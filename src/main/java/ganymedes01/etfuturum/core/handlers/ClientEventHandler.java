@@ -806,8 +806,6 @@ public class ClientEventHandler {
 		}
 	}
 
-	private float prevYOffset;
-
 	@SubscribeEvent
 	public void onRenderTick(TickEvent.RenderTickEvent event) {
 		if (ConfigMixins.worldSaveThumbnails && event.phase == Phase.END) {
@@ -822,21 +820,11 @@ public class ClientEventHandler {
 			SpawnChunkProgress.reset();
 			LoadingScreenHooks.reset();
 		}
-		if (!ConfigMixins.enableElytra)
-			return;
-		EntityPlayerSP player = mc.thePlayer;
-		if (!(player instanceof IElytraPlayer))
-			return;
-		if (((IElytraPlayer) player).etfu$isElytraFlying()) {
-			if (event.phase == Phase.START) {
-				prevYOffset = player.yOffset;
-				/* TODO find the right number here */
-				if (mc.gameSettings.thirdPersonView == 0)
-					player.yOffset = 3.02f;
-			} else {
-				player.yOffset = prevYOffset;
-			}
-		}
+		// Do NOT modify yOffset for elytra flight.
+		// Changing yOffset alters the stance value in C03PacketPlayer,
+		// causing "Illegal stance" kicks when stance - posY > 1.65.
+		// The camera offset for first-person elytra is handled in
+		// MixinEntityRenderer.orientCamera instead.
 	}
 
 	@SubscribeEvent

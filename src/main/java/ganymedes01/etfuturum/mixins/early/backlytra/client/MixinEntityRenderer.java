@@ -17,10 +17,15 @@ public class MixinEntityRenderer {
 
 	@Inject(method = "orientCamera", at = @At("TAIL"))
 	private void adjustThirdPersonForElytra(float partialTicks, CallbackInfo ci) {
-		if (this.mc.gameSettings.thirdPersonView > 0 && this.mc.renderViewEntity instanceof IElytraPlayer) {
+		if (this.mc.renderViewEntity instanceof IElytraPlayer) {
 			if (((IElytraPlayer) this.mc.renderViewEntity).etfu$isElytraFlying()) {
-				/* Move the camera down 1.62 blocks to sit at the player's feet and then up by 0.4 blocks, like 1.12 does */
-				GL11.glTranslatef(0, 1.22f, 0f);
+				if (this.mc.gameSettings.thirdPersonView > 0) {
+					/* Move the camera down 1.62 blocks to sit at the player's feet and then up by 0.4 blocks, like 1.12 does */
+					GL11.glTranslatef(0, 1.22f, 0f);
+				} else {
+					/* First person: lower the camera by 1.22 to match elytra eye height (1.62 - 0.4) */
+					GL11.glTranslatef(0, -1.22f, 0f);
+				}
 			}
 		}
 	}

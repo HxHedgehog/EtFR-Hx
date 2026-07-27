@@ -49,7 +49,7 @@ public abstract class MixinEntityLivingBase extends Entity {
 					this.motionZ += vec3d.zCoord * d2 / d6;
 				}
 
-				if (f < 0.0F) {
+				if (f < 0.0F && d6 > 0.0D) {
 					double d9 = d8 * (-MathHelper.sin(f)) * 0.04D;
 					this.motionY += d9 * 3.2D;
 					this.motionX -= vec3d.xCoord * d9 / d6;
