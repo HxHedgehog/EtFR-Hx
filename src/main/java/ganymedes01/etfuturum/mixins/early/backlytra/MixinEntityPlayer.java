@@ -109,9 +109,7 @@ public abstract class MixinEntityPlayer extends EntityLivingBase implements IEly
 
 	@Inject(method = "readEntityFromNBT", at = @At("TAIL"))
 	private void readElytra(NBTTagCompound tagCompound, CallbackInfo ci) {
-		// Do not restore FallFlying state from NBT.
-		// Restoring it causes "Illegal stance" kicks when rejoining,
-		// because the player's motion/position is invalid on reload.
-		// The player must re-activate elytra flight after rejoining.
+		if (tagCompound.getBoolean("FallFlying"))
+			etfu$setElytraFlying(true);
 	}
 }

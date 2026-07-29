@@ -1,8 +1,8 @@
 package ganymedes01.etfuturum.blocks;
 
-import com.gtnewhorizon.gtnhlib.blocks.util.BFSLeafDecay;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockLeaves;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
@@ -14,6 +14,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -104,8 +105,72 @@ public abstract class BaseLeaves extends BlockLeaves implements ISubBlocksBlock 
 			final int meta = worldIn.getBlockMetadata(x, y, z);
 			if ((meta & 8) != 0 && (meta & 4) == 0) {
 				final int decayRange = getRange(meta % 4);
-				BFSLeafDecay.handleDecayChecked(this, worldIn, x, y, z, meta, decayRange);
+				handleLeafDecay(this, worldIn, x, y, z, meta, decayRange);
 			}
 		}
+	}
+
+	private static final int MAX_RANGE = 7;
+	private static final int MAX_SIDE = 2 * MAX_RANGE + 1;
+	private static final int MAX_VOLUME = MAX_SIDE * MAX_SIDE * MAX_SIDE;
+	private static final boolean[] visited = new boolean[MAX_VOLUME];
+	private static final int[] queue = new int[MAX_VOLUME];
+	private static final int[] DX = { -1, 1, 0, 0, 0, 0 };
+	private static final int[] DY = { 0, 0, -1, 1, 0, 0 };
+	private static final int[] DZ = { 0, 0, 0, 0, -1, 1 };
+
+	private static void handleLeafDecay(Block block, World world, int x, int y, int z, int meta, int range) {
+		if (range > 7) {
+			throw new IllegalArgumentException();
+		}
+		final int r = range + 1;
+		if (world.checkChunksExist(x - r, y - r, z - r, x + r, y + r, z + r)) {
+			if (isConnectedToLog(world, x, y, z, range)) {
+				world.setBlockMetadataWithNotify(x, y, z, meta & -9, 4);
+			} else {
+				block.dropBlockAsItem(world, x, y, z, meta, 0);
+				world.setBlockToAir(x, y, z);
+			}
+		} else {
+			world.setBlockMetadataWithNotify(x, y, z, meta & -9, 4);
+		}
+	}
+
+	private static boolean isConnectedToLog(World world, int x, int y, int z, int range) {
+		final int side = 2 * range + 1;
+		final int sideSquared = side * side;
+		final int volume = sideSquared * side;
+		final int maxDepth = range - 1;
+		Arrays.fill(visited, 0, volume, false);
+		int head = 0;
+		int tail = 0;
+		final int startIdx = range * sideSquared + range * side + range;
+		visited[startIdx] = true;
+		queue[tail++] = startIdx;
+		while (head < tail) {
+			final int entry = queue[head++];
+			final int dist = entry >>> 16;
+			final int idx = entry & 0xFFFF;
+			final int dx = (idx / sideSquared) - range;
+			final int dy = ((idx % sideSquared) / side) - range;
+			final int dz = (idx % side) - range;
+			for (int face = 0; face < 6; face++) {
+				final int nx = dx + DX[face];
+				final int ny = dy + DY[face];
+				final int nz = dz + DZ[face];
+				if (nx < -range || nx > range || ny < -range || ny > range || nz < -range || nz > range) continue;
+				final int nIdx = (nx + range) * sideSquared + (ny + range) * side + (nz + range);
+				if (visited[nIdx]) continue;
+				visited[nIdx] = true;
+				final Block block = world.getBlock(x + nx, y + ny, z + nz);
+				if (block.canSustainLeaves(world, x + nx, y + ny, z + nz)) {
+					return true;
+				}
+				if (dist < maxDepth && block.isLeaves(world, x + nx, y + ny, z + nz)) {
+					queue[tail++] = ((dist + 1) << 16) | nIdx;
+				}
+			}
+		}
+		return false;
 	}
 }
