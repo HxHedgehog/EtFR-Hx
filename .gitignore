@@ -88,3 +88,6 @@ usernamecache.json
 
 /*.kate-swp
 addon.local.gradle
+
+## Temp dev scripts
+/scripts/
