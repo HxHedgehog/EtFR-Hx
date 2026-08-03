@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.sound.ModSounds;
@@ -22,7 +23,7 @@ public class BlockNetherSprouts extends BlockBush implements IShearable {
 		Utils.setBlockSound(this, ModSounds.soundNetherSprouts);
 		setBlockName(Utils.getUnlocalisedName("nether_sprouts"));
 		setBlockTextureName("nether_sprouts");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		this.setBlockBounds(0.1F, 0.0F, 0.1F, 0.9F, 0.3F, 0.9F);
 	}
 

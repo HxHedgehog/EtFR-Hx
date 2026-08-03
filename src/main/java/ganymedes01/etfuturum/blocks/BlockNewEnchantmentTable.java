@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -19,7 +20,7 @@ public class BlockNewEnchantmentTable extends BlockEnchantmentTable {
 		setResistance(2000.0F);
 		setBlockTextureName("enchanting_table");
 		setBlockName("enchantmentTable");
-		setCreativeTab(ConfigWorld.tileReplacementMode == -1 ? EtFuturum.creativeTabBlocks : null);
+		setCreativeTab(ConfigWorld.tileReplacementMode == -1 ? ModdedCreativeTabs.BUILDING_BLOCKS : null);
 	}
 
 	@Override

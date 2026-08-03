@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -21,7 +22,7 @@ public class BlockConcretePowder extends BaseSubtypesSand {
 		this.setResistance(.5F);
 		this.setBlockName(Utils.getUnlocalisedName("concrete_powder"));
 		this.setBlockTextureName("concrete_powder");
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

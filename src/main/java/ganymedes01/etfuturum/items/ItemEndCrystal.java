@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -15,7 +16,7 @@ public class ItemEndCrystal extends ItemSimpleFoiled {
 	public ItemEndCrystal() {
 		setTextureName("end_crystal");
 		setUnlocalizedName(Utils.getUnlocalisedName("end_crystal"));
-		setCreativeTab(EtFuturum.creativeTabItems);
+		setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 
 	@Override

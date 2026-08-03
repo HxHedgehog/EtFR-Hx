@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -27,7 +28,7 @@ public class BaseLog extends BlockLog implements ISubBlocksBlock {
 		types = new String[]{type + "_log", type + "_wood", "stripped_" + type + "_log", "stripped_" + type + "_wood"};
 		setBlockName(Utils.getUnlocalisedName(type + "_log"));
 		Utils.setBlockSound(this, soundTypeWood);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	public BaseLog setBlockSound(SoundType type) {

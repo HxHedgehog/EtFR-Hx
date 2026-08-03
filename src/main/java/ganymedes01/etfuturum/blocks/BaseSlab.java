@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import com.google.common.collect.Maps;
 import cpw.mods.fml.relauncher.Side;
@@ -49,7 +50,7 @@ public class BaseSlab extends BlockSlab implements ISubBlocksBlock {
 			previousSlab = null;
 		} else {
 			singleSlab = previousSlab = this;
-			setCreativeTab(EtFuturum.creativeTabBlocks);
+			setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		}
 	}
 

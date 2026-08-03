@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -24,7 +25,7 @@ public class BaseDoor extends BlockDoor {
 		setHardness(3.0F);
 		setBlockTextureName(Utils.getModName(type) + Utils.getTypeName(type) + "_door");
 		setBlockName(Utils.getUnlocalisedName(type + "_door"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setBlockSound(getMaterial() == Material.iron ? Block.soundTypeMetal : Block.soundTypeWood);
 	}
 

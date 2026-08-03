@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -17,7 +18,7 @@ public class BlockEndBricks extends Block {
 		setStepSound(soundTypePiston);
 		setBlockTextureName("end_bricks");
 		setBlockName(Utils.getUnlocalisedName("end_bricks"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

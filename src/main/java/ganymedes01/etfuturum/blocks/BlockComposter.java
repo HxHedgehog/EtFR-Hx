@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -50,7 +51,7 @@ public class BlockComposter extends Block implements FakeTileEntityProvider {
 		this.setBlockName(Utils.getUnlocalisedName("composter"));
 		this.setBlockTextureName("composter");
 		this.setLightOpacity(500);
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		this.setLightOpacity(0);
 		this.useNeighborBrightness = true;
 	}

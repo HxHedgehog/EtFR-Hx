@@ -289,7 +289,7 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableEnchantingTable = getBoolean("enableNewEnchantingTable", catBlockFunc, true, "Uses lapis as payment and has enchant previews and adjusted level costs. Requires tile entity replacement to be enabled in \"function.cfg\". It is compatible with CraftTweaker for adding and removing fuels." +
 				"\nThe mod prefix is \"mods.etfuturum.enchantingFuel\", and the function is \"addFuel\" and an ItemStack or OreDictionary tag. You can remove fuels using the \"remove\" function and an ItemStack or an OreDictionary tag." +
 				"\nExamples:" +
-				"\nmods.etfuturum.enchantingFuel.addFuel(<etfuturum:amethyst_shard>); //(Adds amethyst shards as an enchanting fuel)" +
+				"\nmods.etfuturum.enchantingFuel.addFuel(<minecraft:amethyst_shard>); //(Adds amethyst shards as an enchanting fuel)" +
 				"\nmods.etfuturum.enchantingFuel.remove(<minecraft:dye:4>); //(Removes lapis lazuli as an enchanting fuel)");
 		enableAnvil = getBoolean("enableNewAnvil", catBlockFunc, true, "Enables new anvil behavior, such as less expensive item renaming");
 		enableBrewingStands = getBoolean("enableNewBrewingStand", catBlockFunc, true, "Makes the brewing stand have a fuel slot like in 1.9+. The fuel slot is compatible with CraftTweaker and takes blaze powder by default. Blaze powder can brew 30 potion cycles." +

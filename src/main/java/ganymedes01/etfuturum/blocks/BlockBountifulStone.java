@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import net.minecraft.block.Block;
@@ -6,14 +7,19 @@ import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 
-public class BlockBountifulStone extends BaseSubtypesBlock {
+/**
+ * 1.8+ 的石头变体（花岗岩、闪长岩、安山岩及其磨制版本）。
+ * 拆分为独立方块后，每个变体用一个 BlockBountifulStone 实例，
+ * 注册名为官方名称（granite, polished_granite 等）。
+ */
+public class BlockBountifulStone extends BaseBlock {
 
-	public BlockBountifulStone() {
-		super(Material.rock, 1, "", "granite", "polished_granite", "diorite", "polished_diorite", "andesite", "polished_andesite");
+	public BlockBountifulStone(String name) {
+		super(Material.rock);
+		setNames(name);
 		setHardness(1.5F);
 		setResistance(6.0F);
-		setNames("stone");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

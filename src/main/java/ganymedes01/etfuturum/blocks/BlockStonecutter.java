@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -32,7 +33,7 @@ public class BlockStonecutter extends Block {
 		this.setResistance(3.5F);
 		this.setBlockName(Utils.getUnlocalisedName("stonecutter"));
 		this.setBlockTextureName("stonecutter");
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.5625F, 1.0F);
 		this.setLightOpacity(0);
 		this.useNeighborBrightness = true;

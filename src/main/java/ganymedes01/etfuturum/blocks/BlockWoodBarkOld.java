@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -17,7 +18,7 @@ public class BlockWoodBarkOld extends BlockOldLog implements ISubBlocksBlock {
 
 	public BlockWoodBarkOld() {
 		setBlockName(Utils.getUnlocalisedName("wood_stripped"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

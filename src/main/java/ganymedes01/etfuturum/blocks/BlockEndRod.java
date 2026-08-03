@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.particle.CustomParticles;
@@ -24,7 +25,7 @@ public class BlockEndRod extends Block {
 		setLightLevel(0.9375F);
 		setBlockTextureName("end_rod");
 		setBlockName(Utils.getUnlocalisedName("end_rod"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -20,7 +21,7 @@ public class BlockBone extends BlockRotatedPillar {
 		setStepSound(ConfigSounds.newBlockSounds ? ModSounds.soundBoneBlock : soundTypeStone);
 		setBlockTextureName("bone_block");
 		setBlockName(Utils.getUnlocalisedName("bone"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

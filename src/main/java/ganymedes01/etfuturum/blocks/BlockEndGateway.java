@@ -4,6 +4,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 import ganymedes01.etfuturum.tileentities.TileEntityGateway;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -33,7 +34,7 @@ public class BlockEndGateway extends BlockContainer {
 		this.setResistance(3600000);
 		this.setBlockUnbreakable();
 		this.setBlockName(Utils.getUnlocalisedName("end_gateway"));
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.TEMPORARY);
 
 		Blocks.end_portal.setBlockName(Utils.getUnlocalisedName("end_portal"));
 	}

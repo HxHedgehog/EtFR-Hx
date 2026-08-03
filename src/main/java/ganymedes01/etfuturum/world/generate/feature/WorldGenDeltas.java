@@ -68,7 +68,7 @@ public class WorldGenDeltas extends WorldGenerator {
 	}
 
 	//	private static final ImmutableList<Block> CANNOT_REPLACE = ImmutableList.of(
-//			Blocks.bedrock, Blocks.nether_brick, Blocks.nether_brick_fence, Blocks.nether_brick_stairs, ModBlocks.NETHER_WART.get(), Blocks.chest, Blocks.mob_spawner);
+//			Blocks.bedrock, Blocks.nether_brick, Blocks.nether_brick_fence, Blocks.nether_brick_stairs, ModBlocks.NETHER_WART_BLOCK.get(), Blocks.chest, Blocks.mob_spawner);
 	private static final ImmutableList<Block> CAN_REPLACE = ImmutableList.of(ModBlocks.BLACKSTONE.get(), ModBlocks.BASALT.get());
 
 	private static boolean isClear(World world, int x, int y, int z) {

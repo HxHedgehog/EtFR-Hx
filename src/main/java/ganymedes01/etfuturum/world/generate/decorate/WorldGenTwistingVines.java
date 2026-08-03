@@ -87,7 +87,7 @@ public class WorldGenTwistingVines extends WorldGenerator {
 		} else {
 			Block block = world.getBlock(x, y - 1, z);
 			int meta = world.getBlockMetadata(x, y - 1, z);
-			return !(block instanceof BlockNetherrack || (block == ModBlocks.NYLIUM.get() && meta == 1) || (block == ModBlocks.NETHER_WART.get() && meta == 1));
+			return !(block instanceof BlockNetherrack || (block == ModBlocks.NYLIUM.get() && meta == 1) || (block == ModBlocks.NETHER_WART_BLOCK.get() && meta == 1));
 		}
 	}
 }

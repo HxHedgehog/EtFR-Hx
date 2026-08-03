@@ -99,7 +99,7 @@ public class WorldGenBasaltColumns extends WorldGenerator {
 
 	//	private static final ImmutableList<Block> CANNOT_PLACE_ON = ImmutableList.of(
 //			Blocks.lava, Blocks.flowing_lava, Blocks.bedrock, ModBlocks.MAGMA.get(), Blocks.soul_sand, Blocks.nether_brick, Blocks.nether_brick_fence,
-//			Blocks.nether_brick_stairs, ModBlocks.NETHER_WART.get(), Blocks.chest, Blocks.mob_spawner);
+//			Blocks.nether_brick_stairs, ModBlocks.NETHER_WART_BLOCK.get(), Blocks.chest, Blocks.mob_spawner);
 	private static final ImmutableList<Block> CAN_PLACE_ON = ImmutableList.of(ModBlocks.BLACKSTONE.get(), ModBlocks.BASALT.get());
 
 	private static boolean canPlaceAt(World world, int seaLevel, int x, int y, int z) {

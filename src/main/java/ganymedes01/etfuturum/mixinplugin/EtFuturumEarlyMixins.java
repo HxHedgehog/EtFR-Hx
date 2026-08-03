@@ -8,6 +8,7 @@ import ganymedes01.etfuturum.configuration.ConfigBase;
 import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
 import ganymedes01.etfuturum.configuration.configs.ConfigEnchantsPotions;
 import ganymedes01.etfuturum.configuration.configs.ConfigEntities;
+import ganymedes01.etfuturum.configuration.configs.ConfigFunctions;
 import ganymedes01.etfuturum.configuration.configs.ConfigMixins;
 import ganymedes01.etfuturum.configuration.configs.ConfigTweaks;
 import ganymedes01.etfuturum.configuration.configs.ConfigWorld;
@@ -329,6 +330,14 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		if (ConfigEntities.enableFoxes) {
 			mixins.add("foxes.MixinEntityLivingBase");
 			mixins.add("foxes.MixinEntityWolf");
+		}
+
+		if (ConfigBlocksItems.enableSponge) {
+			mixins.add("sponge.MixinBlockSponge");
+		}
+
+		if (ConfigFunctions.enableSilkTouchingMushrooms) {
+			mixins.add("mushroom.MixinBlockHugeMushroom");
 		}
 
 		return mixins;

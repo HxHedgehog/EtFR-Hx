@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -27,7 +28,7 @@ public class BlockWoodFence extends BlockFence {
 		setResistance(5.0F);
 		setStepSound(soundTypeWood);
 		setBlockName(Utils.getUnlocalisedName(ModRecipes.woodTypes[meta] + "_fence"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

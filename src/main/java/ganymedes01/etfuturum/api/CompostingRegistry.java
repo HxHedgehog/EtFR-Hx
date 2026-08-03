@@ -96,8 +96,6 @@ public class CompostingRegistry {
 				new ItemStack(Blocks.hay_block),
 				new ItemStack(Blocks.red_mushroom_block, 1, OreDictionary.WILDCARD_VALUE),
 				new ItemStack(Blocks.brown_mushroom_block, 1, OreDictionary.WILDCARD_VALUE),
-				ModBlocks.RED_MUSHROOM.newItemStack(1, OreDictionary.WILDCARD_VALUE),
-				ModBlocks.BROWN_MUSHROOM.newItemStack(1, OreDictionary.WILDCARD_VALUE),
 				ModBlocks.AZALEA.newItemStack(1, 1)
 		), 85);
 

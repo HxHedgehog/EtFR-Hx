@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -22,7 +23,7 @@ public class BlockTuff extends BaseSubtypesBlock {
 		setNames("tuff");
 		setBlockSound(ModSounds.soundTuff);
 		setHarvestLevel("pickaxe", 0);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

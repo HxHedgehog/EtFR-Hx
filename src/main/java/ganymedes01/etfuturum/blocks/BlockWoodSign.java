@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModItems;
@@ -60,7 +61,7 @@ public class BlockWoodSign extends BlockSign {
 			setStepSound(Block.soundTypeWood);
 		}
 		if (block != Blocks.planks && standing) { //Only apply this logic to new signs; old ones use a separate item.
-			setCreativeTab(EtFuturum.creativeTabBlocks);
+			setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		}
 	}
 

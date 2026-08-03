@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -21,7 +22,7 @@ public class BlockLodestone extends Block {
 		setHarvestLevel("pickaxe", 1);
 		setBlockName(Utils.getUnlocalisedName("lodestone"));
 		setBlockTextureName("lodestone");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		Utils.setBlockSound(this, ModSounds.soundLodestone);
 		setTickRandomly(true);
 	}

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -28,7 +29,7 @@ public class BlockWeepingVines extends BaseBlock implements IShearable {
 		super(Material.plants);
 		setBlockSound(ModSounds.soundWeepingVines);
 		setNames("weeping_vines");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setTickRandomly(true);
 	}
 

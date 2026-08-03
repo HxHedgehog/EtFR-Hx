@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -32,7 +33,7 @@ public class BlockDeepslate extends BlockRotatedPillar {
 		this.setResistance(6);
 		this.setBlockName(Utils.getUnlocalisedName("deepslate"));
 		this.setBlockTextureName("deepslate");
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		this.setHarvestLevel("pickaxe", 0);
 		Utils.setBlockSound(this, ModSounds.soundDeepslate);
 	}

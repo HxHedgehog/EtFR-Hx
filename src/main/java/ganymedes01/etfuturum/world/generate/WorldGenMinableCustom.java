@@ -43,7 +43,7 @@ public class WorldGenMinableCustom extends WorldGenMinable {
 
 	@Override
 	public boolean generate(World p_76484_1_, Random p_76484_2_, int p_76484_3_, int p_76484_4_, int p_76484_5_) {
-		if (ConfigWorld.deepslateReplacesStones && field_150519_a == ModBlocks.STONE.get() && p_76484_1_.getBlock(p_76484_3_, p_76484_4_, p_76484_5_) == ModBlocks.DEEPSLATE.get()) {
+		if (ConfigWorld.deepslateReplacesStones && ModBlocks.isStoneVariant(field_150519_a) && p_76484_1_.getBlock(p_76484_3_, p_76484_4_, p_76484_5_) == ModBlocks.DEEPSLATE.get()) {
 			return false; //Don't even try to generate this vein if it starts in deepslate
 		}
 		float f = p_76484_2_.nextFloat() * (float) Math.PI;
@@ -107,7 +107,7 @@ public class WorldGenMinableCustom extends WorldGenMinable {
 			}
 		}
 
-		return !ConfigWorld.deepslateReplacesStones || field_150519_a != ModBlocks.STONE.get() || world.getBlock(x, y, z) != ModBlocks.DEEPSLATE.get();
+		return !ConfigWorld.deepslateReplacesStones || !ModBlocks.isStoneVariant(field_150519_a) || world.getBlock(x, y, z) != ModBlocks.DEEPSLATE.get();
 	}
 
 	private void setBlock(World world, int x, int y, int z, Block block, int meta, int flag) {

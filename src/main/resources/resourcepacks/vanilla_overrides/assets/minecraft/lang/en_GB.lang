@@ -80,3 +80,6 @@ tile.doorWood.name=Oak Door
 tile.fence.name=Oak Fence
 tile.fenceGate.name=Oak Fence Gate
 tile.trapdoor.name=Oak Trapdoor
+tile.mushroom_stem.name=Mushroom Stem
+tile.brown_mushroom_block.name=Brown Mushroom Block
+tile.red_mushroom_block.name=Red Mushroom Block

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -13,7 +14,7 @@ public class BlockPolishedBlackstoneButton extends BlockButtonStone {
 		setHardness(0.5F);
 		setResistance(0.5F);
 		setBlockName(Utils.getUnlocalisedName("polished_blackstone_button"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	/**

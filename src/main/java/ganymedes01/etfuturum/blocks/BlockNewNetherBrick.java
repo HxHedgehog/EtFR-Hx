@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.sound.ModSounds;
@@ -16,6 +17,6 @@ public class BlockNewNetherBrick extends BaseSubtypesBlock {
 		this.setHarvestLevel("pickaxe", 0);
 		this.setBlockTextureName("nether_bricks");
 		setBlockName(Utils.getUnlocalisedName("red_netherbrick"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 }

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import net.minecraft.block.Block;
@@ -20,7 +21,7 @@ public class BlockWitherRose extends BaseFlower {
 
 	public BlockWitherRose() {
 		setNames("wither_rose");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

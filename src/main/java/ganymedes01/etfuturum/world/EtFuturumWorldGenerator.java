@@ -84,9 +84,9 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 	private List<BiomeGenBase> cherryBiomes;
 
 	protected EtFuturumWorldGenerator() {
-		stoneGen.add(new WorldGenMinableCustom(ModBlocks.STONE.get(), 1, ConfigWorld.maxStonesPerCluster, Blocks.stone));
-		stoneGen.add(new WorldGenMinableCustom(ModBlocks.STONE.get(), 3, ConfigWorld.maxStonesPerCluster, Blocks.stone));
-		stoneGen.add(new WorldGenMinableCustom(ModBlocks.STONE.get(), 5, ConfigWorld.maxStonesPerCluster, Blocks.stone));
+		stoneGen.add(new WorldGenMinableCustom(ModBlocks.GRANITE.get(), 0, ConfigWorld.maxStonesPerCluster, Blocks.stone));
+		stoneGen.add(new WorldGenMinableCustom(ModBlocks.DIORITE.get(), 0, ConfigWorld.maxStonesPerCluster, Blocks.stone));
+		stoneGen.add(new WorldGenMinableCustom(ModBlocks.ANDESITE.get(), 0, ConfigWorld.maxStonesPerCluster, Blocks.stone));
 	}
 
 	public void postInit() {
@@ -156,7 +156,7 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 			caveVineGen = new WorldGenCaveVines(ModBlocks.CAVE_VINE.get());
 		}
         
-		if (ModBlocks.CHERRY_LOG.isEnabled() && ModBlocks.LEAVES.isEnabled()) {
+		if (ModBlocks.CHERRY_LOG.isEnabled() && ModBlocks.CHERRY_LEAVES.isEnabled()) {
 			BiomeGenBase[] cherryBiomeArray = BiomeDictionary.getBiomesForType(Type.MOUNTAIN);
 			cherryBiomeArray = Utils.excludeBiomesFromTypesWithDefaults(cherryBiomeArray, Type.SNOWY, Type.HOT, Type.SANDY, Type.MESA, Type.SPARSE, Type.JUNGLE);
 			cherryBiomes = Arrays.asList(cherryBiomeArray);
@@ -280,7 +280,7 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 				z = (chunkZ << 4) + rand.nextInt(16) + 8;
 				int y = world.getHeightValue(x, z);
 				Block block = world.getBlock(x, y - 1, z);
-				if (y > 0 && block.canSustainPlant(world, x, y - 1, z, ForgeDirection.UP, (IPlantable) ModBlocks.SAPLING.get())) {
+				if (y > 0 && block.canSustainPlant(world, x, y - 1, z, ForgeDirection.UP, (IPlantable) ModBlocks.CHERRY_SAPLING.get())) {
 					BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
 					int rng = cherryBiomes.contains(biome) ? ConfigWorld.cherryTreeRarity : 0;
 					if (rng > 0 && rand.nextInt(rng) == 0) {

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -15,7 +16,7 @@ public class BaseTrapdoor extends BlockTrapDoor {
 		setHardness(3.0F);
 		setBlockName(Utils.getUnlocalisedName(type + "_trapdoor"));
 		setBlockTextureName(Utils.getModName(type) + Utils.getTypeName(type) + "_trapdoor");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setBlockSound(getMaterial() == Material.iron ? Block.soundTypeMetal : Block.soundTypeWood);
 	}
 

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 import ganymedes01.etfuturum.EtFuturum;
@@ -28,7 +29,7 @@ public class BlockModernWoodFenceCompat extends BlockModernWoodFence {
         for (int i = 0; i < elements.length; i++) {
             this.elements[i] = mod + "_" + elements[i] + "_fence";
         }
-        setCreativeTab(EtFuturum.creativeTabBlocks);
+        setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
     }
 
     @Override

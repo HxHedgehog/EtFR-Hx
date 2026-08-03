@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items.equipment;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModItems;
@@ -13,7 +14,7 @@ public class ItemEFRHoe extends ItemHoe {
 		this.setMaxDamage(durabilityOverride > -1 ? durabilityOverride : material.getMaxUses());
 		this.setUnlocalizedName(Utils.getUnlocalisedName("netherite_hoe"));
 		this.setTextureName("netherite_hoe");
-		this.setCreativeTab(EtFuturum.creativeTabItems);
+		this.setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 
 	@Override

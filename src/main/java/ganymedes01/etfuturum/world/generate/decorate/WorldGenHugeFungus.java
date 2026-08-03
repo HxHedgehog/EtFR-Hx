@@ -106,7 +106,7 @@ public class WorldGenHugeFungus extends WorldGenAbstractTree {
 	}
 
 	private void placeHat(World world, Random rand, int x, int y, int z, int p_285156_, boolean p_285265_) {
-		boolean flag = hat == ModBlocks.NETHER_WART.get() && hatMeta == 0;
+		boolean flag = hat == ModBlocks.NETHER_WART_BLOCK.get() && hatMeta == 0;
 		int i = Math.min(rand.nextInt(1 + p_285156_ / 3) + 5, p_285156_);
 		int j = p_285156_ - i;
 

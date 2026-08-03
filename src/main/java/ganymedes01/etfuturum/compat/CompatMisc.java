@@ -106,7 +106,7 @@ public class CompatMisc {
 
 
 	public static void runModHooksLoadComplete() {
-		if (ModBlocks.SPONGE.isEnabled() && ModsList.BIOMES_O_PLENTY.isLoaded()) {
+		if (ConfigBlocksItems.enableSponge && ModsList.BIOMES_O_PLENTY.isLoaded()) {
 			try {
 				Field featureMapField = Class.forName("biomesoplenty.common.world.generation.WorldGenFieldAssociation").getDeclaredField("featureMap");
 				@SuppressWarnings("unchecked")
@@ -123,8 +123,8 @@ public class CompatMisc {
 				splotchBlockField.setAccessible(true);
 				splotchBlockMetaField.setAccessible(true);
 
-				splotchBlockField.set(worldGenerator, ModBlocks.SPONGE.get()); //Change the info to generate the EFR sponge
-				splotchBlockMetaField.set(worldGenerator, 1);
+				splotchBlockField.set(worldGenerator, ModBlocks.WET_SPONGE.get()); //Change the info to generate the EFR wet sponge
+				splotchBlockMetaField.set(worldGenerator, 0);
 			} catch (Exception ignored) {
 			}
 		}

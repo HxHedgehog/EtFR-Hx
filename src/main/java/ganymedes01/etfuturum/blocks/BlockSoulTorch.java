@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.particle.CustomParticles;
@@ -17,7 +18,7 @@ public class BlockSoulTorch extends BlockTorch {
 		setLightLevel(0.666F);
 		setBlockName(Utils.getUnlocalisedName("soul_torch"));
 		setBlockTextureName("soul_torch");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	/**

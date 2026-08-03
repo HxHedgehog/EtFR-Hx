@@ -1,6 +1,15 @@
 # Creative Tab
-itemGroup.etfuturum.items=Et Futurum Items
-itemGroup.etfuturum.blocks=Et Futurum Blocks
+itemGroup.etfuturum.buildingBlocks=Building Blocks
+itemGroup.etfuturum.coloredBlocks=Colored Blocks
+itemGroup.etfuturum.naturalBlocks=Natural Blocks
+itemGroup.etfuturum.functionalBlocks=Functional Blocks
+itemGroup.etfuturum.redstoneBlocks=Redstone Blocks
+itemGroup.etfuturum.toolsAndUtilities=Tools &amp; Utilities
+itemGroup.etfuturum.combat=Combat
+itemGroup.etfuturum.foodAndDrinks=Food &amp; Drinks
+itemGroup.etfuturum.ingredients=Ingredients
+itemGroup.etfuturum.spawnEggs=Spawn Eggs
+itemGroup.etfuturum.temporary=Temporary
 
 # Enchantments
 enchantment.frost_walker=Frost Walker
@@ -467,8 +476,6 @@ tile.etfuturum.cut_red_sandstone.name=Cut Red Sandstone
 tile.etfuturum.red_sandstone_slab.name=Red Sandstone Slab
 tile.etfuturum.cut_red_sandstone_slab.name=Cut Red Sandstone Slab
 tile.etfuturum.red_sandstone_stairs.name=Red Sandstone Stairs
-tile.etfuturum.red_mushroom.name=Mushroom
-tile.etfuturum.brown_mushroom.name=Mushroom
 tile.etfuturum.coarse_dirt.name=Coarse Dirt
 tile.etfuturum.slime.name=Slime Block
 tile.etfuturum.sponge.name=Sponge
@@ -504,12 +511,13 @@ tile.etfuturum.smooth_quartz.name=Smooth Quartz
 tile.etfuturum.smooth_quartz_slab.name=Smooth Quartz Slab
 tile.etfuturum.smooth_quartz_stairs.name=Smooth Quartz Stairs
 tile.etfuturum.quartz_bricks.name=Quartz Bricks
-tile.etfuturum.stone_slab.name=Stone Slab
+tile.etfuturum.smooth_stone_slab.name=Smooth Stone Slab
 tile.etfuturum.mossy_cobblestone_slab.name=Mossy Cobblestone Slab
 tile.etfuturum.mossy_stone_brick_slab.name=Mossy Stone Brick Slab
 tile.etfuturum.cut_sandstone_slab.name=Cut Sandstone Slab
 tile.etfuturum.stone_stairs.name=Stone Stairs
 tile.etfuturum.mossy_cobblestone_stairs.name=Mossy Cobblestone Stairs
+tile.etfuturum.cobblestone_stairs.name=Cobblestone Stairs
 tile.etfuturum.mossy_stone_brick_stairs.name=Mossy Stone Brick Stairs
 tile.etfuturum.lily_of_the_valley.name=Lily of the Valley
 tile.etfuturum.cornflower.name=Cornflower

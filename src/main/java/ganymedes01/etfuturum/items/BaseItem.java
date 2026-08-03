@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -17,7 +18,7 @@ public class BaseItem extends Item {
 
 	public BaseItem() {
 		super();
-		setCreativeTab(EtFuturum.creativeTabItems);
+		setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 
 	public BaseItem(String names) {

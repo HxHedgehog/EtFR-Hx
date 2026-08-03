@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -17,7 +18,7 @@ public class BlockPurpur extends Block {
 		setStepSound(soundTypePiston);
 		setBlockTextureName("purpur_block");
 		setBlockName(Utils.getUnlocalisedName("purpur_block"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

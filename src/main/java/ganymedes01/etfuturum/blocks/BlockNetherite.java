@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.sound.ModSounds;
@@ -17,7 +18,7 @@ public class BlockNetherite extends Block {
 		Utils.setBlockSound(this, ModSounds.soundNetherite);
 		setBlockTextureName("netherite_block");
 		setBlockName(Utils.getUnlocalisedName("netherite_block"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

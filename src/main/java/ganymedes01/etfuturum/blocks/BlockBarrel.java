@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -61,7 +62,7 @@ public class BlockBarrel extends BlockContainer {
 		}
 
 		this.useNeighborBrightness = true;
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	private final TileEntityBarrel.BarrelType type;

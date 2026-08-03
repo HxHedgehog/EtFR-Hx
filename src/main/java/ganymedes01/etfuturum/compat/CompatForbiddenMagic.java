@@ -17,9 +17,9 @@ public class CompatForbiddenMagic {
         }
         ThaumcraftApi.registerObjectTag(ModBlocks.OBSERVER.newItemStack(), new AspectList().add(Aspect.MECHANISM, 4).add(Aspect.EARTH, 4).add(Aspect.ENTROPY, 4).add(DarkAspects.ENVY, 2));
 
-        ThaumcraftApi.registerObjectTag(ModBlocks.RED_NETHERBRICK.newItemStack(1, 0), new AspectList(new ItemStack(Blocks.nether_brick)).add(DarkAspects.NETHER, 2)); // Infernus is not included for some reason. Load order issue?
-        ThaumcraftApi.registerObjectTag(ModBlocks.RED_NETHERBRICK.newItemStack(1, 1), new AspectList(ModBlocks.RED_NETHERBRICK.newItemStack()).add(Aspect.ENTROPY, 1));
-        ThaumcraftApi.registerObjectTag(ModBlocks.RED_NETHERBRICK.newItemStack(1, 2), new AspectList(ModBlocks.RED_NETHERBRICK.newItemStack()).add(Aspect.MAGIC, 1));
+        ThaumcraftApi.registerObjectTag(ModBlocks.RED_NETHER_BRICKS.newItemStack(1, 0), new AspectList(new ItemStack(Blocks.nether_brick)).add(DarkAspects.NETHER, 2)); // Infernus is not included for some reason. Load order issue?
+        ThaumcraftApi.registerObjectTag(ModBlocks.RED_NETHER_BRICKS.newItemStack(1, 1), new AspectList(ModBlocks.RED_NETHER_BRICKS.newItemStack()).add(Aspect.ENTROPY, 1));
+        ThaumcraftApi.registerObjectTag(ModBlocks.RED_NETHER_BRICKS.newItemStack(1, 2), new AspectList(ModBlocks.RED_NETHER_BRICKS.newItemStack()).add(Aspect.MAGIC, 1));
 
         ThaumcraftApi.registerObjectTag(ModBlocks.BLACKSTONE.newItemStack(1, OreDictionary.WILDCARD_VALUE), new AspectList().add(Aspect.EARTH, 1).add(Aspect.DARKNESS, 1));
         ThaumcraftApi.registerObjectTag(ModBlocks.BLACKSTONE.newItemStack(1, 4), new AspectList().add(Aspect.EARTH, 1).add(Aspect.DARKNESS, 1).add(Aspect.BEAST, 1).add(DarkAspects.NETHER, 1));

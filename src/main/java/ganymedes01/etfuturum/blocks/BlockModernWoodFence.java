@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
@@ -36,7 +37,7 @@ public class BlockModernWoodFence extends BlockFence implements ISubBlocksBlock 
 		for (int i = 0; i < types.length; i++) {
 			types[i] = types[i].replace("planks", "fence");
 		}
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

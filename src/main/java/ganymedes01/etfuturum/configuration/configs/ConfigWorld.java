@@ -119,7 +119,7 @@ public class ConfigWorld extends ConfigBase {
 			int oldID = oldFossilIDProp.getInt();
 			switch (oldID) {
 				default:
-					fossilBlockID = "etfuturum:bone";
+					fossilBlockID = "minecraft:bone_block";
 					break;
 				case 1:
 					fossilBlockID = "netherlicious:BoneBlock";
@@ -129,32 +129,32 @@ public class ConfigWorld extends ConfigBase {
 					break;
 			}
 			getCategory(catGeneration).remove("fossilBoneBlock");
-			get(catGeneration, "fossilBlockID", "etfuturum:bone").set(fossilBlockID);
+			get(catGeneration, "fossilBlockID", "minecraft:bone_block").set(fossilBlockID);
 			save();
 		}
-		fossilBlockID = getString("fossilBlockID", catGeneration, "etfuturum:bone", "Use a namespaced ID, + optionally meta (max 3) to choose the block that makes up fossils. The max meta is 3 because the rotations will change the meta. North/South is the meta + 4 and East/West is + 8.\nNetherlicious bone block is \"netherlicious:BoneBlock\" and UpToDate bone block is \"uptodate:bone_block\".\nIf the chosen block does not exist then fossils will not generate. If Netherlicious is installed, its bone block will be used if this is set to \"etfutrum:bone\" and Et Futurum Requiem bone blocks are disabled.");
+		fossilBlockID = getString("fossilBlockID", catGeneration, "minecraft:bone_block", "Use a namespaced ID, + optionally meta (max 3) to choose the block that makes up fossils. The max meta is 3 because the rotations will change the meta. North/South is the meta + 4 and East/West is + 8.\nNetherlicious bone block is \"netherlicious:BoneBlock\" and UpToDate bone block is \"uptodate:bone_block\".\nIf the chosen block does not exist then fossils will not generate. If Netherlicious is installed, its bone block will be used if this is set to \"minecraft:bone_block\" and Et Futurum Requiem bone blocks are disabled.");
 
 		if (hasKey(catGeneration, "amethystOuterBlock")) {
 			Property oldAmethystOuterIDProp = get(catGeneration, "amethystOuterBlock", 0);
 			int oldID = oldAmethystOuterIDProp.getInt();
 			switch (oldID) {
 				default:
-					amethystOuterBlockID = "etfuturum:smooth_basalt";
+					amethystOuterBlockID = "minecraft:smooth_basalt";
 					break;
 				case 1:
-					amethystOuterBlockID = "etfuturum:tuff";
+					amethystOuterBlockID = "minecraft:tuff";
 					break;
 				case 2:
 					amethystOuterBlockID = "netherlicious:BasaltBricks:6";
 					break;
 			}
 			getCategory(catGeneration).remove("amethystOuterBlock");
-			get(catGeneration, "amethystOuterBlockID", "etfuturum:bone").set(amethystOuterBlockID);
+			get(catGeneration, "amethystOuterBlockID", "minecraft:bone_block").set(amethystOuterBlockID);
 			save();
 		}
-		amethystOuterBlockID = getString("amethystOuterBlockID", catGeneration, "etfuturum:smooth_basalt", "Use a namespaced ID, + optionally meta (max 15) to choose the block that makes up the outer layer of amethyst geodes.\nThe outer layer was formerly \"etfuturum:tuff\" before it was changed in later 1.17 snapshots. Netherlicious smooth basalt is \"netherlicious:BasaltBricks:6\"\nIf the chosen block does not exist then amethyst geodes will not generate.");
+		amethystOuterBlockID = getString("amethystOuterBlockID", catGeneration, "minecraft:smooth_basalt", "Use a namespaced ID, + optionally meta (max 15) to choose the block that makes up the outer layer of amethyst geodes.\nThe outer layer was formerly \"minecraft:tuff\" before it was changed in later 1.17 snapshots. Netherlicious smooth basalt is \"netherlicious:BasaltBricks:6\"\nIf the chosen block does not exist then amethyst geodes will not generate.");
 
-		amethystMiddleBlockID = getString("amethystMiddleBlockID", catGeneration, "etfuturum:calcite", "Use a namespaced ID, + optionally meta (max 15) to choose the block that makes up the middle layer of amethyst geodes.\nIf the chosen block does not exist then amethyst geodes will not generate.");
+		amethystMiddleBlockID = getString("amethystMiddleBlockID", catGeneration, "minecraft:calcite", "Use a namespaced ID, + optionally meta (max 15) to choose the block that makes up the middle layer of amethyst geodes.\nIf the chosen block does not exist then amethyst geodes will not generate.");
 
 		Property fossilBlacklistProp = get(catGeneration, "fossilDimensionBlacklist", new int[]{});
 		fossilBlacklistProp.comment = "The dimension IDs of the dimensions the fossil structures should not spawn in. Fossils will also not spawn in any dimension that is not an instance of WorldProviderSurface";
@@ -202,7 +202,7 @@ public class ConfigWorld extends ConfigBase {
 	@Override
 	protected void initValues() {
 		if (enableFossils) {
-			if (ModsList.NETHERLICIOUS.isLoaded() && fossilBlockID.equals("etfuturum:bone_block") && !ModBlocks.BONE.isEnabled()) {
+			if (ModsList.NETHERLICIOUS.isLoaded() && fossilBlockID.equals("minecraft:bone_block") && !ModBlocks.BONE_BLOCK.isEnabled()) {
 				fossilBlock = new RegistryMapping<>(ExternalContent.Blocks.NETHERLICIOUS_BONE_BLOCK.get(), 0);
 			} else {
 				String[] fossilBlockArray = fossilBlockID.split(":");

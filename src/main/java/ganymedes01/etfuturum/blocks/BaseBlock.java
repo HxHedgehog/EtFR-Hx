@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -17,7 +18,7 @@ public class BaseBlock extends Block {
 
 	public BaseBlock(Material materialIn) {
 		super(materialIn);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	public BaseBlock setUnlocalizedNameWithPrefix(String name) {

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -21,7 +22,7 @@ public class BlockCoarseDirt extends Block {
 		setStepSound(soundTypeGravel);
 		setBlockTextureName("coarse_dirt");
 		setBlockName(Utils.getUnlocalisedName("coarse_dirt"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

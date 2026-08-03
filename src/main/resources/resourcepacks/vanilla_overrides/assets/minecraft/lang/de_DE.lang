@@ -68,3 +68,6 @@ item.bed.name=Rotes Bett
 tile.bed.name=Rotes Bett
 tile.fence.name=Eichenholzzaun
 tile.trapdoor.name=Eichenholzfalltür
+tile.mushroom_stem.name=Pilzstiel
+tile.brown_mushroom_block.name=Brauner Pilzblock
+tile.red_mushroom_block.name=Roter Pilzblock

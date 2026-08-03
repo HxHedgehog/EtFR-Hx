@@ -61,9 +61,6 @@ public class EFRBlockStateConverter extends BlockStateConverter {
 					return ConfigWorld.fossilBlock.getObject();
 				}
 				break;
-			case "end_stone_bricks":
-				nameToFind = "end_bricks";
-				break;
 			case "white_banner":
 			case "orange_banner":
 			case "magenta_banner":
@@ -98,7 +95,7 @@ public class EFRBlockStateConverter extends BlockStateConverter {
 			case "black_wall_banner":
 				nameToFind = "banner";
 		}
-		Block efrBlock = GameRegistry.findBlock("etfuturum", nameToFind);
+		Block efrBlock = GameRegistry.findBlock("minecraft", nameToFind);
 		if (efrBlock != null) {
 			return efrBlock;
 		}

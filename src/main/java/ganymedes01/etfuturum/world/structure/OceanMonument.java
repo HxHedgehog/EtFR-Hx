@@ -84,7 +84,7 @@ public class OceanMonument {
 					block = Blocks.gold_block;
 					break;
 				case 5:
-					block = ConfigBlocksItems.enableSponge ? ModBlocks.SPONGE.get() : Blocks.sponge;
+					block = Blocks.sponge;
 					meta = 1;
 					break;
 				case 6:

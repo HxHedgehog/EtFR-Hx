@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -26,7 +27,7 @@ public class BlockStrippedLogCompat extends BlockNewLog implements ISubBlocksBlo
 
     public BlockStrippedLogCompat(String mod, String name, boolean wood, boolean stripped, String... elements) {
         setBlockName(Utils.getUnlocalisedName(name));
-        setCreativeTab(EtFuturum.creativeTabBlocks);
+        setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 
         this.mod = mod;
         this.modName = mod;

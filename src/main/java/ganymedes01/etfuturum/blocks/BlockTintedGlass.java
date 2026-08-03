@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -19,7 +20,7 @@ public class BlockTintedGlass extends BlockGlass {
 		setLightOpacity(255);
 		setBlockTextureName("tinted_glass");
 		setBlockName(Utils.getUnlocalisedName("tinted_glass"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setStepSound(Block.soundTypeGlass);
 	}
 

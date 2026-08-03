@@ -6,6 +6,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
@@ -24,6 +25,7 @@ public class BlockLight extends BlockBarrier implements ISubBlocksBlock {
 		super();
 		setNames("light");
 		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
+		this.setCreativeTab(ModdedCreativeTabs.TEMPORARY);
 		for (int i = 0; i < 16; i++) {
 			types[i] = "light_" + String.format("%02d", i);
 		}

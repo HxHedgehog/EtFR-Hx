@@ -65,7 +65,7 @@ public class WorldGenDeepslateLayerBlob extends WorldGenMinable {
 								if (d12 * d12 + d13 * d13 + d14 * d14 < 1.0D) {
 									block = world.getBlock(x, y, z);
 
-									if ((ConfigWorld.deepslateReplacesStones || block != ModBlocks.STONE.get()) && block.getMaterial() != Material.air && block != ModBlocks.TUFF.get()) {
+									if ((ConfigWorld.deepslateReplacesStones || !ModBlocks.isStoneVariant(block)) && block.getMaterial() != Material.air && block != ModBlocks.TUFF.get()) {
 										if (block.isReplaceableOreGen(world, x, y, z, Blocks.stone)) {
 											world.setBlock(x, y, z, field_150519_a);
 											continue;

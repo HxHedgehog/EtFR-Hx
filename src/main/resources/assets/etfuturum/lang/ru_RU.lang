@@ -1,7 +1,3 @@
-# Вкладки творческого меню (Creative Tab)
-itemGroup.etfuturum.items=Et Futurum: Предметы
-itemGroup.etfuturum.blocks=Et Futurum: Блоки
-
 # Зачарования (Enchantments)
 enchantment.frost_walker=Ледяная поступь
 enchantment.mending=Починка
@@ -413,8 +409,6 @@ tile.etfuturum.cut_red_sandstone.name=Резной красный песчани
 tile.etfuturum.red_sandstone_slab.name=Плита из красного песчаника
 tile.etfuturum.cut_red_sandstone_slab.name=Плита из резного красного песчаника
 tile.etfuturum.red_sandstone_stairs.name=Ступеньки из красного песчаника
-tile.etfuturum.red_mushroom.name=Гриб
-tile.etfuturum.brown_mushroom.name=Гриб
 tile.etfuturum.coarse_dirt.name=Грубая земля
 tile.etfuturum.slime.name=Блок слизи
 tile.etfuturum.sponge.name=Губка
@@ -472,12 +466,13 @@ tile.etfuturum.smooth_quartz.name=Гладкий кварц
 tile.etfuturum.smooth_quartz_slab.name=Плита из гладкого кварца
 tile.etfuturum.smooth_quartz_stairs.name=Ступеньки из гладкого кварца
 tile.etfuturum.quartz_bricks.name=Кварцевые кирпичи
-tile.etfuturum.stone_slab.name=Каменная плита
+tile.etfuturum.smooth_stone_slab.name=Плита из гладкого камня
 tile.etfuturum.mossy_cobblestone_slab.name=Плита из замшелого булыжника
 tile.etfuturum.mossy_stone_brick_slab.name=Плита из замшелого каменного кирпича
 tile.etfuturum.cut_sandstone_slab.name=Плита из резного песчаник
 tile.etfuturum.stone_stairs.name=Каменные ступеньки
 tile.etfuturum.mossy_cobblestone_stairs.name=Ступеньки из замшелого булыжника
+tile.etfuturum.cobblestone_stairs.name=Ступеньки из булыжника
 tile.etfuturum.mossy_stone_brick_stairs.name=Ступеньки из замшелого каменного кирпича
 tile.etfuturum.lily_of_the_valley.name=Ландыш
 tile.etfuturum.cornflower.name=Василёк

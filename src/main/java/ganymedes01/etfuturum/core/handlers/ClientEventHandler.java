@@ -21,6 +21,7 @@ import ganymedes01.etfuturum.client.loading.LoadingScreenStateTracker;
 import ganymedes01.etfuturum.client.WorldIconManager;
 import ganymedes01.etfuturum.client.gui.GuiConfigWarning;
 import ganymedes01.etfuturum.client.gui.GuiGamemodeSwitcher;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 import ganymedes01.etfuturum.client.particle.CustomParticles;
 import ganymedes01.etfuturum.client.particle.DeferredBubbleFX;
 import ganymedes01.etfuturum.client.renderer.entity.elytra.LayerBetterElytra;
@@ -157,6 +158,15 @@ public class ClientEventHandler {
 
 	@SubscribeEvent
 	public void onKeyInput(InputEvent.KeyInputEvent event) {
+		// F7: 导出创造栏内容到文件（调试用）
+		if (Keyboard.getEventKey() == Keyboard.KEY_F7 && Keyboard.getEventKeyState()) {
+			ModdedCreativeTabs.dumpAllTabs();
+			if (mc.thePlayer != null) {
+				mc.thePlayer.addChatComponentMessage(new ChatComponentText(
+						EnumChatFormatting.GREEN + "[EtFuturum] 创造栏内容已导出到 creative_tab_dump.txt"));
+			}
+		}
+
 		if (ConfigFunctions.enableNewF3Behavior) {
 			if (Keyboard.getEventKey() == Keyboard.KEY_F3) {
 				boolean pressedF3 = Keyboard.getEventKeyState();

@@ -33,7 +33,7 @@ import ganymedes01.etfuturum.api.StrippedLogRegistry;
 import ganymedes01.etfuturum.api.mappings.BasicMultiBlockSound;
 import ganymedes01.etfuturum.blocks.BlockSculk;
 import ganymedes01.etfuturum.blocks.BlockSculkCatalyst;
-import ganymedes01.etfuturum.blocks.BlockSponge;
+import net.minecraft.block.BlockSponge;
 import ganymedes01.etfuturum.client.BuiltInResourcePack;
 import ganymedes01.etfuturum.client.DynamicSoundsResourcePack;
 import ganymedes01.etfuturum.client.GrayscaleWaterResourcePack;
@@ -48,6 +48,8 @@ import ganymedes01.etfuturum.compat.CompatWaila;
 import ganymedes01.etfuturum.compat.ExternalContent;
 import ganymedes01.etfuturum.compat.ModsList;
 import ganymedes01.etfuturum.configuration.ConfigBase;
+import ganymedes01.etfuturum.creative.ItemCategoryHelper;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
 import ganymedes01.etfuturum.configuration.configs.ConfigExperiments;
@@ -59,8 +61,7 @@ import ganymedes01.etfuturum.core.handlers.WorldEventHandler;
 import ganymedes01.etfuturum.core.proxy.CommonProxy;
 import ganymedes01.etfuturum.core.utils.IInitAction;
 import ganymedes01.etfuturum.core.utils.Logger;
-import ganymedes01.etfuturum.entities.ModEntityList;
-import ganymedes01.etfuturum.items.ItemWoodSign;
+
 import ganymedes01.etfuturum.lib.Reference;
 
 import ganymedes01.etfuturum.network.ArmourStandInteractHandler;
@@ -121,7 +122,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -147,72 +147,6 @@ public class EtFuturum {
 	public static CommonProxy proxy;
 
 	public static SimpleNetworkWrapper networkWrapper;
-
-	public static CreativeTabs creativeTabItems = new CreativeTabs(MOD_ID + ".items") {
-		@Override
-		public Item getTabIconItem() {
-			return  ModItems.RAW_ORE.isEnabled() ? ModItems.RAW_ORE.get()
-					: ModItems.NETHERITE_SCRAP.isEnabled() ? ModItems.NETHERITE_SCRAP.get()
-					: ModItems.PRISMARINE_SHARD.isEnabled() ? ModItems.PRISMARINE_SHARD.get()
-					: Items.magma_cream;
-		}
-
-		@Override
-		public void displayAllReleventItems(List<ItemStack> p_78018_1_) {
-			for (byte i = 1; i <= 3; i++) {
-				ItemStack firework = new ItemStack(Items.fireworks);
-				NBTTagCompound nbt = new NBTTagCompound();
-				NBTTagCompound nbt2 = new NBTTagCompound();
-				nbt2.setByte("Flight", i);
-				nbt.setTag("Fireworks", nbt2);
-				firework.setTagCompound(nbt);
-				p_78018_1_.add(firework);
-			}
-			for (int i : ModEntityList.eggIDs) {
-				p_78018_1_.add(new ItemStack(Items.spawn_egg, 1, i));
-			}
-			super.displayAllReleventItems(p_78018_1_);
-		}
-	};
-
-	public static CreativeTabs creativeTabBlocks = new CreativeTabs(MOD_ID + ".blocks") {
-		@Override
-		public Item getTabIconItem() {
-			return ModBlocks.COPPER_BLOCK.isEnabled() ? ModBlocks.COPPER_BLOCK.getItem()
-					: ModBlocks.CHERRY_LOG.isEnabled() ? ModBlocks.CHERRY_LOG.getItem()
-					: ModBlocks.SMOKER.isEnabled() ? ModBlocks.SMOKER.getItem()
-					: ModBlocks.CHORUS_FLOWER.isEnabled() ? ModBlocks.CHORUS_FLOWER.getItem()
-					: Item.getItemFromBlock(Blocks.ender_chest);
-		}
-
-		@Override
-		public void displayAllReleventItems(List<ItemStack> list) {
-			list.add(new ItemStack(Blocks.mob_spawner));
-			super.displayAllReleventItems(list);
-
-			//Remove the sign items from the list; we'll add them back in a moment
-			Iterator<ItemStack> iterator = list.iterator();
-			while (iterator.hasNext()) {
-				ItemStack stack = iterator.next();
-				for (ModItems sign : ModItems.OLD_SIGN_ITEMS) {
-					if (stack.getItem() == sign.get()) {
-						iterator.remove();
-					}
-				}
-			}
-
-			//Add the sign items back but in a way so they are sorted by their block ID instead of their item ID.
-			//This allows them to be in the correct place instead of always at the bottom of the block ID list, since item IDs are always above block IDs
-			for (ModItems sign : ModItems.OLD_SIGN_ITEMS) {
-				for (ItemStack stack : list) {
-					if (Item.getIdFromItem(stack.getItem()) > Block.getIdFromBlock(((ItemWoodSign) sign.get()).getSignBlock())) {
-						list.add(list.indexOf(stack), sign.newItemStack());
-						break;
-					}
-				}
-			}
-		}
-	};
 
 	@EventHandler
 	public void onConstruction(FMLConstructionEvent event) {
@@ -364,23 +298,23 @@ public class EtFuturum {
 		Blocks.trapped_chest.setCreativeTab(CreativeTabs.tabRedstone);
 
 		if (ConfigBlocksItems.enableOtherside) {
-			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.OTHERSIDE_RECORD.get(), 0, 1, 1, 1));
-			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.OTHERSIDE_RECORD.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.MUSIC_DISC_OTHERSIDE.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.MUSIC_DISC_OTHERSIDE.get(), 0, 1, 1, 1));
 		}
 
 		if (ConfigBlocksItems.enablePrecipice) {
-			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.PRECIPICE_RECORD.get(), 0, 1, 1, 1));
-			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.PRECIPICE_RECORD.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.MUSIC_DISC_PRECIPICE.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.MUSIC_DISC_PRECIPICE.get(), 0, 1, 1, 1));
 		}
 
 		if (ConfigBlocksItems.enableCreatorMusicBox) {
-			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.CREATOR_MUSIC_BOX_RECORD.get(), 0, 1, 1, 1));
-			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.CREATOR_MUSIC_BOX_RECORD.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.MUSIC_DISC_CREATOR_MUSIC_BOX.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.MUSIC_DISC_CREATOR_MUSIC_BOX.get(), 0, 1, 1, 1));
 		}
 
 		if (ConfigBlocksItems.enableCreator) {
-			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.CREATOR_RECORD.get(), 0, 1, 1, 1));
-			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.CREATOR_RECORD.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.MUSIC_DISC_CREATOR.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.MUSIC_DISC_CREATOR.get(), 0, 1, 1, 1));
 		}
 
 		if (ConfigBlocksItems.enable5) {
@@ -389,7 +323,7 @@ public class EtFuturum {
 		}
 
 		if (ConfigBlocksItems.enablePigstep) {
-			ChestGenHooks.addItem(NETHER_FORTRESS, new WeightedRandomChestContent(ModItems.PIGSTEP_RECORD.get(), 0, 1, 1, 5));
+			ChestGenHooks.addItem(NETHER_FORTRESS, new WeightedRandomChestContent(ModItems.MUSIC_DISC_PIGSTEP.get(), 0, 1, 1, 5));
 
 			if (fortressWeightedField != null) {
 				try {
@@ -436,6 +370,10 @@ public class EtFuturum {
 		CompostingRegistry.init();
 		BeePlantRegistry.init();
 		PistonBehaviorRegistry.init();
+
+		// Initialize modern creative tab system
+		ModdedCreativeTabs.init();
+		ItemCategoryHelper.reassignAllItems();
 
 		if (ModsList.TINKERS_CONSTRUCT.isLoaded()) {
 			CompatTinkersConstruct.postInit();
@@ -493,7 +431,7 @@ public class EtFuturum {
 					HoeRegistry.addToHoeArray(block);
 				}
 				HoeRegistry.addToHoeArray(ModBlocks.SHROOMLIGHT.get());
-				HoeRegistry.addToHoeArray(ModBlocks.SPONGE.get());
+				HoeRegistry.addToHoeArray(ModBlocks.WET_SPONGE.get());
 			}
 
 			if (ConfigSounds.newBlockSounds) {
@@ -547,11 +485,11 @@ public class EtFuturum {
 		MultiBlockSoundRegistry.addBasic(ModBlocks.AMETHYST_CLUSTER_1.get(), ModSounds.soundAmethystBudSmall, 0, 1, 2, 3, 4, 5, 6);
 		MultiBlockSoundRegistry.addBasic(ModBlocks.AMETHYST_CLUSTER_2.get(), ModSounds.soundAmethystBudLrg, 0, 1, 2, 3, 4, 5, 6);
 
-		MultiBlockSoundRegistry.addBasic(ModBlocks.SPONGE.get(), ModSounds.soundWetSponge, 1);
+		MultiBlockSoundRegistry.addBasic(ModBlocks.WET_SPONGE.get(), ModSounds.soundWetSponge, 0);
 		MultiBlockSoundRegistry.addBasic(Blocks.sponge, ModSounds.soundWetSponge, 1);
 
-		MultiBlockSoundRegistry.addBasic(ModBlocks.SAPLING.get(), ModSounds.soundCherrySapling, 1, 9);
-		MultiBlockSoundRegistry.addBasic(ModBlocks.LEAVES.get(), ModSounds.soundCherryLeaves, 1, 5, 9, 13);
+		MultiBlockSoundRegistry.addBasic(ModBlocks.CHERRY_SAPLING.get(), ModSounds.soundCherrySapling, 0, 8);
+		MultiBlockSoundRegistry.addBasic(ModBlocks.CHERRY_LEAVES.get(), ModSounds.soundCherryLeaves, 0, 4, 8, 12);
 
 		MultiBlockSoundRegistry.addBasic(ModBlocks.WOOD_PLANKS.get(), ModSounds.soundNetherWood, 0, 1);
 		MultiBlockSoundRegistry.addBasic(ModBlocks.WOOD_PLANKS.get(), ModSounds.soundCherryWood, 3);

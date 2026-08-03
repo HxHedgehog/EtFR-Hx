@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.lib.Reference;
@@ -11,7 +12,7 @@ public class ItemEtFuturumRecord extends ItemRecord {
 		super(recordName);
 		setTextureName("music_disc_" + recordName);
 		setUnlocalizedName("record");
-		setCreativeTab(EtFuturum.creativeTabItems);
+		setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 
 	@Override

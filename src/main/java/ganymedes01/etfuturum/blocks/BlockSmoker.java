@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -38,7 +39,7 @@ public class BlockSmoker extends BlockFurnace {
 		this.setResistance(3.5F);
 		this.setLightLevel(cooking ? .875F : 0);
 		this.setBlockName(Utils.getUnlocalisedName("smoker"));
-		this.setCreativeTab(!cooking ? EtFuturum.creativeTabBlocks : null);
+		this.setCreativeTab(!cooking ? ModdedCreativeTabs.BUILDING_BLOCKS : null);
 	}
 
 	@Override

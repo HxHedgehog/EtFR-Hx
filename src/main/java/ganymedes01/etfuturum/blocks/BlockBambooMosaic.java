@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.sound.ModSounds;
@@ -12,7 +13,7 @@ public class BlockBambooMosaic extends BaseBlock {
 		setHardness(2.0F);
 		setResistance(5.0F);
 		setNames("bamboo_mosaic");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setBlockSound(ModSounds.soundBambooWood);
 	}
 

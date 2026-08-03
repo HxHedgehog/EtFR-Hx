@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -14,7 +15,7 @@ public class BlockRedSandstone extends BlockSandStone {
 		setHardness(0.8F);
 		setBlockTextureName("red_sandstone");
 		setBlockName(Utils.getUnlocalisedName("red_sandstone"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

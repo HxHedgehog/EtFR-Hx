@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -37,7 +38,7 @@ public class BlockAzalea extends BlockBush implements ISubBlocksBlock {
 		Utils.setBlockSound(this, ModSounds.soundAzalea);
 		setBlockName(Utils.getUnlocalisedName("azalea"));
 		setBlockTextureName("azalea");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setBlockBounds(0, 0, 0, 1, 1, 1);
 	}
 

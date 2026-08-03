@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -24,7 +25,7 @@ public class BlockMoss extends BaseBlock implements IGrowable {
 		setNames("moss_block");
 		setHarvestLevel("hoe", 0);
 		setBlockSound(ModSounds.soundMoss);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	/**

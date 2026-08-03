@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -36,7 +37,7 @@ public class BlockNetherFungus extends BlockBush implements ISubBlocksBlock, IGr
 		Utils.setBlockSound(this, ModSounds.soundFungus);
 		setBlockName(name);
 		setBlockTextureName(name);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override
@@ -120,7 +121,7 @@ public class BlockNetherFungus extends BlockBush implements ISubBlocksBlock, IGr
 	public void func_149853_b(World world, Random rand, int x, int y, int z) {
 		boolean crimson = world.getBlockMetadata(x, y, z) == 0;
 		WorldGenAbstractTree fungus = new WorldGenHugeFungus(true, 0, crimson ? 0 : 1,
-				crimson ? ModBlocks.CRIMSON_STEM.get() : ModBlocks.WARPED_STEM.get(), ModBlocks.NETHER_WART.get(), true);
+				crimson ? ModBlocks.CRIMSON_STEM.get() : ModBlocks.WARPED_STEM.get(), ModBlocks.NETHER_WART_BLOCK.get(), true);
 		fungus.generate(world, rand, x, y, z);
 	}
 }

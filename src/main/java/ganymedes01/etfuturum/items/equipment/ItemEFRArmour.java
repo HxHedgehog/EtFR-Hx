@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items.equipment;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModItems;
@@ -30,7 +31,7 @@ public class ItemEFRArmour extends ItemArmor implements ISpecialArmor {
 		}
 		this.setUnlocalizedName(Utils.getUnlocalisedName("netherite_" + s));
 		this.setTextureName("netherite_" + s);
-		this.setCreativeTab(EtFuturum.creativeTabItems);
+		this.setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 
 	@Override
