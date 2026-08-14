@@ -34,12 +34,6 @@ public class NEIEtFuturumConfig implements IConfigureNEI {
 				API.hideItem(ModBlocks.BEACON.newItemStack());
 			}
 
-			if (ModBlocks.ANVIL.isEnabled()) {
-				API.hideItem(ModBlocks.ANVIL.newItemStack());
-				API.hideItem(ModBlocks.ANVIL.newItemStack(1, 1));
-				API.hideItem(ModBlocks.ANVIL.newItemStack(1, 2));
-			}
-
 			if (ModBlocks.ENCHANTMENT_TABLE.isEnabled()) {
 				API.hideItem(ModBlocks.ENCHANTMENT_TABLE.newItemStack());
 			}

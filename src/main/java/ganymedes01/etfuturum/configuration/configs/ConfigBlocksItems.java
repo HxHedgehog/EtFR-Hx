@@ -109,7 +109,6 @@ public class ConfigBlocksItems extends ConfigBase {
 	public static boolean enableTears;
 	public static boolean enable5;
 	public static boolean enableEnchantingTable;
-	public static boolean enableAnvil;
 	public static boolean enableComposter;
 	public static boolean enableSmithingTable;
 	public static boolean enableStonecutter;
@@ -291,7 +290,6 @@ public class ConfigBlocksItems extends ConfigBase {
 				"\nExamples:" +
 				"\nmods.etfuturum.enchantingFuel.addFuel(<minecraft:amethyst_shard>); //(Adds amethyst shards as an enchanting fuel)" +
 				"\nmods.etfuturum.enchantingFuel.remove(<minecraft:dye:4>); //(Removes lapis lazuli as an enchanting fuel)");
-		enableAnvil = getBoolean("enableNewAnvil", catBlockFunc, true, "Enables new anvil behavior, such as less expensive item renaming");
 		enableBrewingStands = getBoolean("enableNewBrewingStand", catBlockFunc, true, "Makes the brewing stand have a fuel slot like in 1.9+. The fuel slot is compatible with CraftTweaker and takes blaze powder by default. Blaze powder can brew 30 potion cycles." +
 				"\nThe mod prefix is \"mods.etfuturum.brewingFuel\", and the function is \"addFuel\" and an ItemStack or OreDictionary tag, then an integer for how many brew cycles. (Any brewing, regardless of if 1 or all 3 slots are filled, is still one \"cycle\") You can remove fuels using the \"remove\" function and an ItemStack or an OreDictionary tag." +
 				"\nExamples:" +

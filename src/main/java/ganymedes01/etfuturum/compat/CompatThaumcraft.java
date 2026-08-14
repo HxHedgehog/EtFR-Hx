@@ -175,7 +175,7 @@ public class CompatThaumcraft {
 		ThaumcraftApi.registerObjectTag(ModBlocks.CHORUS_FLOWER.newItemStack(), new AspectList().add(Aspect.ELDRITCH, 1).add(Aspect.SENSES, 1).add(Aspect.PLANT, 1));
 		ThaumcraftApi.registerObjectTag(ModBlocks.CHORUS_PLANT.newItemStack(), new AspectList().add(Aspect.ELDRITCH, 1).add(Aspect.PLANT, 1));
 		ThaumcraftApi.registerObjectTag(ModBlocks.DAYLIGHT_DETECTOR.newItemStack(), new AspectList(new ItemStack(Blocks.daylight_detector)));
-		ThaumcraftApi.registerObjectTag(ModBlocks.ENCHANTMENT_TABLE.newItemStack(), new AspectList(new ItemStack(Blocks.enchanting_table)));ThaumcraftApi.registerObjectTag(new ItemStack(ModBlocks.ANVIL.get()), new AspectList(new ItemStack(Blocks.anvil)));
+		ThaumcraftApi.registerObjectTag(ModBlocks.ENCHANTMENT_TABLE.newItemStack(), new AspectList(new ItemStack(Blocks.enchanting_table)));
 		ThaumcraftApi.registerObjectTag(ModBlocks.IRON_TRAPDOOR.newItemStack(), new AspectList().add(Aspect.METAL, 12).add(Aspect.MECHANISM, 2).add(Aspect.MOTION, 1));
 		ThaumcraftApi.registerObjectTag(ModBlocks.BARREL.newItemStack(), new AspectList(new ItemStack(Blocks.chest)));
 		ThaumcraftApi.registerObjectTag(ModBlocks.COMPOSTER.newItemStack(), new AspectList().add(Aspect.TREE, 5).add(Aspect.EXCHANGE, 2));

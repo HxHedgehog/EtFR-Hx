@@ -161,9 +161,12 @@ public class ClientEventHandler {
 		// F7: 导出创造栏内容到文件（调试用）
 		if (Keyboard.getEventKey() == Keyboard.KEY_F7 && Keyboard.getEventKeyState()) {
 			ModdedCreativeTabs.dumpAllTabs();
+			ModdedCreativeTabs.dumpNotInCreative();
 			if (mc.thePlayer != null) {
 				mc.thePlayer.addChatComponentMessage(new ChatComponentText(
 						EnumChatFormatting.GREEN + "[EtFuturum] 创造栏内容已导出到 creative_tab_dump.txt"));
+				mc.thePlayer.addChatComponentMessage(new ChatComponentText(
+						EnumChatFormatting.GREEN + "[EtFuturum] 未显示物品已导出到 creative_tab_missing.txt"));
 			}
 		}
 

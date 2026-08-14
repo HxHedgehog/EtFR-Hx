@@ -1156,11 +1156,6 @@ public class ModRecipes {
 
 		if (ConfigWorld.tileReplacementMode == -1) {
 			//We keep the original enabled checks inside of the booleans and use the original addShapedRecipe function because we need to check it anyways for recipe removal
-			if (ModBlocks.ANVIL.isEnabled()) {
-				GameRegistry.addShapedRecipe(ModBlocks.ANVIL.newItemStack(), "BBB", " I ", "III", 'I', new ItemStack(Items.iron_ingot), 'B', new ItemStack(Blocks.iron_block));
-				removeFirstRecipeFor(Blocks.anvil);
-			}
-
 			if (ModBlocks.BREWING_STAND.isEnabled()) {
 				GameRegistry.addShapedRecipe(ModBlocks.BREWING_STAND.newItemStack(), " B ", "CCC", 'C', new ItemStack(Blocks.cobblestone), 'B', new ItemStack(Items.blaze_rod));
 				removeFirstRecipeFor(Blocks.brewing_stand);

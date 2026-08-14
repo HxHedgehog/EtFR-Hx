@@ -301,6 +301,14 @@ public class ModdedCreativeTabs {
 		if (path.equals("music_disc_relic")) {
 			return "etfuturum:record_relic";
 		}
+		// armor_stand → wooden_armorstand（1.21.4 名 → mod 物品）
+		if (path.equals("armor_stand")) {
+			return domain + "wooden_armorstand";
+		}
+		// nether_quartz_ore → quartz_ore（1.21.4 名 → 1.7.10 原版名）
+		if (path.equals("nether_quartz_ore")) {
+			return domain + "quartz_ore";
+		}
 		return null;
 	}
 
@@ -516,6 +524,10 @@ public class ModdedCreativeTabs {
 		if (path.equals("chiseled_sandstone") || path.equals("cut_sandstone") ||
 			path.equals("smooth_sandstone")) {
 			return "sandstone";
+		}
+		// 粗矿（mod 用 raw_ore 统一注册，meta 0=铜、1=铁、2=金）
+		if (path.equals("raw_copper") || path.equals("raw_iron") || path.equals("raw_gold")) {
+			return "raw_ore";
 		}
 		if (path.equals("chiseled_red_sandstone") || path.equals("cut_red_sandstone") ||
 			path.equals("smooth_red_sandstone")) {
@@ -889,6 +901,11 @@ public class ModdedCreativeTabs {
 		if (path.equals("mossy_stone_bricks")) return 1;
 		if (path.equals("cracked_stone_bricks")) return 2;
 		if (path.equals("chiseled_stone_bricks")) return 3;
+
+		// === 粗矿（mod 用 raw_ore 统一注册，meta 0=铜、1=铁、2=金） ===
+		if (path.equals("raw_copper")) return 0;
+		if (path.equals("raw_iron")) return 1;
+		if (path.equals("raw_gold")) return 2;
 
 		// === 砂岩变体 ===
 		if (path.equals("chiseled_sandstone")) return 1;
@@ -1311,6 +1328,183 @@ public class ModdedCreativeTabs {
 
 			pw.close();
 			Logger.info("Creative tab diff written to: " + file.getAbsolutePath());
+		} catch (Exception e) {
+			e.printStackTrace();
+			if (pw != null) pw.close();
+		}
+	}
+
+	// ==================== 调试：F7 输出未显示在创造栏的物品 ====================
+
+	/**
+	 * 从"功能代码角度"检测缺失物品：
+	 * 遍历每个 SortedCreativeTab 的 CreativeTabData 条目，
+	 * 用与 displayAllReleventItems() Part 1 相同的 lookup 路径尝试解析，
+	 * 输出"条目存在但无法解析到实际物品"的差距。
+	 * <p>
+	 * 相比遍历 ItemRegistry 的方式，这种方式：
+	 * - 不会被双台阶/技术方块等干扰
+	 * - 不会被 CreativeTabData 中大量预留条目干扰
+	 * - 直接从代码功能层面暴露映射缺失
+	 */
+	public static void dumpNotInCreative() {
+		PrintWriter pw = null;
+		try {
+			File file = new File("creative_tab_missing.txt");
+			pw = new PrintWriter(file, "UTF-8");
+
+			pw.println("========================================================");
+			pw.println("  CreativeTabData Entries That Cannot Resolve to Items");
+			pw.println("  (Checked via same lookup path as displayAllReleventItems)");
+			pw.println("========================================================");
+			pw.println();
+
+			int totalGaps = 0;
+
+			CreativeTabs[] tabs = CreativeTabs.creativeTabArray;
+
+			// 遍历每个 creative tab index，跳过没有 CreativeTabData 的标签页
+			for (int tabIdx = 0; tabIdx < tabs.length; tabIdx++) {
+				List<String> officialItems = CreativeTabData.getItemsForTab(tabIdx);
+				if (officialItems == null || officialItems.isEmpty()) continue;
+				CreativeTabs tab = tabs[tabIdx];
+				if (tab == null) continue;
+
+				List<String> gaps = new ArrayList<>();
+				for (String itemId : officialItems) {
+					// 用与 displayAllReleventItems() Part 1 完全一致的路径检测
+					int meta = getMetaForOfficialName(itemId);
+					if (meta == -2) continue; // isUnsupportedWood / 不存在于 1.7.10
+
+					String regName = null;
+					Item obj = null;
+
+					// 路径 1: getNameAlias → lookupItem 直接名
+					String alias = getNameAlias(itemId);
+					if (alias != null) {
+						obj = (Item) lookupItem(alias);
+						regName = alias;
+					}
+
+					// 路径 2: lookupItem 原始名（mod 独立物品）
+					if (obj == null) {
+						obj = (Item) lookupItem(itemId);
+						if (obj != null) regName = itemId;
+					}
+
+					// 路径 3: getBaseItemName → lookupItem（1.7.10 metadata 物品）
+					String baseName = null;
+					if (obj == null) {
+						baseName = getBaseItemName(itemId);
+						if (baseName != null) {
+							obj = (Item) lookupItem(baseName);
+							if (obj != null) regName = baseName;
+						}
+					}
+
+					if (obj == null) {
+						// 所有路径都失败 → 这个条目无法解析到任何物品
+						gaps.add(String.format("  %s  (alias=%s, base=%s)",
+							itemId,
+							alias != null ? alias : "null",
+							baseName != null ? baseName : "null"));
+					}
+				}
+
+				if (!gaps.isEmpty()) {
+					pw.println("--- " + tab.getTabLabel() + " (" + gaps.size() + " unresolved entries) ---");
+					for (String gap : gaps) {
+						pw.println(gap);
+						totalGaps++;
+					}
+					pw.println();
+				}
+			}
+
+			if (totalGaps == 0) {
+				pw.println("All CreativeTabData entries resolve to items successfully.");
+				pw.println();
+			}
+
+			// Step 2: 检查"已解析但实际不显示"的物品
+			// (物品能被 lookupItem 找到，但 displayAllReleventItems 没把它加进去)
+			// 这种通常是因为 getSubItems 没返回正确 meta 或者物品被 skip
+			pw.println("========================================================");
+			pw.println("  Resolved Items NOT Actually Displayed In Their Tab");
+			pw.println("  (Item found by lookupItem but not in displayAllReleventItems output)");
+			pw.println("========================================================");
+			pw.println();
+
+			int notDisplayed = 0;
+			for (int tabIdx = 0; tabIdx < tabs.length; tabIdx++) {
+				List<String> officialItems = CreativeTabData.getItemsForTab(tabIdx);
+				if (officialItems == null || officialItems.isEmpty()) continue;
+				CreativeTabs tab = tabs[tabIdx];
+				if (tab == null) continue;
+
+				// 收集此 tab 实际显示的物品列表
+				List displayList = new ArrayList();
+				tab.displayAllReleventItems(displayList);
+				Set<String> displayedKeys = new HashSet<>();
+				for (Object o : displayList) {
+					ItemStack stack = (ItemStack) o;
+					if (stack == null || stack.getItem() == null) continue;
+					String regName = Item.itemRegistry.getNameForObject(stack.getItem());
+					displayedKeys.add(regName + "@" + stack.getItemDamage());
+				}
+
+				for (String itemId : officialItems) {
+					int meta = getMetaForOfficialName(itemId);
+					if (meta == -2) continue;
+
+					Item obj = null;
+					String finalRegName = null;
+					int finalMeta = -1;
+
+					String alias = getNameAlias(itemId);
+					if (alias != null) {
+						obj = (Item) lookupItem(alias);
+						finalRegName = alias;
+						finalMeta = 0;
+					}
+					if (obj == null) {
+						obj = (Item) lookupItem(itemId);
+						if (obj != null) { finalRegName = itemId; finalMeta = 0; }
+					}
+					if (obj == null) {
+						String baseName = getBaseItemName(itemId);
+						if (baseName != null) {
+							obj = (Item) lookupItem(baseName);
+							if (obj != null) {
+								finalRegName = baseName;
+								finalMeta = (meta < 0) ? 0 : meta;
+							}
+						}
+					}
+
+					if (obj != null && finalRegName != null) {
+						String checkKey = finalRegName + "@" + finalMeta;
+						if (!displayedKeys.contains(checkKey)) {
+							notDisplayed++;
+							pw.println(String.format("  [%s] %s → %s (meta=%d) — resolved but not displayed",
+								tab.getTabLabel(), itemId, finalRegName, finalMeta));
+						}
+					}
+				}
+			}
+
+			if (notDisplayed == 0) {
+				pw.println("All resolved items are displayed correctly.");
+				pw.println();
+			}
+
+			pw.println("========================================================");
+			pw.println("  TOTAL UNRESOLVED GAPS: " + totalGaps);
+			pw.println("  TOTAL RESOLVED BUT NOT DISPLAYED: " + notDisplayed);
+			pw.println("========================================================");
+
+			pw.close();
+			Logger.info("Missing items written to: " + file.getAbsolutePath());
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (pw != null) pw.close();

@@ -56,14 +56,6 @@ public class EtFuturumWorldListener implements IWorldAccess {
 			}
 		}
 
-		if (ModBlocks.ANVIL.isEnabled()) {
-			if (ConfigWorld.tileReplacementMode == 0) {
-				replacements.put(Blocks.anvil, ModBlocks.ANVIL.get());
-			} else if (ConfigWorld.tileReplacementMode == 1) {
-				replacements.put(ModBlocks.ANVIL.get(), Blocks.anvil);
-			}
-		}
-
 		// Sponge tile replacement removed — vanilla sponge is now enhanced via MixinBlockSponge
 
 		if (ModBlocks.DAYLIGHT_DETECTOR.isEnabled()) {
