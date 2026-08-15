@@ -9,7 +9,7 @@ itemGroup.etfuturum.combat=Combat
 itemGroup.etfuturum.foodAndDrinks=Food &amp; Drinks
 itemGroup.etfuturum.ingredients=Ingredients
 itemGroup.etfuturum.spawnEggs=Spawn Eggs
-itemGroup.etfuturum.temporary=Temporary
+itemGroup.etfuturum.unclassified=Unclassified
 
 # Enchantments
 enchantment.frost_walker=Frost Walker
@@ -498,7 +498,6 @@ tile.etfuturum.frosted_ice.name=Frosted Ice
 tile.etfuturum.rose.name=Rose
 tile.etfuturum.ancient_debris.name=Ancient Debris
 tile.etfuturum.netherite_block.name=Block of Netherite
-tile.etfuturum.netherite_stairs.name=Swaggiest stairs ever
 tile.etfuturum.blue_ice.name=Blue Ice
 tile.etfuturum.smooth_stone.name=Smooth Stone
 tile.etfuturum.smooth_sandstone.name=Smooth Sandstone

@@ -1,5 +1,7 @@
 package ganymedes01.etfuturum.creative;
 
+import ganymedes01.etfuturum.blocks.BaseSlab;
+import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -16,6 +18,7 @@ import java.util.Set;
  *   <li>其他 mod 物品：从对应原版 CreativeTab 接管，追加到新分类末尾</li>
  *   <li>刷怪蛋：统一归入 {@link ModdedCreativeTabs#SPAWN_EGGS}</li>
  *   <li>无法归类的（不在官方数据中、也不在原版标签页的）→ 放入"原材料"</li>
+ *   <li>本 mod 独有物品（不在官方 1.21.4 数据中）→ {@link ModdedCreativeTabs#TEMPORARY}</li>
  * </ol>
  * <p>
  * 本类不再使用 Item 子类或 Block 材质判断策略，避免误伤其他 mod 的物品。
@@ -49,8 +52,31 @@ public class ItemCategoryHelper {
 
 		// 2. 药水类（不在 CreativeTabData 中，按 1.21.4 官方分类归入食物与饮品）
 		// 1.7.10 的 minecraft:potion 通过 metadata 同时涵盖饮用和喷溅药水
-		if ("minecraft:potion".equals(registryName)) {
+		// lingering_potion 是 mod 添加的，但 1.21.4 也有此物品，归入食物与饮品
+		if ("minecraft:potion".equals(registryName) || "minecraft:lingering_potion".equals(registryName)) {
 			return ModdedCreativeTabs.FOOD_AND_DRINKS;
+		}
+
+		// 2b. 1.21.4 创造栏中存在但 CreativeTabData 未收录的物品
+		// （提取脚本跳过了部分 NBT 变体/技术方块，这里按 1.21.4 官方分类补全）
+		if ("minecraft:tipped_arrow".equals(registryName)) {
+			return ModdedCreativeTabs.COMBAT;
+		}
+		if ("minecraft:suspicious_stew".equals(registryName)) {
+			return ModdedCreativeTabs.FOOD_AND_DRINKS;
+		}
+		if ("minecraft:cave_vines".equals(registryName) || "minecraft:cave_vine_plant".equals(registryName)) {
+			return ModdedCreativeTabs.NATURAL_BLOCKS;
+		}
+		if ("minecraft:dye_same".equals(registryName)) {
+			return ModdedCreativeTabs.INGREDIENTS;
+		}
+		if ("minecraft:barrier".equals(registryName) || "minecraft:light".equals(registryName)) {
+			return ModdedCreativeTabs.FUNCTIONAL_BLOCKS;
+		}
+		// 1.21.6（Tears）/ 1.21.7（Lava Chicken）才加入的官方唱片，CreativeTabData（1.21.4）未收录
+		if ("minecraft:music_disc_tears".equals(registryName) || "minecraft:music_disc_lava_chicken".equals(registryName)) {
+			return ModdedCreativeTabs.TOOLS_AND_UTILITIES;
 		}
 
 		// 3. 刷怪蛋
@@ -79,6 +105,15 @@ public class ItemCategoryHelper {
 			case CreativeTabData.SPAWN_EGGS:          return ModdedCreativeTabs.SPAWN_EGGS;
 			default: return null;
 		}
+	}
+
+	/** 判断物品是否是本 mod 注册的（通过检查类所在包名） */
+	private static boolean isModItem(Item item) {
+		if (item instanceof ItemBlock) {
+			Block block = ((ItemBlock) item).field_150939_a;
+			return block.getClass().getName().startsWith("ganymedes01.etfuturum");
+		}
+		return item.getClass().getName().startsWith("ganymedes01.etfuturum");
 	}
 
 	// ==================== 初始化 ====================
@@ -131,6 +166,70 @@ public class ItemCategoryHelper {
 		}
 
 		System.out.println("[EtFuturum Creative] Reassigned " + redirected + " items to modern creative tabs.");
+
+		// 3. 本 mod 独有物品（不在官方 1.21.4 创造栏数据中）→ 分类之外
+		// 这些物品是 mod 实现了但官方 1.21.4 中没有的（如自定义唱片、升级组件等），
+		// 以及 mod 联动物品（BOP/Witchery 的船、栅栏等，条件满足时才注册）。
+		// 已显式设到"分类之外"的物品（如屏障、光源方块）不会被重复设置。
+		// 注意：需要排除被 CreativeTabData 映射系统用作 base item 的物品
+		// （如 concrete_powder、planks 等），它们会被 SortedCreativeTab 通过
+		// baseName 映射找到并正确显示在对应标签页中。
+		Set<String> creativeTabBaseItems = ModdedCreativeTabs.getCreativeTabBaseItemIds();
+		int temporary = 0;
+		int classified = 0;
+		for (Object obj : Item.itemRegistry) {
+			if (obj instanceof Item) {
+				Item item = (Item) obj;
+				String regName = Item.itemRegistry.getNameForObject(item);
+				if (regName == null) continue;
+
+				// 只处理本 mod 注册的物品
+				if (!isModItem(item)) continue;
+
+				// double slab 技术方块（不显示在任何创造栏）→ 跳过
+				if (item instanceof ItemBlock) {
+					Block block = ((ItemBlock) item).field_150939_a;
+					if (block instanceof BaseSlab && ((BaseSlab) block).getDoubleSlab() == block) {
+						continue;
+					}
+				}
+
+				// 已在官方数据中 → 由 SortedCreativeTab 处理
+				int officialTab = CreativeTabData.getTab(regName);
+				if (officialTab != CreativeTabData.UNKNOWN) continue;
+
+				// etfuturum: 命名空间物品（如 etfuturum:beacon）→ 检查对应 minecraft: 条目
+				// 这三个方块因与 1.7.10 原版冲突而强制使用 etfuturum: 命名空间
+				if (regName.startsWith("etfuturum:")) {
+					String mcName = "minecraft:" + regName.substring("etfuturum:".length());
+					if (CreativeTabData.getTab(mcName) != CreativeTabData.UNKNOWN) continue;
+				}
+
+				// 是 CreativeTabData 映射的 base item（如 concrete_powder、planks）→ 跳过
+				if (creativeTabBaseItems.contains(regName)) continue;
+
+				CreativeTabs currentTab = item.getCreativeTab();
+
+				// 1.21.4 创造栏有但 CreativeTabData 未收录的物品 → 归入官方分类
+				CreativeTabs target = getTabForItem(item);
+				if (target != null) {
+					if (currentTab != target) {
+						setCreativeTab(item, target);
+						classified++;
+					}
+					continue;
+				}
+
+				// 已显式设到"分类之外"的物品不重复设置
+				if (currentTab == ModdedCreativeTabs.TEMPORARY) continue;
+
+				setCreativeTab(item, ModdedCreativeTabs.TEMPORARY);
+				temporary++;
+			}
+		}
+		if (temporary > 0 || classified > 0) {
+			System.out.println("[EtFuturum Creative] Moved " + temporary + " mod-only items to TEMPORARY tab, " + classified + " to official tabs.");
+		}
 	}
 
 	/**

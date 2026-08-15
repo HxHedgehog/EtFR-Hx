@@ -5,6 +5,9 @@ import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.ModItems;
 import ganymedes01.etfuturum.core.utils.Logger;
+import ganymedes01.etfuturum.items.ItemSuspiciousStew;
+import ganymedes01.etfuturum.recipes.ModRecipes;
+import net.minecraft.client.Minecraft;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
@@ -129,11 +132,11 @@ public class ModdedCreativeTabs {
 		}
 	};
 
-	/** 11. 临时 - 本 mod 添加的高版本也不存在的物品（如下界合金楼梯），不参与排序面板 */
-	public static final CreativeTabs TEMPORARY = new CreativeTabs(12, LANG_PREFIX + "temporary") {
+	/** 11. 分类之外 - 本 mod 添加的高版本也不存在的物品（如下界合金楼梯），不参与排序面板 */
+	public static final CreativeTabs TEMPORARY = new CreativeTabs(12, LANG_PREFIX + "unclassified") {
 		@Override
 		public Item getTabIconItem() {
-			return Items.paper;
+			return Item.getItemFromBlock(ModBlocks.OBSERVER.get());
 		}
 	};
 
@@ -190,7 +193,7 @@ public class ModdedCreativeTabs {
 			// 4. 生存物品栏标签页（索引 11）
 			newTabs.add(CreativeTabs.tabInventory);
 
-			// 5. 临时标签页（本 mod 独有的、高版本也不存在的物品）
+			// 5. 分类之外标签页（本 mod 独有的、高版本也不存在的物品）
 			newTabs.add(TEMPORARY);
 
 			// 6. 添加其他 Mod 的自定义标签页（非原版、非我们自己的、非搜索/生存栏、非本 mod 的）
@@ -248,7 +251,8 @@ public class ModdedCreativeTabs {
 	 * 例如：minecraft:grass 在 1.7.10 是草方块，但 1.21.4 是草丛，需映射到 tallgrass。
 	 */
 	private static final Set<String> FORCE_BASENAME_LOOKUP = new HashSet<>(Arrays.asList(
-			"minecraft:grass"  // 1.7.10 grass = grass block, 1.21.4 grass = 草丛
+			"minecraft:grass",  // 1.7.10 grass = grass block, 1.21.4 grass = 草丛
+			"minecraft:nether_brick"  // 1.7.10 nether_brick = 方块(ItemBlock), 1.21.4 nether_brick = 物品(需映射到 netherbrick)
 	));
 
 	/**
@@ -259,11 +263,6 @@ public class ModdedCreativeTabs {
 	 * 不再需要 etfuturum: 回退查询。
 	 */
 	private static Object lookupItem(String itemId) {
-		// 1.7.10 中 netherbrick(物品405) 与 netherBrick(方块112) 注册名大小写归一化后冲突，
-		// Item.itemRegistry.getObject 返回方块的 ItemBlock，需直接返回物品
-		if (itemId.equals("minecraft:nether_brick") || itemId.equals("nether_brick")) {
-			return Items.netherbrick;
-		}
 		Object obj = Item.itemRegistry.getObject(itemId);
 		if (obj == null) {
 			String alias = getNameAlias(itemId);
@@ -306,11 +305,15 @@ public class ModdedCreativeTabs {
 			return domain + "wooden_armorstand";
 		}
 		// nether_quartz_ore → quartz_ore（1.21.4 名 → 1.7.10 原版名）
-		if (path.equals("nether_quartz_ore")) {
-			return domain + "quartz_ore";
-		}
-		return null;
+	if (path.equals("nether_quartz_ore")) {
+		return domain + "quartz_ore";
 	}
+	// enchanting_table → enchantment_table（1.21.4 名 → 1.7.10 原版名）
+	if (path.equals("enchanting_table")) {
+		return domain + "enchantment_table";
+	}
+	return null;
+}
 
 	/**
 	 * 对于 1.7.10 的 metadata 物品，将 1.21.4 独立注册名映射到 1.7.10 基础物品名。
@@ -318,7 +321,7 @@ public class ModdedCreativeTabs {
 	 *      minecraft:zombie_spawn_egg → minecraft:spawn_egg
 	 * 返回 null 表示无需映射。
 	 */
-	private static String getBaseItemName(String itemId) {
+	public static String getBaseItemName(String itemId) {
 		int colon = itemId.indexOf(':');
 		String domain = colon >= 0 ? itemId.substring(0, colon + 1) : "";
 		String path = colon >= 0 ? itemId.substring(colon + 1) : itemId;
@@ -342,6 +345,15 @@ public class ModdedCreativeTabs {
 				return domain + "bed";
 			}
 			return null;
+		}
+		// 新式染料（1.14+ 独立物品）：white/blue/brown/black 映射到 mod 的 dye_same
+		if (path.equals("white_dye") || path.equals("blue_dye") ||
+			path.equals("brown_dye") || path.equals("black_dye")) {
+			return domain + "dye_same";
+		}
+		// 青金石/骨粉/墨囊（1.21.4 独立物品，1.7.10 是 minecraft:dye 的 meta 4/15/0）
+		if (path.equals("lapis_lazuli") || path.equals("bone_meal") || path.equals("ink_sac")) {
+			return domain + "dye";
 		}
 		// 染色变体：minecraft:white_stained_glass → minecraft:stained_glass
 		// 同时支持花等需要二次映射的物品：blue_orchid → orchid → red_flower
@@ -456,6 +468,8 @@ public class ModdedCreativeTabs {
 		if (path.equals("fern")) return "tallgrass";
 		// 草丛（1.21.4 "grass" = 草丛，区别于 grass_block 草方块）
 		if (path.equals("grass")) return "tallgrass";
+		// 草丛（1.21.4 "short_grass" = 草丛）
+		if (path.equals("short_grass")) return "tallgrass";
 		// 鱼
 		if (path.equals("cod") || path.equals("salmon") || path.equals("pufferfish") || path.equals("tropical_fish")) {
 			return "fish";
@@ -526,9 +540,13 @@ public class ModdedCreativeTabs {
 			return "sandstone";
 		}
 		// 粗矿（mod 用 raw_ore 统一注册，meta 0=铜、1=铁、2=金）
-		if (path.equals("raw_copper") || path.equals("raw_iron") || path.equals("raw_gold")) {
-			return "raw_ore";
-		}
+	if (path.equals("raw_copper") || path.equals("raw_iron") || path.equals("raw_gold")) {
+		return "raw_ore";
+	}
+	// 粗矿块（mod 用 raw_ore_block 统一注册，meta 0=铜、1=铁、2=金）
+	if (path.equals("raw_copper_block") || path.equals("raw_iron_block") || path.equals("raw_gold_block")) {
+		return "raw_ore_block";
+	}
 		if (path.equals("chiseled_red_sandstone") || path.equals("cut_red_sandstone") ||
 			path.equals("smooth_red_sandstone")) {
 			return "red_sandstone";
@@ -540,7 +558,10 @@ public class ModdedCreativeTabs {
 			return "deepslate_bricks";
 		}
 		if (path.equals("deepslate_tile_slab")) return "deepslate_brick_slab";
-		if (path.equals("deepslate_tile_wall")) return "deepslate_brick_wall";
+	if (path.equals("deepslate_tile_wall")) return "deepslate_brick_wall";
+	// 深板岩台阶/墙（mod 用 deepslate_slab / deepslate_wall 带 meta 0=圆石、1=磨制）
+	if (path.equals("cobbled_deepslate_slab") || path.equals("polished_deepslate_slab")) return "deepslate_slab";
+	if (path.equals("cobbled_deepslate_wall") || path.equals("polished_deepslate_wall")) return "deepslate_wall";
 		// 下界砖变体（mod 用 red_nether_bricks 带 meta 统配）
 		if (path.equals("cracked_nether_bricks") || path.equals("chiseled_nether_bricks")) {
 			return "red_nether_bricks";
@@ -591,11 +612,17 @@ public class ModdedCreativeTabs {
 		if (copperPath.equals("cut_copper_slab")) return "cut_copper_slab";
 		// snow_block → snow (1.7.10 使用同一个 snow block)
 		if (path.equals("snow_block")) return "snow";
+		// 铁砧变体（1.7.10 用 anvil meta 0/1/2 统配）
+		if (path.equals("chipped_anvil") || path.equals("damaged_anvil")) {
+			return "anvil";
+		}
 		// 雕刻南瓜 / 南瓜灯 / 岩浆块 / 地狱砖
 		if (path.equals("carved_pumpkin")) return "pumpkin";
 		if (path.equals("jack_o_lantern")) return "lit_pumpkin";
 		if (path.equals("magma_block")) return "magma";
 		if (path.equals("nether_bricks")) return "nether_brick";
+		// nether_brick (1.21.4 物品) → netherbrick (1.7.10 物品注册名，无下划线)
+		if (path.equals("nether_brick")) return "netherbrick";
 		// 樱花木（mod 用 cherry_log meta 1 统配）
 		if (path.equals("cherry_wood")) return "cherry_log";
 		// 泥砖（mod 用 packed_mud meta 1）
@@ -615,6 +642,7 @@ public class ModdedCreativeTabs {
 		if (path.equals("large_amethyst_bud") || path.equals("amethyst_cluster")) return "amethyst_cluster_2";
 		// 1.7.10 命名差异
 		if (path.equals("firework_star")) return "firework_charge";
+		if (path.equals("firework_rocket")) return "fireworks";
 		if (path.equals("powered_rail")) return "golden_rail";
 		if (path.equals("stone_bricks")) return "stonebrick";
 		if (path.equals("lily_pad")) return "waterlily";
@@ -647,7 +675,8 @@ public class ModdedCreativeTabs {
 		}
 		// 头颅
 		if (path.equals("skeleton_skull") || path.equals("wither_skeleton_skull") ||
-			path.equals("zombie_head") || path.equals("creeper_head") || path.equals("dragon_head")) {
+			path.equals("zombie_head") || path.equals("player_head") ||
+			path.equals("creeper_head") || path.equals("dragon_head")) {
 			return "skull";
 		}
 		// 橡木物品 → 1.7.10 原版注册名（其他木材由 mod 直接注册为独立名）
@@ -804,6 +833,41 @@ public class ModdedCreativeTabs {
 		int colon = officialId.indexOf(':');
 		String path = colon >= 0 ? officialId.substring(colon + 1) : officialId;
 
+		// === 鸡蛋变体（1.7.10 无独立 brown_egg/blue_egg，避免颜色前缀误匹配成 egg:11/12） ===
+		if (path.equals("brown_egg") || path.equals("blue_egg")) return -2;
+
+		// === 南瓜（1.7.10 原版 pumpkin 即 26.2 的 carved_pumpkin；26.2 未雕刻 pumpkin 未实现） ===
+		if (path.equals("pumpkin")) return -2;
+		if (path.equals("carved_pumpkin")) return 0;
+
+		// === 新式染料（mod 用 dye_same 的 meta 0/1/2/3 区分） ===
+		if (path.equals("white_dye")) return 0;
+		if (path.equals("blue_dye")) return 1;
+		if (path.equals("brown_dye")) return 2;
+		if (path.equals("black_dye")) return 3;
+		// === 青金石/骨粉/墨囊（1.7.10 是 minecraft:dye 的 meta 4/15/0） ===
+		if (path.equals("lapis_lazuli")) return 4;
+		if (path.equals("bone_meal")) return 15;
+		if (path.equals("ink_sac")) return 0;
+		// 其余 12 色染料 → 1.7.10 原版 minecraft:dye 的正确 meta
+		// （1.7.10 dye meta：0=墨囊 1=红 2=绿 3=棕 4=蓝 5=紫 6=青 7=浅灰 8=灰
+		//   9=粉 10=黄绿 11=黄 12=浅蓝 13=品红 14=橙 15=骨粉）
+		if (path.equals("light_gray_dye")) return 7;
+		if (path.equals("gray_dye")) return 8;
+		if (path.equals("red_dye")) return 1;
+		if (path.equals("orange_dye")) return 14;
+		if (path.equals("yellow_dye")) return 11;
+		if (path.equals("lime_dye")) return 10;
+		if (path.equals("green_dye")) return 2;
+		if (path.equals("cyan_dye")) return 6;
+		if (path.equals("light_blue_dye")) return 12;
+		if (path.equals("purple_dye")) return 5;
+		if (path.equals("magenta_dye")) return 13;
+		if (path.equals("pink_dye")) return 9;
+
+		// === 烟花火箭（1.7.10 原版 fireworks，只显示飞行时间 3） ===
+		if (path.equals("firework_rocket")) return 0;
+
 		// === 紫水晶芽/簇（mod 用 amethyst_cluster_1/2 的 meta 0/6 区分） ===
 		if (path.equals("small_amethyst_bud")) return 0;   // amethyst_cluster_1:0
 		if (path.equals("medium_amethyst_bud")) return 6;   // amethyst_cluster_1:6
@@ -866,6 +930,10 @@ public class ModdedCreativeTabs {
 		if (path.equals("pink_tulip")) return 7;
 		if (path.equals("oxeye_daisy")) return 8;
 
+		// === 低草丛/蕨（1.7.10 tallgrass meta 1=草丛, 2=蕨；meta 0=死灌木已废弃，避免与 dead_bush 重复显示） ===
+		if (path.equals("short_grass")) return 1;
+		if (path.equals("fern")) return 2;
+
 		// === 高花 (double_plant) ===
 		if (path.equals("sunflower")) return 0;
 		if (path.equals("lilac")) return 1;
@@ -903,9 +971,14 @@ public class ModdedCreativeTabs {
 		if (path.equals("chiseled_stone_bricks")) return 3;
 
 		// === 粗矿（mod 用 raw_ore 统一注册，meta 0=铜、1=铁、2=金） ===
-		if (path.equals("raw_copper")) return 0;
-		if (path.equals("raw_iron")) return 1;
-		if (path.equals("raw_gold")) return 2;
+	if (path.equals("raw_copper")) return 0;
+	if (path.equals("raw_iron")) return 1;
+	if (path.equals("raw_gold")) return 2;
+
+	// === 粗矿块（mod 用 raw_ore_block 统一注册，meta 0=铜、1=铁、2=金） ===
+	if (path.equals("raw_copper_block")) return 0;
+	if (path.equals("raw_iron_block")) return 1;
+	if (path.equals("raw_gold_block")) return 2;
 
 		// === 砂岩变体 ===
 		if (path.equals("chiseled_sandstone")) return 1;
@@ -953,10 +1026,12 @@ public class ModdedCreativeTabs {
 		if (path.equals("chiseled_deepslate")) return 4;
 
 		// === 深板岩台阶 / 墙 ===
-		if (path.equals("polished_deepslate_slab")) return 1;   // deepslate_slab meta 1
-		if (path.equals("deepslate_tile_slab")) return 1;       // deepslate_brick_slab meta 1
-		if (path.equals("polished_deepslate_wall")) return 1;    // deepslate_wall meta 1
-		if (path.equals("deepslate_tile_wall")) return 1;        // deepslate_brick_wall meta 1
+	if (path.equals("cobbled_deepslate_slab")) return 0;   // deepslate_slab meta 0
+	if (path.equals("polished_deepslate_slab")) return 1;   // deepslate_slab meta 1
+	if (path.equals("deepslate_tile_slab")) return 1;       // deepslate_brick_slab meta 1
+	if (path.equals("cobbled_deepslate_wall")) return 0;    // deepslate_wall meta 0
+	if (path.equals("polished_deepslate_wall")) return 1;    // deepslate_wall meta 1
+	if (path.equals("deepslate_tile_wall")) return 1;        // deepslate_brick_wall meta 1
 
 		// === 黑石变体 (blackstone meta 0-4) ===
 		if (path.equals("polished_blackstone")) return 1;
@@ -999,12 +1074,16 @@ public class ModdedCreativeTabs {
 		if (path.equals("cut_red_sandstone_slab")) return 1;
 
 		// === 头颅 ===
-		if (path.equals("skeleton_skull")) return 0;
-		if (path.equals("wither_skeleton_skull")) return 1;
-		if (path.equals("zombie_head")) return 2;
-		if (path.equals("player_head")) return 3;
-		if (path.equals("creeper_head")) return 4;
-		if (path.equals("dragon_head")) return 5;
+	if (path.equals("skeleton_skull")) return 0;
+	if (path.equals("wither_skeleton_skull")) return 1;
+	if (path.equals("zombie_head")) return 2;
+	if (path.equals("player_head")) return 3;
+	if (path.equals("creeper_head")) return 4;
+	if (path.equals("dragon_head")) return 5;
+
+	// === 铁砧变体 (anvil meta 0=正常, 1=轻微损坏, 2=严重损坏) ===
+	if (path.equals("chipped_anvil")) return 1;
+	if (path.equals("damaged_anvil")) return 2;
 
 		// === 怪物蛋 (monster_egg meta) ===
 		if (path.equals("infested_stone")) return 0;
@@ -1116,6 +1195,10 @@ public class ModdedCreativeTabs {
 
 	/** 1.7.10 不存在的木材种类（应跳过，不映射到任何现有物品） */
 	private static boolean isUnsupportedWood(String path) {
+		// 剥离 stripped_ 前缀，让 stripped_mangrove_log 等也能被识别为不支持的木材
+		if (path.startsWith("stripped_")) {
+			path = path.substring("stripped_".length());
+		}
 		for (String prefix : new String[] {"mangrove_", "pale_oak_", "crimson_", "warped_"}) {
 			if (path.startsWith(prefix)) return true;
 		}
@@ -1154,12 +1237,12 @@ public class ModdedCreativeTabs {
 	public static void dumpAllTabs() {
 		PrintWriter pw = null;
 		try {
-			File file = new File("creative_tab_dump.txt");
+			File file = new File(Minecraft.getMinecraft().mcDataDir, "mods/creative_tab_dump.txt");
 			pw = new PrintWriter(file, "UTF-8");
 
 			pw.println("========================================================");
 			pw.println("  Creative Tab Diff Report");
-			pw.println("  对比官方 1.21.4 排序 vs 游戏实际显示");
+			pw.println("  对比官方 26.2 排序 vs 游戏实际显示");
 			pw.println("  只列出不一致的部分");
 			pw.println("========================================================");
 			pw.println();
@@ -1317,6 +1400,30 @@ public class ModdedCreativeTabs {
 				}
 			}
 
+			// ==================== 分类之外（TEMPORARY）内容 ====================
+			CreativeTabs tempTab = ModdedCreativeTabs.TEMPORARY;
+			if (tempTab != null) {
+				pw.println("========================================================");
+				pw.println("Tab #" + tempTab.getTabIndex() + ": " + tempTab.getTabLabel() + " (分类之外)");
+				pw.println("========================================================");
+				List<ItemStack> tempItems = new ArrayList<>();
+				for (Object obj : Item.itemRegistry) {
+					if (obj instanceof Item) {
+						Item item = (Item) obj;
+						if (item.getCreativeTab() == tempTab) {
+							item.getSubItems(item, tempTab, tempItems);
+						}
+					}
+				}
+				pw.println("Total items: " + tempItems.size());
+				for (ItemStack stack : tempItems) {
+					String regName = Item.itemRegistry.getNameForObject(stack.getItem());
+					String displayName = stack.getDisplayName();
+					pw.println("  " + regName + " (meta=" + stack.getItemDamage() + ") [" + displayName + "]");
+				}
+				pw.println();
+			}
+
 			// 汇总
 			pw.println("========================================================");
 			pw.println("  SUMMARY");
@@ -1350,12 +1457,12 @@ public class ModdedCreativeTabs {
 	public static void dumpNotInCreative() {
 		PrintWriter pw = null;
 		try {
-			File file = new File("creative_tab_missing.txt");
+			File file = new File(Minecraft.getMinecraft().mcDataDir, "mods/creative_tab_missing.txt");
 			pw = new PrintWriter(file, "UTF-8");
 
 			pw.println("========================================================");
-			pw.println("  CreativeTabData Entries That Cannot Resolve to Items");
-			pw.println("  (Checked via same lookup path as displayAllReleventItems)");
+			pw.println("  Missing Report (仅关注已实现但未显示的内容)");
+			pw.println("  (未实现的官方条目只统计总数，不逐条列出)");
 			pw.println("========================================================");
 			pw.println();
 
@@ -1367,57 +1474,33 @@ public class ModdedCreativeTabs {
 			for (int tabIdx = 0; tabIdx < tabs.length; tabIdx++) {
 				List<String> officialItems = CreativeTabData.getItemsForTab(tabIdx);
 				if (officialItems == null || officialItems.isEmpty()) continue;
-				CreativeTabs tab = tabs[tabIdx];
-				if (tab == null) continue;
 
-				List<String> gaps = new ArrayList<>();
 				for (String itemId : officialItems) {
 					// 用与 displayAllReleventItems() Part 1 完全一致的路径检测
 					int meta = getMetaForOfficialName(itemId);
 					if (meta == -2) continue; // isUnsupportedWood / 不存在于 1.7.10
 
-					String regName = null;
 					Item obj = null;
 
-					// 路径 1: getNameAlias → lookupItem 直接名
-					String alias = getNameAlias(itemId);
-					if (alias != null) {
-						obj = (Item) lookupItem(alias);
-						regName = alias;
-					}
-
-					// 路径 2: lookupItem 原始名（mod 独立物品）
-					if (obj == null) {
+					// Part 1 路径：先直接 lookup（除非 FORCE_BASENAME_LOOKUP），
+					// 失败则走 baseName 映射，最后回退直接 lookup。
+					// lookupItem 内部会处理 getNameAlias。
+					if (!FORCE_BASENAME_LOOKUP.contains(itemId)) {
 						obj = (Item) lookupItem(itemId);
-						if (obj != null) regName = itemId;
 					}
-
-					// 路径 3: getBaseItemName → lookupItem（1.7.10 metadata 物品）
-					String baseName = null;
 					if (obj == null) {
-						baseName = getBaseItemName(itemId);
+						String baseName = getBaseItemName(itemId);
 						if (baseName != null) {
 							obj = (Item) lookupItem(baseName);
-							if (obj != null) regName = baseName;
 						}
+					}
+					if (obj == null) {
+						obj = (Item) lookupItem(itemId);
 					}
 
 					if (obj == null) {
-						// 所有路径都失败 → 这个条目无法解析到任何物品
-						gaps.add(String.format("  %s  (alias=%s, base=%s)",
-							itemId,
-							alias != null ? alias : "null",
-							baseName != null ? baseName : "null"));
-					}
-				}
-
-				if (!gaps.isEmpty()) {
-					pw.println("--- " + tab.getTabLabel() + " (" + gaps.size() + " unresolved entries) ---");
-					for (String gap : gaps) {
-						pw.println(gap);
 						totalGaps++;
 					}
-					pw.println();
 				}
 			}
 
@@ -1443,54 +1526,61 @@ public class ModdedCreativeTabs {
 				if (tab == null) continue;
 
 				// 收集此 tab 实际显示的物品列表
-				List displayList = new ArrayList();
-				tab.displayAllReleventItems(displayList);
-				Set<String> displayedKeys = new HashSet<>();
-				for (Object o : displayList) {
-					ItemStack stack = (ItemStack) o;
-					if (stack == null || stack.getItem() == null) continue;
-					String regName = Item.itemRegistry.getNameForObject(stack.getItem());
-					displayedKeys.add(regName + "@" + stack.getItemDamage());
+			List displayList = new ArrayList();
+			tab.displayAllReleventItems(displayList);
+			Set<String> displayedKeys = new HashSet<>();
+			for (Object o : displayList) {
+				ItemStack stack = (ItemStack) o;
+				if (stack == null || stack.getItem() == null) continue;
+				String regName = Item.itemRegistry.getNameForObject(stack.getItem());
+				displayedKeys.add(regName + "@" + stack.getItemDamage());
+				// Shulker box 颜色变体通过 NBT Color 区分，不是 meta
+				if (regName.equals("minecraft:shulker_box") && stack.getTagCompound() != null) {
+					int color = stack.getTagCompound().getByte("Color");
+					displayedKeys.add(regName + "#color=" + color);
 				}
+			}
 
 				for (String itemId : officialItems) {
-					int meta = getMetaForOfficialName(itemId);
-					if (meta == -2) continue;
+				int meta = getMetaForOfficialName(itemId);
+				if (meta == -2) continue;
 
-					Item obj = null;
-					String finalRegName = null;
-					int finalMeta = -1;
+				// 与 Part 1 一致的 lookup 路径（含 FORCE_BASENAME_LOOKUP）
+				Item obj = null;
+				String baseName = null;
 
-					String alias = getNameAlias(itemId);
-					if (alias != null) {
-						obj = (Item) lookupItem(alias);
-						finalRegName = alias;
-						finalMeta = 0;
-					}
-					if (obj == null) {
-						obj = (Item) lookupItem(itemId);
-						if (obj != null) { finalRegName = itemId; finalMeta = 0; }
-					}
-					if (obj == null) {
-						String baseName = getBaseItemName(itemId);
-						if (baseName != null) {
-							obj = (Item) lookupItem(baseName);
-							if (obj != null) {
-								finalRegName = baseName;
-								finalMeta = (meta < 0) ? 0 : meta;
-							}
-						}
-					}
-
-					if (obj != null && finalRegName != null) {
-						String checkKey = finalRegName + "@" + finalMeta;
-						if (!displayedKeys.contains(checkKey)) {
-							notDisplayed++;
-							pw.println(String.format("  [%s] %s → %s (meta=%d) — resolved but not displayed",
-								tab.getTabLabel(), itemId, finalRegName, finalMeta));
-						}
+				if (!FORCE_BASENAME_LOOKUP.contains(itemId)) {
+					obj = (Item) lookupItem(itemId);
+				}
+				if (obj != null) {
+					meta = 0;
+				} else {
+					baseName = getBaseItemName(itemId);
+					if (baseName != null) {
+						obj = (Item) lookupItem(baseName);
 					}
 				}
+				if (obj == null) {
+					obj = (Item) lookupItem(itemId);
+				}
+
+				if (obj != null) {
+					String finalRegName = Item.itemRegistry.getNameForObject(obj);
+					int finalMeta = (meta < 0) ? 0 : meta;
+					String checkKey = finalRegName + "@" + finalMeta;
+					// Shulker box 颜色变体用 NBT Color 检查，不是 meta；
+					// 无色变体 (color=0) 无 NBT tag，仍用 @0 匹配
+					if (finalRegName.equals("minecraft:shulker_box")) {
+						int color = itemId.equals("minecraft:shulker_box") ? 0 : finalMeta + 1;
+						checkKey = color == 0 ? finalRegName + "@0" : finalRegName + "#color=" + color;
+					}
+					if (!displayedKeys.contains(checkKey)) {
+						notDisplayed++;
+						pw.println(String.format("  [%s] %s → %s (meta=%d) — resolved but not displayed",
+							tab.getTabLabel(), itemId, finalRegName, finalMeta));
+					}
+				}
+			}
 			}
 
 			if (notDisplayed == 0) {
@@ -1499,8 +1589,8 @@ public class ModdedCreativeTabs {
 			}
 
 			pw.println("========================================================");
-			pw.println("  TOTAL UNRESOLVED GAPS: " + totalGaps);
-			pw.println("  TOTAL RESOLVED BUT NOT DISPLAYED: " + notDisplayed);
+			pw.println("  TOTAL NOT IMPLEMENTED (官方有但 mod 未实现): " + totalGaps);
+			pw.println("  TOTAL IMPLEMENTED BUT NOT DISPLAYED (已实现但未显示): " + notDisplayed);
 			pw.println("========================================================");
 
 			pw.close();
@@ -1695,6 +1785,29 @@ public class ModdedCreativeTabs {
 		return result;
 	}
 
+	/**
+	 * 返回所有被 CreativeTabData 映射系统用作 base item 的注册名。
+	 * 这些物品不被直接包含在 CreativeTabData 中，但会被 SortedCreativeTab 的
+	 * displayAllReleventItems 通过 baseName 映射找到并正确显示在对应标签页中。
+	 * 例如：minecraft:concrete_powder（是 white_concrete_powder 的 base）
+	 *      minecraft:planks（是 oak_planks 的 base）
+	 */
+	public static Set<String> getCreativeTabBaseItemIds() {
+		Set<String> bases = new HashSet<>();
+		for (String itemId : CreativeTabData.getAllItemIds()) {
+			String base = getBaseItemName(itemId);
+			if (base != null) {
+				bases.add(base);
+			}
+			// 也检查 getNameAlias 映射（如 armor_stand → wooden_armorstand）
+			String alias = getNameAlias(itemId);
+			if (alias != null) {
+				bases.add(alias);
+			}
+		}
+		return bases;
+	}
+
 	// ==================== 内部类：可排序的 CreativeTab ====================
 
 	/**
@@ -1758,7 +1871,7 @@ public class ModdedCreativeTabs {
 
 			if (obj instanceof Item) {
 			Item item = (Item) obj;
-			// 跳过已直接设到"临时"标签页的创意专用物品（如下界合金楼梯）
+			// 跳过已直接设到"分类之外"标签页的创意专用物品（如下界合金楼梯）
 			if (item.getCreativeTab() == TEMPORARY) continue;
 			// 特殊处理：shulker_box 的颜色变体通过 NBT tag "Color" 区分（不是 meta）。
 			// Part 1 按 official 列表逐条添加，每条用 NBT Color 创建 ItemStack。
@@ -1784,6 +1897,21 @@ public class ModdedCreativeTabs {
 				itemStacks.add(stack);
 				continue;
 			}
+			if (effectiveBase.equals("minecraft:fireworks")) {
+				// 烟花火箭：只显示飞行时间 3 的（与现代版本一致，NBT 构造等同 3 火药合成）
+				String fwKey = "minecraft:fireworks#flight=3";
+				if (addedMetaKeys.contains(fwKey)) continue;
+				addedMetaKeys.add(fwKey);
+				ItemStack stack = new ItemStack(item, 1, 0);
+				NBTTagCompound tag = new NBTTagCompound();
+				NBTTagCompound fw = new NBTTagCompound();
+				fw.setByte("Flight", (byte) 3);
+				fw.setTag("Explosions", new NBTTagList());
+				tag.setTag("Fireworks", fw);
+				stack.setTagCompound(tag);
+				itemStacks.add(stack);
+				continue;
+			}
 			if (meta >= 0) {
 					// 精确 meta：只添加该变体（per-meta 去重）
 					String metaKey = (baseName != null ? baseName : itemId) + "@" + meta;
@@ -1799,6 +1927,29 @@ public class ModdedCreativeTabs {
 						// 其他：只添加 meta=0，避免 getSubItems dump 全部变体造成连锁错位
 						// （变种靠 official 列表各自的 meta 映射单独添加；遗漏只导致单个 missing）
 						itemStacks.add(new ItemStack(item, 1, 0));
+					}
+				}
+			}
+			// 谜之炖菜：官方数据跳过 NBT 变体，需在 rabbit_stew(39) 后、milk_bucket(40) 前手动展开
+			if (itemId.equals("minecraft:rabbit_stew")) {
+				Item suspiciousStew = (Item) Item.itemRegistry.getObject("minecraft:suspicious_stew");
+				if (suspiciousStew != null) {
+					for (ItemStack flower : ModRecipes.getStewFlowers()) {
+						PotionEffect effect = EtFuturum.getSuspiciousStewEffect(flower);
+						if (effect == null) continue;
+						String key = "minecraft:suspicious_stew@" + effect.getPotionID() + ":" + effect.getDuration();
+						if (addedMetaKeys.contains(key)) continue;
+						addedMetaKeys.add(key);
+						ItemStack stew = new ItemStack(suspiciousStew, 1, 0);
+						NBTTagCompound tag = new NBTTagCompound();
+						NBTTagList effects = new NBTTagList();
+						NBTTagCompound eff = new NBTTagCompound();
+						eff.setByte(ItemSuspiciousStew.stewEffect, (byte) effect.getPotionID());
+						eff.setInteger(ItemSuspiciousStew.stewEffectDuration, effect.getDuration());
+						effects.appendTag(eff);
+						tag.setTag(ItemSuspiciousStew.effectsList, effects);
+						stew.setTagCompound(tag);
+						itemStacks.add(stew);
 					}
 				}
 			}

@@ -22,7 +22,7 @@ tile.monsterStoneEgg.cobble.name=被虫蚀的圆石
 tile.monsterStoneEgg.brick.name=被虫蚀的石砖
 tile.monsterStoneEgg.mossybrick.name=被虫蚀的苔石砖
 tile.monsterStoneEgg.crackedbrick.name=被虫蚀的裂纹石砖
-tile.monsterStoneEgg.chiseledbrick.name=被虫蚀的錾制石砖
+tile.monsterStoneEgg.chiseledbrick.name=被虫蚀的雕纹石砖
 tile.stonebricksmooth.chiseled.name=雕纹石砖
 
 tile.log.name=原木
@@ -97,3 +97,5 @@ tile.trapdoor.name=橡木活板门
 tile.mushroom_stem.name=蘑菇柄
 tile.brown_mushroom_block.name=棕色蘑菇方块
 tile.red_mushroom_block.name=红色蘑菇方块
+
+tile.flower2.poppy.name=虞美人

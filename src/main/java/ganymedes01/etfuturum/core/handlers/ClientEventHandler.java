@@ -164,9 +164,9 @@ public class ClientEventHandler {
 			ModdedCreativeTabs.dumpNotInCreative();
 			if (mc.thePlayer != null) {
 				mc.thePlayer.addChatComponentMessage(new ChatComponentText(
-						EnumChatFormatting.GREEN + "[EtFuturum] 创造栏内容已导出到 creative_tab_dump.txt"));
+						EnumChatFormatting.GREEN + "[EtFuturum] 创造栏内容已导出到 mods/creative_tab_dump.txt"));
 				mc.thePlayer.addChatComponentMessage(new ChatComponentText(
-						EnumChatFormatting.GREEN + "[EtFuturum] 未显示物品已导出到 creative_tab_missing.txt"));
+						EnumChatFormatting.GREEN + "[EtFuturum] 未显示物品已导出到 mods/creative_tab_missing.txt"));
 			}
 		}
 

@@ -97,7 +97,6 @@ import ganymedes01.etfuturum.blocks.BlockNetherRoots;
 import ganymedes01.etfuturum.blocks.BlockNetherSprouts;
 import ganymedes01.etfuturum.blocks.BlockNetherStem;
 import ganymedes01.etfuturum.blocks.BlockNetherite;
-import ganymedes01.etfuturum.blocks.BlockNetheriteStairs;
 import ganymedes01.etfuturum.blocks.BlockNetherwart;
 import ganymedes01.etfuturum.blocks.BlockNewBeacon;
 import ganymedes01.etfuturum.blocks.BlockNewBrewingStand;
@@ -890,7 +889,6 @@ public enum ModBlocks {
 
 	//Creative-only stuff
 
-	NETHERITE_STAIRS(ConfigBlocksItems.enableNetherite, new BlockNetheriteStairs()),
 	END_GATEWAY(ConfigExperiments.endDimensionProvider, new BlockEndGateway()),
 	LIGHT(ConfigBlocksItems.enableLightBlock, new BlockLight()),
 	BARRIER(ConfigBlocksItems.enableBarrier, new BlockBarrier()),

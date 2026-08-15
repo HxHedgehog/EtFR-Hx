@@ -1470,7 +1470,7 @@ public class ModRecipes {
 		registerOre("raw" + StringUtils.capitalize(tagNoPrefix), stack);
 	}
 
-	private static List<ItemStack> getStewFlowers() {
+	public static List<ItemStack> getStewFlowers() {
 		List<ItemStack> list = new ArrayList<>();
 
 		list.add(new ItemStack(Blocks.red_flower, 1, 2));
