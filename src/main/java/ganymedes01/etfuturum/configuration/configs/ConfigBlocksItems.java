@@ -43,6 +43,8 @@ public class ConfigBlocksItems extends ConfigBase {
 	public static boolean enableInvertedDaylightSensor;
 	public static boolean enableOldBaseDaylightSensor;
 	public static boolean enableCoarseDirt;
+	public static boolean enableRootedDirt;
+	public static boolean enableMossAzalea;
 	public static boolean enableRedSandstone;
 	public static boolean enableVanillaFences;
 	public static boolean enableNewFences;
@@ -184,6 +186,8 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableNetherGold = getBoolean("enableNetherGold", catBlockNatural, true, "");
 		enablePrismarine = getBoolean("enablePrismarine", catBlockNatural, true, "");
 		enableCoarseDirt = getBoolean("enableCoarseDirt", catBlockNatural, true, "");
+		enableRootedDirt = getBoolean("enableRootedDirt", catBlockNatural, true, "Enables rooted dirt and hanging roots.");
+		enableMossAzalea = getBoolean("enableMossAzalea", catBlockNatural, true, "Enables moss blocks, moss carpets, azalea bushes and azalea leaves.");
 		enableRedSandstone = getBoolean("enableRedSandstone", catBlockNatural, true, "");
 		enableChorusFruit = getBoolean("enableChorusBlocks", catBlockNatural, true, "Enables chorus plants and purpur blocks");
 		enableGrassPath = getBoolean("enableGrassPath", catBlockNatural, true, "");
@@ -205,7 +209,6 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableDeepslateOres = getBoolean("enableDeepslateOres", catBlockNatural, true, "Enable deepslate ores for copper ore and vanilla ores when deepslate generates over them.");
 		enableAmethyst = getBoolean("enableAmethyst", catBlockNatural, true, "Enables tinted glass, amethyst blocks, budding amethyst and amethyst crystals. Also enables the item too.");
 		enableMud = getBoolean("enableMud", catBlockNatural, true, "Enables mud, packed mud and mud bricks, as well as the mud brick stairs, slabs and walls.");
-//		enableMoss = getBoolean("enableMoss", catBlockNatural, true, "Enables moss blocks and carpets");
 //		enableCrimsonBlocks = getBoolean("enableCrimsonBlocks", catBlockMisc, true, "Enables the crimson nylium, wood, and plants. This must be on for the crimson forest biome to generate unless Netherlicious is installed.\nThe nether wart block is still a separate toggle, both this and the wart toggle must be turned off to disable the nether wart block, because crimson trees need the wart blocks.");
 //		enableWarpedBlocks = getBoolean("enableWarpedBlocks", catBlockMisc, true, "Enables the warped nylium, wood, and plants. This must be on for the warped forest biome to generate unless Netherlicious is installed.");
 		enableBlackstone = getBoolean("enableBlackstone", catBlockMisc, true, "This must be on for the basalt deltas biome to generate unless Netherlicious is installed.");

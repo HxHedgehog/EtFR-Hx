@@ -71,6 +71,18 @@ public class ItemCategoryHelper {
 		if ("minecraft:dye_same".equals(registryName)) {
 			return ModdedCreativeTabs.INGREDIENTS;
 		}
+		// 锁链：1.21.4 官方数据用 iron_chain，mod 注册名为 chain
+		if ("minecraft:chain".equals(registryName)) {
+			return ModdedCreativeTabs.FUNCTIONAL_BLOCKS;
+		}
+		// 西瓜块：1.21.4 官方数据用 melon（西瓜块），1.7.10 注册名是 melon_block
+		if ("minecraft:melon_block".equals(registryName)) {
+			return ModdedCreativeTabs.NATURAL_BLOCKS;
+		}
+		// 雪层：1.21.4 官方数据用 snow（雪层），1.7.10 注册名是 snow_layer
+		if ("minecraft:snow_layer".equals(registryName)) {
+			return ModdedCreativeTabs.NATURAL_BLOCKS;
+		}
 		if ("minecraft:barrier".equals(registryName) || "minecraft:light".equals(registryName)) {
 			return ModdedCreativeTabs.FUNCTIONAL_BLOCKS;
 		}

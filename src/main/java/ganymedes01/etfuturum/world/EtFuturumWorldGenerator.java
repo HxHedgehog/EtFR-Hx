@@ -14,6 +14,7 @@ import ganymedes01.etfuturum.world.generate.decorate.WorldGenBamboo;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenCaveVines;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenCherryTrees;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenGlowLichen;
+import ganymedes01.etfuturum.world.generate.decorate.WorldGenLushCave;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenPinkPetals;
 import ganymedes01.etfuturum.world.generate.feature.WorldGenFossil;
 import ganymedes01.etfuturum.world.generate.feature.WorldGenGeode;
@@ -71,6 +72,7 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 	protected WorldGenerator glowLichenGen;
 	protected WorldGenerator caveVineGen;
 	protected WorldGenerator mudGen;
+	protected WorldGenerator lushCaveGen;
 
 	private List<BiomeGenBase> fossilBiomes;
 	private List<BiomeGenBase> berryBushBiomes;
@@ -154,6 +156,11 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 		if (ModBlocks.CAVE_VINE.isEnabled())
 		{
 			caveVineGen = new WorldGenCaveVines(ModBlocks.CAVE_VINE.get());
+		}
+
+		if (ConfigWorld.enableLushCaves && ModBlocks.MOSS_BLOCK.isEnabled() && ModBlocks.ROOTED_DIRT.isEnabled()
+				&& ModBlocks.HANGING_ROOTS.isEnabled() && ModBlocks.AZALEA_LEAVES.isEnabled()) {
+			lushCaveGen = new WorldGenLushCave();
 		}
         
 		if (ModBlocks.CHERRY_LOG.isEnabled() && ModBlocks.CHERRY_LEAVES.isEnabled()) {
@@ -291,6 +298,15 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 							}
 						}
 					}
+				}
+			}
+
+			if (lushCaveGen != null && world.provider.dimensionId == 0) {
+				x = (chunkX << 4) + rand.nextInt(16) + 8;
+				z = (chunkZ << 4) + rand.nextInt(16) + 8;
+				int y = world.getHeightValue(x, z);
+				if (y > 0 && rand.nextInt(ConfigWorld.lushCaveRarity) == 0) {
+					lushCaveGen.generate(world, rand, x, y, z);
 				}
 			}
 

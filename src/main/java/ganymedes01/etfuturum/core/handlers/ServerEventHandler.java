@@ -1116,6 +1116,23 @@ public class ServerEventHandler {
 							doMudConversion(world, x, y, z, player, oldBlock, meta, heldStack);
 						}
 
+						// 锄头转化缠根泥土（官方 HoeItem.TILLABLES: ROOTED_DIRT -> dirt 并掉落垂根）
+						if (heldStack != null && heldStack.getItem() instanceof ItemHoe && oldBlock == ModBlocks.ROOTED_DIRT.get()) {
+							player.swingItem();
+							if (!world.isRemote) {
+								world.setBlock(x, y, z, Blocks.dirt, 0, 2);
+								heldStack.damageItem(1, player);
+								world.playSoundEffect(x + 0.5F, y + 0.5F, z + 0.5F, Reference.MCAssetVer + ":item.hoe.till", 1.0F, 1.0F);
+								if (!player.capabilities.isCreativeMode) {
+									EntityItem entityItem = new EntityItem(world, x + 0.5D, y + 0.5D, z + 0.5D, ModBlocks.HANGING_ROOTS.newItemStack());
+									entityItem.delayBeforeCanPickup = 10;
+									world.spawnEntityInWorld(entityItem);
+								}
+								event.setResult(Result.ALLOW);
+								event.setCanceled(true);
+							}
+						}
+
 						if (ConfigFunctions.mobSpawnerEgging && oldBlock == Blocks.mob_spawner && heldStack != null && heldStack.getItem() == Items.spawn_egg) {
 							TileEntityMobSpawner tileEntityMobSpawner = (TileEntityMobSpawner) world.getTileEntity(x, y, z);
 							String entityName = EntityList.getStringFromID(heldStack.getItemDamage());
@@ -1174,7 +1191,7 @@ public class ServerEventHandler {
 			int itemDamage = heldStack.getItemDamage();
 			isValid = heldStack.getItem() == ExternalContent.Items.EXTRAUTILS_WATERING_CAN.get() && (itemDamage == 0 || itemDamage == 3);
 		}
-		if (ModBlocks.MUD.isEnabled() && isValid && ((oldBlock == Blocks.dirt && meta != 2) || oldBlock == ModBlocks.COARSE_DIRT.get())) { //TODO: Rooted dirt
+		if (ModBlocks.MUD.isEnabled() && isValid && ((oldBlock == Blocks.dirt && meta != 2) || oldBlock == ModBlocks.COARSE_DIRT.get() || oldBlock == ModBlocks.ROOTED_DIRT.get())) {
 			world.setBlock(x, y, z, ModBlocks.MUD.get());
 			world.playSoundEffect(x + 0.5F, y + 0.5F, z + 0.5F, Reference.MCAssetVer + ":item.bottle.empty", 1.0F, 1.0F);
 			player.swingItem();

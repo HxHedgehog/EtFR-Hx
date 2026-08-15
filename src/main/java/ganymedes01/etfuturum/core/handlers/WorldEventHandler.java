@@ -17,6 +17,7 @@ import ganymedes01.etfuturum.core.utils.Utils;
 import ganymedes01.etfuturum.core.utils.WeightedRandomList;
 import ganymedes01.etfuturum.entities.EntityBee;
 import ganymedes01.etfuturum.tileentities.TileEntityBeeHive;
+import ganymedes01.etfuturum.world.generate.caves.MapGenEtFuturumCaves;
 import ganymedes01.etfuturum.world.structure.MapGenMesaMineshaft;
 import ganymedes01.etfuturum.world.structure.StructureMesaMineshaftPieces;
 import net.minecraft.block.Block;
@@ -106,6 +107,9 @@ public class WorldEventHandler {
 			}
 			event.newGen = new MapGenMesaMineshaft();
 		}
+		if (ConfigWorld.enableModernCaves && event.type == InitMapGenEvent.EventType.CAVE) {
+			event.newGen = new MapGenEtFuturumCaves();
+		}
 	}
 
 	private final Map<BiomeGenBase, Float> BEE_NEST_BIOMES = Maps.newHashMap();
@@ -162,6 +166,7 @@ public class WorldEventHandler {
 				tryPlaceBeeNest(event.world, event.x, event.y, event.z, event.rand, 3);
 			}
 		}
+		// 大型云杉/云杉松下方灰化土转化由 mixins/early/megapine/MixinWorldGenMegaPineTree 处理（复刻官方 AlterGroundDecorator）
 	}
 
 	//Hives should always face south so we never want to generate them on the north face of a log, since the log would block the hive opening.

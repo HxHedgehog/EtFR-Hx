@@ -26,6 +26,7 @@ import ganymedes01.etfuturum.api.BrewingFuelRegistry;
 import ganymedes01.etfuturum.api.CompostingRegistry;
 import ganymedes01.etfuturum.api.DeepslateOreRegistry;
 import ganymedes01.etfuturum.api.HoeRegistry;
+import ganymedes01.etfuturum.dispenser.DispenserBehaviourMudConversion;
 import ganymedes01.etfuturum.api.MultiBlockSoundRegistry;
 import ganymedes01.etfuturum.api.PistonBehaviorRegistry;
 import ganymedes01.etfuturum.api.RawOreRegistry;
@@ -94,6 +95,7 @@ import makamys.mclib.core.MCLibModules;
 import net.minecraft.block.Block;
 import net.minecraft.block.Block.SoundType;
 import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.BlockHay;
 import net.minecraft.block.BlockHopper;
 import net.minecraft.block.BlockLeaves;
@@ -260,6 +262,11 @@ public class EtFuturum {
 		CompatMisc.runModHooksInit();
 
 		ModRecipes.init();
+
+		// 注册发射器水瓶转化泥土/粗泥/缠根泥土为泥巴
+		if (ConfigBlocksItems.enableMud) {
+			BlockDispenser.dispenseBehaviorRegistry.putObject(Items.potionitem, new DispenserBehaviourMudConversion());
+		}
 	}
 
 	@EventHandler

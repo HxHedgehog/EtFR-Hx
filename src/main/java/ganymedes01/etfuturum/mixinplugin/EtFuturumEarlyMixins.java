@@ -222,6 +222,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("posttreegen.MixinWorldGenAbstractTree");
 		}
 
+		if (ConfigMixins.megaSprucePodzol) {
+			mixins.add("megapine.MixinWorldGenMegaPineTree");
+		}
+
 		if (ConfigMixins.ladderTrapdoors) {
 			mixins.add("laddertrapdoors.MixinBlockLadder");
 			mixins.add("laddertrapdoors.MixinBlockTrapdoor");

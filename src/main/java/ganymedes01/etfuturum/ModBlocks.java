@@ -71,6 +71,7 @@ import ganymedes01.etfuturum.blocks.BlockFrostedIce;
 import ganymedes01.etfuturum.blocks.BlockGildedBlackstone;
 import ganymedes01.etfuturum.blocks.BlockGlazedTerracotta;
 import ganymedes01.etfuturum.blocks.BlockGlowLichen;
+import ganymedes01.etfuturum.blocks.BlockHangingRoots;
 import ganymedes01.etfuturum.blocks.BlockHoney;
 import ganymedes01.etfuturum.blocks.BlockInvertedDaylightDetector;
 import ganymedes01.etfuturum.blocks.BlockIronTrapdoor;
@@ -118,6 +119,7 @@ import ganymedes01.etfuturum.blocks.BlockPurpurPillar;
 import ganymedes01.etfuturum.blocks.BlockPurpurSlab;
 import ganymedes01.etfuturum.blocks.BlockRedSandstone;
 import ganymedes01.etfuturum.blocks.BlockRedSandstoneSlab;
+import ganymedes01.etfuturum.blocks.BlockRootedDirt;
 import ganymedes01.etfuturum.blocks.BlockSculk;
 import ganymedes01.etfuturum.blocks.BlockSculkCatalyst;
 import ganymedes01.etfuturum.blocks.BlockSeaLantern;
@@ -229,6 +231,8 @@ public enum ModBlocks {
 	DAYLIGHT_DETECTOR_INVERTED(ConfigBlocksItems.enableInvertedDaylightSensor, new BlockInvertedDaylightDetector(), null),
 	RED_SANDSTONE(ConfigBlocksItems.enableRedSandstone, new BlockRedSandstone(), ItemBlockRedSandstone.class),
 	COARSE_DIRT(ConfigBlocksItems.enableCoarseDirt, new BlockCoarseDirt()),
+	ROOTED_DIRT(ConfigBlocksItems.enableRootedDirt, new BlockRootedDirt()),
+	HANGING_ROOTS(ConfigBlocksItems.enableRootedDirt, new BlockHangingRoots()),
 	BANNER(ConfigBlocksItems.enableBanners, new BlockBanner(), ItemBlockBanner.class),
 	SLIME(ConfigBlocksItems.enableSlimeBlock, new BlockSlime()),
 	// SPONGE 吸水逻辑已移至 MixinBlockSponge；BROWN/RED_MUSHROOM 精准采集已移至 MixinBlockHugeMushroom
@@ -338,10 +342,10 @@ public enum ModBlocks {
 	MANGROVE_ROOTS(ConfigExperiments.enableMangroveBlocks, new BlockMangroveRoots()),
 	MUDDY_MANGROVE_ROOTS(ConfigExperiments.enableMangroveBlocks, new BlockMuddyMangroveRoots()),
 
-	MOSS_BLOCK(ConfigExperiments.enableMossAzalea, new BlockMoss()),
-	MOSS_CARPET(ConfigExperiments.enableMossAzalea, new BlockMossCarpet()),
-	AZALEA(ConfigExperiments.enableMossAzalea, new BlockAzalea()),
-	AZALEA_LEAVES(ConfigExperiments.enableMossAzalea, new BlockAzaleaLeaves()),
+	MOSS_BLOCK(ConfigBlocksItems.enableMossAzalea, new BlockMoss()),
+	MOSS_CARPET(ConfigBlocksItems.enableMossAzalea, new BlockMossCarpet()),
+	AZALEA(ConfigBlocksItems.enableMossAzalea, new BlockAzalea()),
+	AZALEA_LEAVES(ConfigBlocksItems.enableMossAzalea, new BlockAzaleaLeaves()),
 
 	DEEPSLATE_COAL_ORE(ConfigBlocksItems.enableDeepslate && ConfigBlocksItems.enableDeepslateOres, new BlockDeepslateOre(Blocks.coal_ore)),
 	DEEPSLATE_IRON_ORE(ConfigBlocksItems.enableDeepslate && ConfigBlocksItems.enableDeepslateOres, new BlockDeepslateOre(Blocks.iron_ore)),

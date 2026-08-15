@@ -252,7 +252,9 @@ public class ModdedCreativeTabs {
 	 */
 	private static final Set<String> FORCE_BASENAME_LOOKUP = new HashSet<>(Arrays.asList(
 			"minecraft:grass",  // 1.7.10 grass = grass block, 1.21.4 grass = 草丛
-			"minecraft:nether_brick"  // 1.7.10 nether_brick = 方块(ItemBlock), 1.21.4 nether_brick = 物品(需映射到 netherbrick)
+			"minecraft:nether_brick",  // 1.7.10 nether_brick = 方块(ItemBlock), 1.21.4 nether_brick = 物品(需映射到 netherbrick)
+			"minecraft:snow",   // 1.7.10 snow = 雪块, 1.21.4 snow = 雪层（需映射到 snow_layer）
+			"minecraft:melon"   // 1.7.10 melon = 西瓜片, 1.21.4 melon = 西瓜块（需映射到 melon_block）
 	));
 
 	/**
@@ -612,6 +614,12 @@ public class ModdedCreativeTabs {
 		if (copperPath.equals("cut_copper_slab")) return "cut_copper_slab";
 		// snow_block → snow (1.7.10 使用同一个 snow block)
 		if (path.equals("snow_block")) return "snow";
+		// 雪层：1.21.4 的 snow = 雪层（1.7.10 注册名 snow_layer）
+		if (path.equals("snow")) return "snow_layer";
+		// 西瓜块：1.21.4 的 melon = 西瓜块（1.7.10 注册名 melon_block）
+		if (path.equals("melon")) return "melon_block";
+		// 锁链：1.21.4 改名 iron_chain（mod 注册名为 chain）
+		if (path.equals("iron_chain")) return "chain";
 		// 铁砧变体（1.7.10 用 anvil meta 0/1/2 统配）
 		if (path.equals("chipped_anvil") || path.equals("damaged_anvil")) {
 			return "anvil";
