@@ -22,8 +22,6 @@ public final class NoiseCaveGenerator {
 	private final DoublePerlinNoiseSampler offsetNoise;
 	private final DoublePerlinNoiseSampler offsetScaleNoise;
 	private final DoublePerlinNoiseSampler caveDensityNoise;
-	// 低频腔室掩码：把噪声洞切成离散团块，避免贯通数百区块
-	private final DoublePerlinNoiseSampler chamberMaskNoise;
 	// 低频洞底噪声：让洞穴底部平坦并带小丘
 	private final DoublePerlinNoiseSampler floorNoise;
 
@@ -47,7 +45,6 @@ public final class NoiseCaveGenerator {
 		this.offsetScaleNoise = DoublePerlinNoiseSampler.create(new Random(random.nextLong()), -8, 1.0D);
 		this.terrainAdditionNoise = DoublePerlinNoiseSampler.create(new Random(random.nextLong()), -8, 1.0D);
 		this.caveDensityNoise = DoublePerlinNoiseSampler.create(new Random(random.nextLong()), -8, 0.5D, 1.0D, 2.0D, 1.0D, 2.0D, 1.0D, 0.0D, 2.0D, 0.0D);
-		this.chamberMaskNoise = DoublePerlinNoiseSampler.create(new Random(random.nextLong()), -7, 1.0D, 1.0D);
 		this.floorNoise = DoublePerlinNoiseSampler.create(new Random(random.nextLong()), -7, 1.0D);
 	}
 
@@ -73,9 +70,6 @@ public final class NoiseCaveGenerator {
 			double offset = caveOffset * ConfigWorld.caveFillWeight + terrainAddition * ConfigWorld.caveLedgeStrength;
 			double smallerNoise = Math.min(offset,
 					Math.min(tunnel * ConfigWorld.caveTunnelWeight, caveNoise * ConfigWorld.caveCavityWeight) + tunnelOffset);
-
-			// 低频腔室掩码：把噪声洞切成离散团块，阈值处平滑过渡避免硬墙
-			smallerNoise = this.applyChamberMask(x, y, z, ocean, smallerNoise);
 
 			double finalNoise;
 			if (ConfigWorld.cavePillars) {
@@ -130,8 +124,6 @@ public final class NoiseCaveGenerator {
 		double inner = Math.min(tunnelTerm, chamberTerm) + tunnelOffset;
 		double smallerNoise = Math.min(offset, inner);
 
-		smallerNoise = this.applyChamberMask(x, y, z, ocean, smallerNoise);
-
 		double pillarNoise = ConfigWorld.cavePillars ? this.getPillarNoise(x, y, z) : Double.NEGATIVE_INFINITY;
 		double finalNoise = Math.max(smallerNoise, pillarNoise);
 
@@ -174,27 +166,6 @@ public final class NoiseCaveGenerator {
 	private double getFloorY(int x, int z) {
 		double variation = this.floorNoise.sample(x * 0.2D, 0.0D, z * 0.2D);
 		return ConfigWorld.caveFloorY + variation * ConfigWorld.caveFloorVariation;
-	}
-
-	private double getChamberMask(int x, int y, int z, boolean ocean) {
-		double frequency = ConfigWorld.caveChamberFrequency;
-		if (ocean) {
-			// 海洋 → 更低频率 → 更大（可达 200x200 量级）的腔室
-			frequency /= ConfigWorld.caveOceanChamberScale;
-		}
-		return this.chamberMaskNoise.sample(x * frequency, y * frequency, z * frequency);
-	}
-
-	/**
-	 * 用低频腔室掩码调制洞穴密度：掩码远低于阈值时压向实心，远高于阈值时保持原样，
-	 * 阈值附近用 smoothstep 平滑过渡，让主洞穴噪声参与塑造腔室墙，避免出现大块硬平面。
-	 */
-	private double applyChamberMask(int x, int y, int z, boolean ocean, double smallerNoise) {
-		double mask = this.getChamberMask(x, y, z, ocean);
-		double edge = 0.3D;
-		double t = MathHelper.clamp((mask - ConfigWorld.caveChamberThreshold) / edge + 0.5D, 0.0D, 1.0D);
-		t = t * t * (3.0D - 2.0D * t);
-		return MathHelper.lerp(t, 1.0D, smallerNoise);
 	}
 
 	private double getPillarNoise(int x, int y, int z) {
@@ -249,7 +220,9 @@ public final class NoiseCaveGenerator {
 		int yStart = -4;
 		double horizontalCaveNoise = lerpFromProgress(this.horizontalCaveNoise, x, 0.0D, z, yStart, 4.0D) + 4;
 
-		double caveFalloffNoise = (Math.abs((horizontalCaveNoise - (double) y / 8.0D)) - (2.0D * caveFalloff));
+		// 水平带中线加 Y 方向扰动，避免洞顶平整
+		double ceilingWobble = sample(this.caveNoise, x, y, z, caveScale * 0.5D) * 0.3D;
+		double caveFalloffNoise = (Math.abs((horizontalCaveNoise + ceilingWobble - (double) y / 8.0D)) - (2.0D * caveFalloff));
 		caveFalloffNoise = caveFalloffNoise * caveFalloffNoise * caveFalloffNoise;
 		return clamp(Math.max(caveFalloffNoise, scaledCaveNoise));
 	}
