@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -22,7 +23,7 @@ public class BlockAncientDebris extends Block {
 		Utils.setBlockSound(this, ModSounds.soundAncientDebris);
 		setBlockTextureName("ancient_debris");
 		setBlockName(Utils.getUnlocalisedName("ancient_debris"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

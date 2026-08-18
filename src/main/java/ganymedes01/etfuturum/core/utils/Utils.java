@@ -1,6 +1,10 @@
 package ganymedes01.etfuturum.core.utils;
 
 import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.LoadController;
+import cpw.mods.fml.common.ModContainer;
+import cpw.mods.fml.common.DummyModContainer;
+import cpw.mods.fml.common.ModMetadata;
 import ganymedes01.etfuturum.client.sound.ModSounds;
 import ganymedes01.etfuturum.compat.ModsList;
 import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
@@ -33,6 +37,7 @@ import net.minecraftforge.oredict.OreDictionary;
 import org.apache.commons.lang3.ArrayUtils;
 
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -549,5 +554,66 @@ public class Utils {
 	 */
 	public static List<EntityPlayer> getListWithoutSpectators(List<EntityPlayer> list) {
 		return list.stream().filter(entity -> !SpectatorMode.isSpectator(entity)).collect(Collectors.toList());
+	}
+
+	// ==================== 命名空间切换 ====================
+
+	private static Field activeContainerField;
+	private static Field modControllerField;
+	private static ModContainer minecraftContainer;
+
+	static {
+		try {
+			activeContainerField = LoadController.class.getDeclaredField("activeContainer");
+			activeContainerField.setAccessible(true);
+			modControllerField = Loader.class.getDeclaredField("modController");
+			modControllerField.setAccessible(true);
+			// MinecraftDummyContainer.getModId() returns "Minecraft" (capital M), but
+			// CreativeTabData uses lowercase "minecraft:" prefixes. Create a dummy
+			// container with the lowercase modId so registry names match official data.
+			ModMetadata md = new ModMetadata();
+			md.modId = "minecraft";
+			md.name = "Minecraft";
+			md.version = Loader.instance().getMCVersionString();
+			minecraftContainer = new DummyModContainer(md);
+		} catch (Throwable t) {
+			activeContainerField = null;
+		}
+	}
+
+	/**
+	 * 获取当前的 LoadController 实例（反射 Loader.modController）。
+	 */
+	private static LoadController getLoadController() {
+		try {
+			return (LoadController) modControllerField.get(Loader.instance());
+		} catch (Throwable t) {
+			return null;
+		}
+	}
+
+	/**
+	 * 设置活动 ModContainer。设置后，GameData.addPrefix() 会使用
+	 * 该 container 的 modId 作为注册名前缀，而不是回退到栈扫描。
+	 * 传入 minecraft container 即可将物品/方块注册到 {@code minecraft:} 命名空间。
+	 *
+	 * @param container 要设置的 ModContainer，null 表示恢复默认栈扫描行为
+	 */
+	public static void setActiveModContainer(ModContainer container) {
+		if (activeContainerField == null) return;
+		LoadController controller = getLoadController();
+		if (controller == null) return;
+		try {
+			activeContainerField.set(controller, container);
+		} catch (Throwable t) {
+			// ignore
+		}
+	}
+
+	/**
+	 * 返回 minecraft 原版的 ModContainer，可配合 {@link #setActiveModContainer} 使用。
+	 */
+	public static ModContainer getMinecraftContainer() {
+		return minecraftContainer;
 	}
 }

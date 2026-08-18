@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks.ores;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -13,6 +14,6 @@ public class BlockCopperOre extends BlockOre {
 		setBlockName(Utils.getUnlocalisedName("copper_ore"));
 		setBlockTextureName("copper_ore");
 		setHarvestLevel("pickaxe", 1);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 }

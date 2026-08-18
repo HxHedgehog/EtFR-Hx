@@ -291,9 +291,9 @@ public class EntityRabbit extends EntityAnimal {
 
 		for (int i = 0; i < j; i++)
 			if (isBurning())
-				dropItem(ModItems.RABBIT_COOKED.get(), 1);
+				dropItem(ModItems.COOKED_RABBIT.get(), 1);
 			else
-				dropItem(ModItems.RABBIT_RAW.get(), 1);
+				dropItem(ModItems.RABBIT.get(), 1);
 
 		if (rand.nextInt(100) <= 10 + fortune)
 			entityDropItem(new ItemStack(ModItems.RABBIT_FOOT.get()), 0.0F);

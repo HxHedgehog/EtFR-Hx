@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.sound.ModSounds;
@@ -17,7 +18,7 @@ public class BlockMud extends BaseBlock {
 		setNames("mud");
 		setHardness(0.5F);
 		setResistance(0.5F);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setHarvestLevel("shovel", 0);
 	}
 

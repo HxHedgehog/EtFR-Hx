@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -12,6 +13,6 @@ public class ItemBeetrootSeeds extends ItemSeeds {
 		super(ModBlocks.BEETROOTS.get(), Blocks.farmland);
 		setTextureName("beetroot_seeds");
 		setUnlocalizedName(Utils.getUnlocalisedName("beetroot_seeds"));
-		setCreativeTab(EtFuturum.creativeTabItems);
+		setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 }

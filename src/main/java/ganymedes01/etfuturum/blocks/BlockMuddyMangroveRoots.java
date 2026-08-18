@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -23,7 +24,7 @@ public class BlockMuddyMangroveRoots extends BlockRotatedPillar {
 		Utils.setBlockSound(this, ModSounds.soundMuddyMangroveRoots);
 		setBlockTextureName("muddy_mangrove_roots");
 		setBlockName(Utils.getUnlocalisedName("muddy_mangrove_roots"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setHarvestLevel("shovel", 0);
 	}
 

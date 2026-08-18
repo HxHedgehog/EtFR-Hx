@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -15,6 +16,6 @@ public class BlockBlueIce extends BlockPackedIce {
 		this.setResistance(2.8F);
 		this.setBlockName(Utils.getUnlocalisedName("blue_ice"));
 		this.setBlockTextureName("blue_ice");
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 }

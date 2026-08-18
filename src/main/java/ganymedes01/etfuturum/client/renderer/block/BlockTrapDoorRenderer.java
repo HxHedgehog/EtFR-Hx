@@ -30,7 +30,7 @@ public class BlockTrapDoorRenderer extends BlockModelBase {
 
 	@Override
 	public boolean renderWorldBlock(IBlockAccess world, int x, int y, int z, Block block, int modelId, RenderBlocks renderer) {
-		if (block == ModBlocks.TRAPDOOR_DARK_OAK.get()) {
+		if (block == ModBlocks.DARK_OAK_TRAPDOOR.get()) {
 			return renderer.renderStandardBlock(block, x, y, z);
 		}
 

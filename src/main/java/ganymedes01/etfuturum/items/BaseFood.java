@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -12,7 +13,7 @@ public class BaseFood extends ItemFood {
 
 	public BaseFood(int p_i45339_1_, float p_i45339_2_, boolean p_i45339_3_) {
 		super(p_i45339_1_, p_i45339_2_, p_i45339_3_);
-		setCreativeTab(EtFuturum.creativeTabItems);
+		setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 
 	public BaseFood setUnlocalizedNameWithPrefix(String name) {

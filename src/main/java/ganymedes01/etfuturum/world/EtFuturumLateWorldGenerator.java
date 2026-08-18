@@ -96,7 +96,7 @@ public class EtFuturumLateWorldGenerator extends EtFuturumWorldGenerator {
 			if (ModBlocks.TUFF.isEnabled()) {
 				generateOre(tuffGen, world, rand, chunkX, chunkZ, 1, 6, ConfigWorld.deepslateMaxY);
 			}
-			if (ModBlocks.STONE.isEnabled() && ConfigWorld.maxStonesPerCluster > 0) {
+			if (ModBlocks.GRANITE.isEnabled() && ConfigWorld.maxStonesPerCluster > 0) {
 				for (WorldGenMinable stoneGenerator : stoneGen) {
 					for (int i = 0; i < 10; i++) {
 						generateOre(stoneGenerator, world, rand, chunkX, chunkZ, 1, 0, 80);
@@ -149,7 +149,7 @@ public class EtFuturumLateWorldGenerator extends EtFuturumWorldGenerator {
 	}
 
 	private void replaceBlockInChunk(World world, Block block, int x, int z, int worldX, int worldY, int worldZ, ExtendedBlockStorage array) {
-		if ((ConfigWorld.deepslateReplacesStones || block != ModBlocks.STONE.get()) && block.getMaterial() != Material.air && block != ModBlocks.TUFF.get()) {
+		if ((ConfigWorld.deepslateReplacesStones || !ModBlocks.isStoneVariant(block)) && block.getMaterial() != Material.air && block != ModBlocks.TUFF.get()) {
 			if (block.isReplaceableOreGen(world, worldX, worldY, worldZ, Blocks.stone)) {
 				array.func_150818_a/*setExtBlockID*/(x, worldY & 15, z, ModBlocks.DEEPSLATE.get());
 				array.setExtBlockMetadata(x, worldY & 15, z, 0);

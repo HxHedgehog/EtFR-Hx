@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import com.google.common.collect.HashMultimap;
 import cpw.mods.fml.relauncher.Side;
@@ -40,7 +41,7 @@ public class ItemLingeringPotion extends ItemPotion {
 	public ItemLingeringPotion() {
 		setTextureName("potion");
 		setUnlocalizedName(Utils.getUnlocalisedName("lingering_potion"));
-		setCreativeTab(EtFuturum.creativeTabItems);
+		setCreativeTab(ModdedCreativeTabs.FOOD_AND_DRINKS);
 
 		if (ConfigBlocksItems.enableLingeringPotions)
 			BlockDispenser.dispenseBehaviorRegistry.putObject(this, new DispenserBehaviourLingeringPotion());

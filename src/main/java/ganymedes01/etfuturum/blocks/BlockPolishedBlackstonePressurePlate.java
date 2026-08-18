@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -11,6 +12,6 @@ public class BlockPolishedBlackstonePressurePlate extends BlockPressurePlate {
 		setHardness(0.5F);
 		setResistance(0.5F);
 		setBlockName(Utils.getUnlocalisedName("polished_blackstone_pressure_plate"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 }

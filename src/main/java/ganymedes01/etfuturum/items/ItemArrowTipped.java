@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import com.google.common.collect.HashMultimap;
 import cpw.mods.fml.relauncher.Side;
@@ -46,7 +47,7 @@ public class ItemArrowTipped extends Item {
 		setHasSubtypes(true);
 		setTextureName("tipped_arrow");
 		setUnlocalizedName(Utils.getUnlocalisedName("tipped_arrow"));
-		setCreativeTab(EtFuturum.creativeTabItems);
+		setCreativeTab(ModdedCreativeTabs.COMBAT);
 
 		if (ConfigBlocksItems.enableTippedArrows)
 			BlockDispenser.dispenseBehaviorRegistry.putObject(this, new DispenserBehaviourTippedArrow());

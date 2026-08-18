@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -56,7 +57,7 @@ public class BlockShulkerBox extends BlockContainer {
 		this.setBlockName(Utils.getUnlocalisedName("shulker_box"));
 		this.setBlockTextureName("shulker_box");
 		this.isBlockContainer = true;
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override
@@ -93,6 +94,8 @@ public class BlockShulkerBox extends BlockContainer {
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void registerBlockIcons(IIconRegister i) {
+		// No domain prefix: registerIcon defaults to "minecraft:" domain, and
+		// textures live in assets/minecraft/textures/blocks/ (vanilla override).
 		blockIcon = colorIcons[0] = i.registerIcon("shulker_box");
 		colorIcons[1] = i.registerIcon("white_shulker_box");
 		colorIcons[2] = i.registerIcon("orange_shulker_box");

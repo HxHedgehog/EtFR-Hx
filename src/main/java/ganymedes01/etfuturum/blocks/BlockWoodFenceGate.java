@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.sound.ModSounds;
@@ -23,7 +24,7 @@ public class BlockWoodFenceGate extends BlockFenceGate {
 		setBlockName(Utils.getUnlocalisedName(type + "_fence_gate"));
 		setHardness(2.0F);
 		setResistance(5.0F);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		if (type.equals("crimson") || type.equals("warped")) {
 			Utils.setBlockSound(this, ModSounds.soundNetherWood);
 		} else if (type.equals("cherry")) {

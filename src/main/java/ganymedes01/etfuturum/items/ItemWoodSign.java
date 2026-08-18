@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.blocks.BlockWoodSign;
@@ -24,7 +25,7 @@ public class ItemWoodSign extends Item {
 		this.sign = sign;
 		setUnlocalizedName(Utils.getUnlocalisedName(sign.type + "_sign"));
 		setTextureName(sign.type + "_sign");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		this.maxStackSize = Items.sign.getItemStackLimit(new ItemStack(Items.sign));
 	}
 

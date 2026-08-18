@@ -25,16 +25,16 @@ public class NetherForestDecorator extends NetherBiomeDecorator {
 
 	private NetherForestDecorator(boolean crimson) {
 		if (crimson) {
-			hugeFungusGenerator = new WorldGenHugeFungus(false, 0, 0, ModBlocks.CRIMSON_STEM.get(), ModBlocks.NETHER_WART.get());
+			hugeFungusGenerator = new WorldGenHugeFungus(false, 0, 0, ModBlocks.CRIMSON_STEM.get(), ModBlocks.NETHER_WART_BLOCK.get());
 			grassGenerator = new WorldGenNetherGrass(true);
 			vineGenerator = new WorldGenWeepingVines();
-			wartSplatterGenerator = new WorldGenBlockSplatter(ModBlocks.NETHER_WART.get(), 0, ModBlocks.NYLIUM.get(), 0, 4);
+			wartSplatterGenerator = new WorldGenBlockSplatter(ModBlocks.NETHER_WART_BLOCK.get(), 0, ModBlocks.NYLIUM.get(), 0, 4);
 			netherrackSplatterGenerator = new WorldGenBlockSplatter(Blocks.netherrack, 0, ModBlocks.NYLIUM.get(), 0, 4);
 		} else {
-			hugeFungusGenerator = new WorldGenHugeFungus(false, 0, 1, ModBlocks.WARPED_STEM.get(), ModBlocks.NETHER_WART.get());
+			hugeFungusGenerator = new WorldGenHugeFungus(false, 0, 1, ModBlocks.WARPED_STEM.get(), ModBlocks.NETHER_WART_BLOCK.get());
 			grassGenerator = new WorldGenNetherGrass(false);
 			vineGenerator = new WorldGenTwistingVines();
-			wartSplatterGenerator = new WorldGenBlockSplatter(ModBlocks.NETHER_WART.get(), 1, ModBlocks.NYLIUM.get(), 1, 6);
+			wartSplatterGenerator = new WorldGenBlockSplatter(ModBlocks.NETHER_WART_BLOCK.get(), 1, ModBlocks.NYLIUM.get(), 1, 6);
 			netherrackSplatterGenerator = new WorldGenBlockSplatter(Blocks.netherrack, 0, ModBlocks.NYLIUM.get(), 1, 6);
 		}
 	}

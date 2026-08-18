@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.client.sound.ModSounds;
@@ -19,7 +20,7 @@ public class BlockMossCarpet extends BaseBlock {
 		setBlockName(Utils.getUnlocalisedName("moss_carpet"));
 		setHarvestLevel("hoe", 0);
 		setBlockSound(ModSounds.soundMossCarpet);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.0625F, 1.0F);
 		this.validateBlockBounds(0);
 	}

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import com.google.common.collect.Lists;
 import cpw.mods.fml.relauncher.Side;
@@ -46,7 +47,7 @@ public class BlockBeeHive extends BlockContainer {
 
 	public BlockBeeHive() {
 		super(Material.wood);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setStepSound(Block.soundTypeWood);
 	}
 

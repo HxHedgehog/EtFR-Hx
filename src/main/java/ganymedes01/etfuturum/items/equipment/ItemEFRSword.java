@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items.equipment;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModItems;
@@ -13,7 +14,7 @@ public class ItemEFRSword extends ItemSword {
 		this.setMaxDamage(durabilityOverride > -1 ? durabilityOverride : material.getMaxUses());
 		this.setUnlocalizedName(Utils.getUnlocalisedName("netherite_sword"));
 		this.setTextureName("netherite_sword");
-		this.setCreativeTab(EtFuturum.creativeTabItems);
+		this.setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 
 	@Override

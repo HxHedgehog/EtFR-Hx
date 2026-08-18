@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -32,7 +33,7 @@ public class BlockPointedDripstone extends Block {
 		this.setHarvestLevel("pickaxe", 0);
 		this.setBlockName(Utils.getUnlocalisedName("pointed_dripstone"));
 		this.setBlockTextureName("pointed_dripstone");
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

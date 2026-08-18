@@ -61,7 +61,7 @@ public final class EntityEventHandler {
 				zombie.posX,
 				zombie.posY,
 				zombie.posZ,
-				ModItems.LAVA_CHICKEN_RECORD.newItemStack()
+				ModItems.MUSIC_DISC_LAVA_CHICKEN.newItemStack()
 		);
 		drop.delayBeforeCanPickup = 10;
 		zombie.worldObj.spawnEntityInWorld(drop);
@@ -79,7 +79,7 @@ public final class EntityEventHandler {
 					ghast.posX,
 					ghast.posY,
 					ghast.posZ,
-					ModItems.TEARS_RECORD.newItemStack()
+					ModItems.MUSIC_DISC_TEARS.newItemStack()
 			);
 			drop.delayBeforeCanPickup = 10;
 			ghast.worldObj.spawnEntityInWorld(drop);

@@ -1,6 +1,5 @@
 package ganymedes01.etfuturum.world.structure;
 
-import com.gtnewhorizon.gtnhlib.util.CoordinatePacker;
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
@@ -46,7 +45,7 @@ public class OceanMonument {
 				final int x = Integer.parseInt(coords[0].trim());
 				final int y = Integer.parseInt(coords[1].trim());
 				final int z = Integer.parseInt(coords[2].trim());
-				final long key = CoordinatePacker.pack(x, y, z);
+				final long key = packCoords(x, y, z);
 				final int value = Integer.parseInt(data[1]);
 
 				map.put(key, value);
@@ -65,9 +64,9 @@ public class OceanMonument {
 		for (Long2IntMap.Entry entry : map.long2IntEntrySet()) {
 			final long pos = entry.getLongKey();
 			final int value = entry.getIntValue();
-			final int posX = CoordinatePacker.unpackX(pos);
-			final int posY = CoordinatePacker.unpackY(pos);
-			final int posZ = CoordinatePacker.unpackZ(pos);
+			final int posX = unpackX(pos);
+			final int posY = unpackY(pos);
+			final int posZ = unpackZ(pos);
 
 			Block block = null;
 			int meta = 0;
@@ -85,7 +84,7 @@ public class OceanMonument {
 					block = Blocks.gold_block;
 					break;
 				case 5:
-					block = ConfigBlocksItems.enableSponge ? ModBlocks.SPONGE.get() : Blocks.sponge;
+					block = Blocks.sponge;
 					meta = 1;
 					break;
 				case 6:
@@ -193,5 +192,21 @@ public class OceanMonument {
 		}
 
 		return false;
+	}
+
+	private static long packCoords(int x, int y, int z) {
+		return ((long) x & 0x3FFFFFFL) << 38 | ((long) y & 0xFFFL) | ((long) z & 0x3FFFFFFL) << 12;
+	}
+
+	private static int unpackX(long packed) {
+		return (int) (packed >> 38);
+	}
+
+	private static int unpackY(long packed) {
+		return (int) (packed << 52 >> 52);
+	}
+
+	private static int unpackZ(long packed) {
+		return (int) (packed << 26 >> 38);
 	}
 }

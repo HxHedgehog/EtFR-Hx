@@ -28,7 +28,7 @@ public class SmithingTableRecipes {
 		if (ConfigBlocksItems.enableNetherite) {
 			SmithingTableRecipes.getInstance().addRecipe(new ItemStack(ModItems.NETHERITE_PICKAXE.get()), "ingotNetherite", new ItemStack(Items.diamond_pickaxe, 1, OreDictionary.WILDCARD_VALUE));
 			SmithingTableRecipes.getInstance().addRecipe(new ItemStack(ModItems.NETHERITE_AXE.get()), "ingotNetherite", new ItemStack(Items.diamond_axe, 1, OreDictionary.WILDCARD_VALUE));
-			SmithingTableRecipes.getInstance().addRecipe(new ItemStack(ModItems.NETHERITE_SPADE.get()), "ingotNetherite", new ItemStack(Items.diamond_shovel, 1, OreDictionary.WILDCARD_VALUE));
+			SmithingTableRecipes.getInstance().addRecipe(new ItemStack(ModItems.NETHERITE_SHOVEL.get()), "ingotNetherite", new ItemStack(Items.diamond_shovel, 1, OreDictionary.WILDCARD_VALUE));
 			SmithingTableRecipes.getInstance().addRecipe(new ItemStack(ModItems.NETHERITE_SWORD.get()), "ingotNetherite", new ItemStack(Items.diamond_sword, 1, OreDictionary.WILDCARD_VALUE));
 			SmithingTableRecipes.getInstance().addRecipe(new ItemStack(ModItems.NETHERITE_HOE.get()), "ingotNetherite", new ItemStack(Items.diamond_hoe, 1, OreDictionary.WILDCARD_VALUE));
 

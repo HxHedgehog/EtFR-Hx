@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -31,7 +32,7 @@ public class BlockBanner extends BlockContainer {
 		setHardness(1.0F);
 		setStepSound(soundTypeWood);
 		setBlockName(Utils.getUnlocalisedName("banner"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 
 		float f = 0.25F;
 		float f1 = 1.0F;

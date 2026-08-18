@@ -613,14 +613,7 @@ public class ServerEventHandler {
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void harvestEvent(BlockEvent.HarvestDropsEvent event) {
-		if (ConfigFunctions.enableSilkTouchingMushrooms && event.isSilkTouching)
-			if (event.block == Blocks.brown_mushroom_block) {
-				event.drops.clear();
-				event.drops.add(new ItemStack(ModBlocks.BROWN_MUSHROOM.get()));
-			} else if (event.block == Blocks.red_mushroom_block) {
-				event.drops.clear();
-				event.drops.add(new ItemStack(ModBlocks.RED_MUSHROOM.get()));
-			}
+		// Mushroom silk touch drops now handled by MixinBlockHugeMushroom (canSilkHarvest = true)
 
 		if (ConfigFunctions.enableSticksFromDeadBushes) {
 			if (event.block == Blocks.deadbush) {
@@ -1123,6 +1116,23 @@ public class ServerEventHandler {
 							doMudConversion(world, x, y, z, player, oldBlock, meta, heldStack);
 						}
 
+						// 锄头转化缠根泥土（官方 HoeItem.TILLABLES: ROOTED_DIRT -> dirt 并掉落垂根）
+						if (heldStack != null && heldStack.getItem() instanceof ItemHoe && oldBlock == ModBlocks.ROOTED_DIRT.get()) {
+							player.swingItem();
+							if (!world.isRemote) {
+								world.setBlock(x, y, z, Blocks.dirt, 0, 2);
+								heldStack.damageItem(1, player);
+								world.playSoundEffect(x + 0.5F, y + 0.5F, z + 0.5F, Reference.MCAssetVer + ":item.hoe.till", 1.0F, 1.0F);
+								if (!player.capabilities.isCreativeMode) {
+									EntityItem entityItem = new EntityItem(world, x + 0.5D, y + 0.5D, z + 0.5D, ModBlocks.HANGING_ROOTS.newItemStack());
+									entityItem.delayBeforeCanPickup = 10;
+									world.spawnEntityInWorld(entityItem);
+								}
+								event.setResult(Result.ALLOW);
+								event.setCanceled(true);
+							}
+						}
+
 						if (ConfigFunctions.mobSpawnerEgging && oldBlock == Blocks.mob_spawner && heldStack != null && heldStack.getItem() == Items.spawn_egg) {
 							TileEntityMobSpawner tileEntityMobSpawner = (TileEntityMobSpawner) world.getTileEntity(x, y, z);
 							String entityName = EntityList.getStringFromID(heldStack.getItemDamage());
@@ -1152,7 +1162,7 @@ public class ServerEventHandler {
 								if (ConfigBlocksItems.enableGrassPath && toolClasses.contains("shovel") && !world.getBlock(x, y + 1, z).getMaterial().isSolid() && (oldBlock == Blocks.grass || oldBlock == Blocks.dirt || oldBlock == Blocks.mycelium)) {
 									player.swingItem();
 									if (!world.isRemote) {
-										world.setBlock(x, y, z, ModBlocks.GRASS_PATH.get());
+										world.setBlock(x, y, z, ModBlocks.DIRT_PATH.get());
 										heldStack.damageItem(1, player);
 										world.playSoundEffect(x + 0.5F, y + 0.5F, z + 0.5F, Reference.MCAssetVer + ":item.shovel.flatten", 1.0F, 1.0F);
 									}
@@ -1181,7 +1191,7 @@ public class ServerEventHandler {
 			int itemDamage = heldStack.getItemDamage();
 			isValid = heldStack.getItem() == ExternalContent.Items.EXTRAUTILS_WATERING_CAN.get() && (itemDamage == 0 || itemDamage == 3);
 		}
-		if (ModBlocks.MUD.isEnabled() && isValid && ((oldBlock == Blocks.dirt && meta != 2) || oldBlock == ModBlocks.COARSE_DIRT.get())) { //TODO: Rooted dirt
+		if (ModBlocks.MUD.isEnabled() && isValid && ((oldBlock == Blocks.dirt && meta != 2) || oldBlock == ModBlocks.COARSE_DIRT.get() || oldBlock == ModBlocks.ROOTED_DIRT.get())) {
 			world.setBlock(x, y, z, ModBlocks.MUD.get());
 			world.playSoundEffect(x + 0.5F, y + 0.5F, z + 0.5F, Reference.MCAssetVer + ":item.bottle.empty", 1.0F, 1.0F);
 			player.swingItem();
@@ -1287,14 +1297,14 @@ public class ServerEventHandler {
 		}
 
 		Random rand = event.entityLiving.worldObj.rand;
-		if (ModItems.MUTTON_RAW.isEnabled() && ModItems.MUTTON_COOKED.isEnabled()
+		if (ModItems.MUTTON.isEnabled() && ModItems.COOKED_MUTTON.isEnabled()
 				&& event.entityLiving.worldObj.getGameRules().getGameRuleBooleanValue("doMobLoot") && event.entityLiving instanceof EntitySheep) {
 			int amount = rand.nextInt(3) + 1 + rand.nextInt(1 + event.lootingLevel);
 			for (int i = 0; i < amount; i++)
 				if (event.entityLiving.isBurning()) {
-					addDrop(new ItemStack(ModItems.MUTTON_COOKED.get()), event.entityLiving, event.drops);
+					addDrop(new ItemStack(ModItems.COOKED_MUTTON.get()), event.entityLiving, event.drops);
 				} else {
-					addDrop(new ItemStack(ModItems.MUTTON_RAW.get()), event.entityLiving, event.drops);
+					addDrop(new ItemStack(ModItems.MUTTON.get()), event.entityLiving, event.drops);
 				}
 		}
 
@@ -1530,7 +1540,7 @@ public class ServerEventHandler {
 			int z = MathHelper.floor_double(event.z);
 
 			if (event.world.provider instanceof WorldProviderHell) {
-				if (world.getBlock(x, y - 1, z) == ModBlocks.NETHER_WART.get() && world.getBlockMetadata(x, y - 1, z) == 0) {
+				if (world.getBlock(x, y - 1, z) == ModBlocks.NETHER_WART_BLOCK.get() && world.getBlockMetadata(x, y - 1, z) == 0) {
 					if (!(event.entity instanceof EntityFlying)) {
 						event.setResult(Result.DENY);
 					}

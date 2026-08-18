@@ -62,6 +62,18 @@ public class ConfigWorld extends ConfigBase {
 	public static boolean amethystDimensionBlacklistAsWhitelist;
 	public static int cherryTreeRarity;
 	public static boolean bambooWorldgen;
+	public static boolean enableLushCaves;
+	public static int lushCaveRarity;
+	public static boolean enableModernCaves;
+	public static boolean cavePillars;
+	public static float caveCavityWeight;
+	public static float caveCavityScale;
+	public static float caveTunnelWeight;
+	public static float caveFillWeight;
+	public static float caveLedgeStrength;
+	public static float caveMountainVerticalScale;
+	public static float caveFloorY;
+	public static float caveFloorVariation;
 
 	public static int crimsonForestID;
 	public static int warpedForestID;
@@ -123,7 +135,7 @@ public class ConfigWorld extends ConfigBase {
 			int oldID = oldFossilIDProp.getInt();
 			switch (oldID) {
 				default:
-					fossilBlockID = "etfuturum:bone";
+					fossilBlockID = "minecraft:bone_block";
 					break;
 				case 1:
 					fossilBlockID = "netherlicious:BoneBlock";
@@ -133,32 +145,32 @@ public class ConfigWorld extends ConfigBase {
 					break;
 			}
 			getCategory(catGeneration).remove("fossilBoneBlock");
-			get(catGeneration, "fossilBlockID", "etfuturum:bone").set(fossilBlockID);
+			get(catGeneration, "fossilBlockID", "minecraft:bone_block").set(fossilBlockID);
 			save();
 		}
-		fossilBlockID = getString("fossilBlockID", catGeneration, "etfuturum:bone", "Use a namespaced ID, + optionally meta (max 3) to choose the block that makes up fossils. The max meta is 3 because the rotations will change the meta. North/South is the meta + 4 and East/West is + 8.\nNetherlicious bone block is \"netherlicious:BoneBlock\" and UpToDate bone block is \"uptodate:bone_block\".\nIf the chosen block does not exist then fossils will not generate. If Netherlicious is installed, its bone block will be used if this is set to \"etfutrum:bone\" and Et Futurum Requiem bone blocks are disabled.");
+		fossilBlockID = getString("fossilBlockID", catGeneration, "minecraft:bone_block", "Use a namespaced ID, + optionally meta (max 3) to choose the block that makes up fossils. The max meta is 3 because the rotations will change the meta. North/South is the meta + 4 and East/West is + 8.\nNetherlicious bone block is \"netherlicious:BoneBlock\" and UpToDate bone block is \"uptodate:bone_block\".\nIf the chosen block does not exist then fossils will not generate. If Netherlicious is installed, its bone block will be used if this is set to \"minecraft:bone_block\" and Et Futurum Requiem bone blocks are disabled.");
 
 		if (hasKey(catGeneration, "amethystOuterBlock")) {
 			Property oldAmethystOuterIDProp = get(catGeneration, "amethystOuterBlock", 0);
 			int oldID = oldAmethystOuterIDProp.getInt();
 			switch (oldID) {
 				default:
-					amethystOuterBlockID = "etfuturum:smooth_basalt";
+					amethystOuterBlockID = "minecraft:smooth_basalt";
 					break;
 				case 1:
-					amethystOuterBlockID = "etfuturum:tuff";
+					amethystOuterBlockID = "minecraft:tuff";
 					break;
 				case 2:
 					amethystOuterBlockID = "netherlicious:BasaltBricks:6";
 					break;
 			}
 			getCategory(catGeneration).remove("amethystOuterBlock");
-			get(catGeneration, "amethystOuterBlockID", "etfuturum:bone").set(amethystOuterBlockID);
+			get(catGeneration, "amethystOuterBlockID", "minecraft:bone_block").set(amethystOuterBlockID);
 			save();
 		}
-		amethystOuterBlockID = getString("amethystOuterBlockID", catGeneration, "etfuturum:smooth_basalt", "Use a namespaced ID, + optionally meta (max 15) to choose the block that makes up the outer layer of amethyst geodes.\nThe outer layer was formerly \"etfuturum:tuff\" before it was changed in later 1.17 snapshots. Netherlicious smooth basalt is \"netherlicious:BasaltBricks:6\"\nIf the chosen block does not exist then amethyst geodes will not generate.");
+		amethystOuterBlockID = getString("amethystOuterBlockID", catGeneration, "minecraft:smooth_basalt", "Use a namespaced ID, + optionally meta (max 15) to choose the block that makes up the outer layer of amethyst geodes.\nThe outer layer was formerly \"minecraft:tuff\" before it was changed in later 1.17 snapshots. Netherlicious smooth basalt is \"netherlicious:BasaltBricks:6\"\nIf the chosen block does not exist then amethyst geodes will not generate.");
 
-		amethystMiddleBlockID = getString("amethystMiddleBlockID", catGeneration, "etfuturum:calcite", "Use a namespaced ID, + optionally meta (max 15) to choose the block that makes up the middle layer of amethyst geodes.\nIf the chosen block does not exist then amethyst geodes will not generate.");
+		amethystMiddleBlockID = getString("amethystMiddleBlockID", catGeneration, "minecraft:calcite", "Use a namespaced ID, + optionally meta (max 15) to choose the block that makes up the middle layer of amethyst geodes.\nIf the chosen block does not exist then amethyst geodes will not generate.");
 
 		Property fossilBlacklistProp = get(catGeneration, "fossilDimensionBlacklist", new int[]{});
 		fossilBlacklistProp.comment = "The dimension IDs of the dimensions the fossil structures should not spawn in. Fossils will also not spawn in any dimension that is not an instance of WorldProviderSurface";
@@ -185,6 +197,18 @@ public class ConfigWorld extends ConfigBase {
 		amethystMaxY = getInt("amethystMaxY", catGeneration, 46, 6, 245, "Max Y level amethyst geodes should attempt to generate at");
 		cherryTreeRarity = getInt("cherryTreeRarity", catGeneration, 72, 0, Byte.MAX_VALUE, "How rare should cherry trees be? 1/x chance per chunk, 1 means a tree attempts to appear every chunk. 0 = no cherry trees. They will spawn in mountain-type biomes.");
 		bambooWorldgen = getBoolean("bambooWorldgen", catGeneration, true, "Whether bamboo should naturally spawn in the overworld. Turning this off allows you to use bamboo based blocks without bamboo world gen for mod compatability.");
+		enableLushCaves = getBoolean("enableLushCaves", catGeneration, true, "Whether lush cave vegetation (moss patches, rooted azalea trees with rooted dirt columns and hanging roots) should naturally generate in birch forest and plains biomes.");
+		lushCaveRarity = getInt("lushCaveRarity", catGeneration, 4, 1, Byte.MAX_VALUE, "How rare should lush cave attempts be? 1/x chance per chunk. 1 means an attempt appears every chunk. Only has an effect when enableLushCaves is true.");
+		enableModernCaves = getBoolean("enableModernCaves", catGeneration, true, "Replaces the vanilla cave generator with modern noise-based caves (large open chambers, tunnels, ledges and stone pillars). Vanilla worm caves are still generated and may connect to the noise caves. Disabling this restores vanilla cave generation entirely.");
+		cavePillars = getBoolean("cavePillars", catGeneration, true, "Generate the tall stone pillars that connect the floor and ceiling of large caves. Only has an effect when enableModernCaves is true.");
+		caveCavityWeight = getFloat("caveCavityWeight", catGeneration, 1.0F, 0.0F, 4.0F, "Weight of the main cave chambers (the hollow areas). Higher = bigger/more caverns. Only has an effect when enableModernCaves is true.");
+		caveCavityScale = getFloat("caveCavityScale", catGeneration, 1.0F, 0.1F, 4.0F, "Global scale multiplier for cave cavity size. Higher = larger cavities. Only has an effect when enableModernCaves is true.");
+		caveTunnelWeight = getFloat("caveTunnelWeight", catGeneration, 0.5F, 0.0F, 4.0F, "Weight of the noise tunnels. Lower = shorter/weaker tunnels (0 disables them). Vanilla worm caves are separate and unaffected. Only has an effect when enableModernCaves is true.");
+		caveFillWeight = getFloat("caveFillWeight", catGeneration, 1.0F, 0.0F, 4.0F, "Weight of the solid fill offset. Higher = more rock filled in, fewer/smaller caves. Only has an effect when enableModernCaves is true.");
+		caveLedgeStrength = getFloat("caveLedgeStrength", catGeneration, 1.0F, 0.0F, 4.0F, "Strength of the ledges/terraces carved into cave walls. 0 disables ledges. Only has an effect when enableModernCaves is true.");
+		caveMountainVerticalScale = getFloat("caveMountainVerticalScale", catGeneration, 1.5F, 1.0F, 4.0F, "How much taller caves become under tall terrain such as mountains. Higher = taller, potentially vertically overlapping caves. Only has an effect when enableModernCaves is true.");
+		caveFloorY = getFloat("caveFloorY", catGeneration, 6.0F, 0.0F, 32.0F, "Base height (blocks above bedrock) of the noise cave floor. Higher = higher, flatter cave floors. Only has an effect when enableModernCaves is true.");
+		caveFloorVariation = getFloat("caveFloorVariation", catGeneration, 5.0F, 0.0F, 16.0F, "Vertical variation of the smooth cave floor hills. Lower = flatter floor, higher = more rolling hills. Only has an effect when enableModernCaves is true.");
 
 		crimsonForestID = getInt("crimsonForestID", catBiomes, 200, -1, 65536, "Set to -1 to disable the generation of Crimson Forests. To use an ID above 255, EndlessIDs is required.");
 		warpedForestID = getInt("warpedForestID", catBiomes, 201, -1, 65536, "Set to -1 to disable the generation of Warped Forests. To use an ID above 255, EndlessIDs is required.");
@@ -206,7 +230,7 @@ public class ConfigWorld extends ConfigBase {
 	@Override
 	protected void initValues() {
 		if (enableFossils) {
-			if (ModsList.NETHERLICIOUS.isLoaded() && fossilBlockID.equals("etfuturum:bone_block") && !ModBlocks.BONE.isEnabled()) {
+			if (ModsList.NETHERLICIOUS.isLoaded() && fossilBlockID.equals("minecraft:bone_block") && !ModBlocks.BONE_BLOCK.isEnabled()) {
 				fossilBlock = new RegistryMapping<>(ExternalContent.Blocks.NETHERLICIOUS_BONE_BLOCK.get(), 0);
 			} else {
 				String[] fossilBlockArray = fossilBlockID.split(":");

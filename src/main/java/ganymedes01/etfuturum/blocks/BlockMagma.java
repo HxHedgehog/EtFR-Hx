@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import net.minecraft.block.Block;
@@ -21,7 +22,7 @@ public class BlockMagma extends BaseBlock {
 		setResistance(0.5F);
 		setLightLevel(0.2F);
 		setNames("magma");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	public static final DamageSource HOT_FLOOR = (new DamageSource("hotFloor")).setFireDamage();

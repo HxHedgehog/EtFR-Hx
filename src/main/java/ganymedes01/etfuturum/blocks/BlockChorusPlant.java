@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -27,7 +28,7 @@ public class BlockChorusPlant extends Block {
 		setStepSound(soundTypeWood);
 		setBlockTextureName("chorus_plant");
 		setBlockName(Utils.getUnlocalisedName("chorus_plant"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	//Come back to: Make it so the dragon can destroy the fruits if the new end is on

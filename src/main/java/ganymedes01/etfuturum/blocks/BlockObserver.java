@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -33,7 +34,7 @@ public class BlockObserver extends Block implements IBlockObserver {
 		this.setResistance(3F);
 		this.setBlockName(Utils.getUnlocalisedName("observer"));
 		this.setBlockTextureName("observer");
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override
@@ -60,6 +61,14 @@ public class BlockObserver extends Block implements IBlockObserver {
 					break;
 			}
 			return (side == topSide || side == Facing.oppositeSide[topSide]) ? this.observerTop : this.blockIcon;
+		}
+	}
+
+	@Override
+	public void onBlockAdded(World world, int x, int y, int z) {
+		super.onBlockAdded(world, x, y, z);
+		if (!world.isRemote) {
+			world.scheduleBlockUpdate(x, y, z, this, 2);
 		}
 	}
 

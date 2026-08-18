@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -38,7 +39,7 @@ public class BlockNylium extends BaseSubtypesBlock implements IGrowable {
 		setHardness(0.4F);
 		setResistance(0.4F);
 		setNames("nylium");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setBlockSound(ModSounds.soundNylium);
 		setTickRandomly(true);
 	}

@@ -74,3 +74,6 @@ item.bed.name=Красная кровать
 tile.bed.name=Красная кровать
 tile.fence.name=Забор из дуба
 tile.trapdoor.name=Дубовый люк
+tile.mushroom_stem.name=Ножка гриба
+tile.brown_mushroom_block.name=Коричневый грибной блок
+tile.red_mushroom_block.name=Красный грибной блок

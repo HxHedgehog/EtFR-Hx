@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks.ores;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -16,7 +17,7 @@ public class BlockOreNetherGold extends Block {
 	public BlockOreNetherGold() {
 		super(Material.rock);
 		setStepSound(Block.soundTypeStone);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setHardness(3.0F);
 		setResistance(5.0F);
 		setBlockTextureName("nether_gold_ore");

@@ -1,6 +1,10 @@
 package ganymedes01.etfuturum;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.registry.GameRegistry;
+import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.blocks.BlockWoodSign;
 import ganymedes01.etfuturum.compat.ModsList;
 
@@ -50,13 +54,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public enum ModItems {
-	MUTTON_RAW(ConfigBlocksItems.enableMutton, new BaseFood(2, 0.3F, true).setNames("mutton")),
-	MUTTON_COOKED(ConfigBlocksItems.enableMutton, new BaseFood(6, 0.8F, true).setNames("cooked_mutton")),
+	MUTTON(ConfigBlocksItems.enableMutton, new BaseFood(2, 0.3F, true).setNames("mutton")),
+	COOKED_MUTTON(ConfigBlocksItems.enableMutton, new BaseFood(6, 0.8F, true).setNames("cooked_mutton")),
 	PRISMARINE_SHARD(ConfigBlocksItems.enablePrismarine, new BaseItem("prismarine_shard")),
 	PRISMARINE_CRYSTALS(ConfigBlocksItems.enablePrismarine, new BaseItem("prismarine_crystals")),
 	WOODEN_ARMORSTAND(ConfigBlocksItems.enableArmourStand, new ItemArmorStand()),
-	RABBIT_RAW(ConfigEntities.enableRabbit, new BaseFood(3, 0.3F, true).setNames("rabbit")),
-	RABBIT_COOKED(ConfigEntities.enableRabbit, new BaseFood(5, 0.6F, true).setNames("cooked_rabbit")),
+	RABBIT(ConfigEntities.enableRabbit, new BaseFood(3, 0.3F, true).setNames("rabbit")),
+	COOKED_RABBIT(ConfigEntities.enableRabbit, new BaseFood(5, 0.6F, true).setNames("cooked_rabbit")),
 	RABBIT_FOOT(ConfigEntities.enableRabbit, new BaseItem("rabbit_foot").setPotionEffect("+0+1-2+3&4-4+13")),
 	RABBIT_HIDE(ConfigEntities.enableRabbit, new BaseItem("rabbit_hide")),
 	RABBIT_STEW(ConfigEntities.enableRabbit, new ItemRabbitStew()),
@@ -70,7 +74,7 @@ public enum ModItems {
 	DRAGON_BREATH(ConfigBlocksItems.enableLingeringPotions, new BaseItem("dragon_breath").setContainerItem(Items.glass_bottle).setPotionEffect("-14+13")),
 	ELYTRA(ConfigMixins.enableElytra, new ItemArmorElytra()),
 	END_CRYSTAL(ConfigEntities.enableDragonRespawn, new ItemEndCrystal()),
-	NUGGET_IRON(ConfigBlocksItems.enableIronNugget, new BaseItem("iron_nugget")),
+	IRON_NUGGET(ConfigBlocksItems.enableIronNugget, new BaseItem("iron_nugget")),
 	RAW_ORE(ConfigBlocksItems.enableRawOres, new BaseSubtypesItem("raw_copper", "raw_iron", "raw_gold").setNames("raw_ore")),
 	//modded_raw_ore(true, new ItemRawOre(true)),
 	NETHERITE_SCRAP(ConfigBlocksItems.enableNetherite, new BaseItem("netherite_scrap")),
@@ -80,7 +84,7 @@ public enum ModItems {
 	NETHERITE_LEGGINGS(ConfigBlocksItems.enableNetherite, new ItemEFRArmour(ModMaterials.NETHERITE_ARMOUR, 2, ConfigBlocksItems.netheriteLeggingsDurability)),
 	NETHERITE_BOOTS(ConfigBlocksItems.enableNetherite, new ItemEFRArmour(ModMaterials.NETHERITE_ARMOUR, 3, ConfigBlocksItems.netheriteBootsDurability)),
 	NETHERITE_PICKAXE(ConfigBlocksItems.enableNetherite, new ItemEFRPickaxe(ModMaterials.NETHERITE_TOOL, ConfigBlocksItems.netheritePickaxeDurability)),
-	NETHERITE_SPADE(ConfigBlocksItems.enableNetherite, new ItemEFRSpade(ModMaterials.NETHERITE_TOOL, ConfigBlocksItems.netheriteSpadeDurability)),
+	NETHERITE_SHOVEL(ConfigBlocksItems.enableNetherite, new ItemEFRSpade(ModMaterials.NETHERITE_TOOL, ConfigBlocksItems.netheriteSpadeDurability)),
 	NETHERITE_AXE(ConfigBlocksItems.enableNetherite, new ItemEFRAxe(ModMaterials.NETHERITE_TOOL, ConfigBlocksItems.netheriteAxeDurability)),
 	NETHERITE_HOE(ConfigBlocksItems.enableNetherite, new ItemEFRHoe(ModMaterials.NETHERITE_TOOL, ConfigBlocksItems.netheriteHoeDurability)),
 	NETHERITE_SWORD(ConfigBlocksItems.enableNetherite, new ItemEFRSword(ModMaterials.NETHERITE_TOOL, ConfigBlocksItems.netheriteSwordDurability)),
@@ -89,16 +93,16 @@ public enum ModItems {
 	COPPER_INGOT(ConfigBlocksItems.enableCopper && !ConfigModCompat.disableCopperOreAndIngotOnly, new BaseItem("copper_ingot")),
 	SUSPICIOUS_STEW(ConfigBlocksItems.enableSuspiciousStew, new ItemSuspiciousStew()),
 	SWEET_BERRIES(ConfigBlocksItems.enableSweetBerryBushes, new ItemSweetBerries()),
-	GLOW_BERRIES_ITEM(ConfigBlocksItems.enableGlowBerries, new ItemGlowBerries(ModBlocks.CAVE_VINE.get())),
+	GLOW_BERRIES(ConfigBlocksItems.enableGlowBerries, new ItemGlowBerries(ModBlocks.CAVE_VINE.get())),
 	SHULKER_SHELL(ConfigBlocksItems.enableShulkerBoxes, new BaseItem("shulker_shell")),
-	PIGSTEP_RECORD(ConfigBlocksItems.enablePigstep, new ItemEtFuturumRecord("pigstep")),
-	OTHERSIDE_RECORD(ConfigBlocksItems.enableOtherside, new ItemEtFuturumRecord("otherside")),
-	PRECIPICE_RECORD(ConfigBlocksItems.enablePrecipice, new ItemEtFuturumRecord("precipice")),
-	CREATOR_MUSIC_BOX_RECORD(ConfigBlocksItems.enableCreatorMusicBox, new ItemEtFuturumRecord("creator_music_box")),
-	CREATOR_RECORD(ConfigBlocksItems.enableCreator, new ItemEtFuturumRecord("creator")),
-	TEARS_RECORD(ConfigBlocksItems.enableTears, new ItemEtFuturumRecord("tears")),
-	LAVA_CHICKEN_RECORD(ConfigBlocksItems.enableLavaChicken, new ItemEtFuturumRecord("lava_chicken")),
-	FIVE_RECORD(ConfigBlocksItems.enable5, new ItemEtFuturumRecord("5")),
+	MUSIC_DISC_PIGSTEP(ConfigBlocksItems.enablePigstep, new ItemEtFuturumRecord("pigstep")),
+	MUSIC_DISC_OTHERSIDE(ConfigBlocksItems.enableOtherside, new ItemEtFuturumRecord("otherside")),
+	MUSIC_DISC_PRECIPICE(ConfigBlocksItems.enablePrecipice, new ItemEtFuturumRecord("precipice")),
+	MUSIC_DISC_CREATOR_MUSIC_BOX(ConfigBlocksItems.enableCreatorMusicBox, new ItemEtFuturumRecord("creator_music_box")),
+	MUSIC_DISC_CREATOR(ConfigBlocksItems.enableCreator, new ItemEtFuturumRecord("creator")),
+	MUSIC_DISC_TEARS(ConfigBlocksItems.enableTears, new ItemEtFuturumRecord("tears")),
+	MUSIC_DISC_LAVA_CHICKEN(ConfigBlocksItems.enableLavaChicken, new ItemEtFuturumRecord("lava_chicken")),
+	MUSIC_DISC_5(ConfigBlocksItems.enable5, new ItemEtFuturumRecord("5")),
 	DISC_FRAGMENT_5(ConfigBlocksItems.enable5, new BaseItem("disc_fragment_5", true)),
 	AMETHYST_SHARD(ConfigBlocksItems.enableAmethyst, new BaseItem("amethyst_shard")),
 	SHULKER_BOX_UPGRADE(ModsList.IRON_CHEST.isLoaded() && ConfigModCompat.shulkerBoxesIronChest, new ItemShulkerBoxUpgrade()),
@@ -165,11 +169,11 @@ public enum ModItems {
 	WITCHERY_HAWTHORN_CHEST_BOAT(ConfigBlocksItems.enableNewBoats && ModsList.WITCHERY.isLoaded(), new ItemNewBoat("witchery", "hawthorn", () -> GameRegistry.findItem("witchery", "witchwood"), 2, true, false)),
 
 	//legacy sign items -- new signs use their ItemBlock as the sign item instead
-	ITEM_SIGN_SPRUCE(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.SIGN_SPRUCE.get())),
-	ITEM_SIGN_BIRCH(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.SIGN_BIRCH.get())),
-	ITEM_SIGN_JUNGLE(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.SIGN_JUNGLE.get())),
-	ITEM_SIGN_ACACIA(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.SIGN_ACACIA.get())),
-	ITEM_SIGN_DARK_OAK(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.SIGN_DARK_OAK.get())),
+	SPRUCE_SIGN(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.SPRUCE_SIGN.get())),
+	BIRCH_SIGN(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.BIRCH_SIGN.get())),
+	JUNGLE_SIGN(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.JUNGLE_SIGN.get())),
+	ACACIA_SIGN(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.ACACIA_SIGN.get())),
+	DARK_OAK_SIGN(ConfigBlocksItems.enableVanillaSigns, new ItemWoodSign((BlockWoodSign) ModBlocks.DARK_OAK_SIGN.get())),
 
 	//Mod Support
 	MODDED_RAW_ORE(Utils.enableModdedRawOres(), new ItemGeneralModdedRawOre("raw_aluminum", "raw_tin", "raw_silver", "raw_lead", "raw_nickel", "raw_platinum", "raw_mythril",
@@ -181,7 +185,7 @@ public enum ModItems {
 
 	public static final ModItems[] CHEST_BOATS = new ModItems[]{OAK_CHEST_BOAT, SPRUCE_CHEST_BOAT, BIRCH_CHEST_BOAT, JUNGLE_CHEST_BOAT, ACACIA_CHEST_BOAT, DARK_OAK_CHEST_BOAT, CHERRY_CHEST_BOAT, BAMBOO_CHEST_RAFT};
 	public static final ModItems[] BOATS = new ModItems[]{OAK_BOAT, SPRUCE_BOAT, BIRCH_BOAT, JUNGLE_BOAT, ACACIA_BOAT, DARK_OAK_BOAT, CHERRY_BOAT, BAMBOO_RAFT};
-	public static final ModItems[] OLD_SIGN_ITEMS = new ModItems[]{ITEM_SIGN_SPRUCE, ITEM_SIGN_BIRCH, ITEM_SIGN_JUNGLE, ITEM_SIGN_ACACIA, ITEM_SIGN_DARK_OAK};
+	public static final ModItems[] OLD_SIGN_ITEMS = new ModItems[]{SPRUCE_SIGN, BIRCH_SIGN, JUNGLE_SIGN, ACACIA_SIGN, DARK_OAK_SIGN};
 
 	/*
 	 * Stand-in static final fields because some mods incorrectly referenced my code directly.
@@ -195,10 +199,46 @@ public enum ModItems {
 	public static final ModItems[] VALUES = values();
 
 	public static void init() {
+		// Forge 1.7.10's GameRegistry.registerItem(item, name, modId) ignores the modId
+		// parameter (deprecated, unused). The namespace is determined by the active
+		// ModContainer via GameData.addPrefix(). We reflectively swap the active container
+		// to the minecraft dummy so most mod items register under "minecraft:" and match
+		// CreativeTabData lookups without alias mapping. If the name already exists in
+		// vanilla 1.7.10 (detected dynamically via Item.getByNameOrId), fall back to
+		// etfuturum: namespace to avoid "registered twice" crashes.
+		ModContainer mcContainer = Utils.getMinecraftContainer();
+		ModContainer oldContainer = Loader.instance().activeModContainer();
 		for (ModItems item : VALUES) {
-			if (item.isEnabled()) { //Honestly what do you think it's doing lmfao
-				GameRegistry.registerItem(item.get(), item.name().toLowerCase());
+			if (item.isEnabled()) {
+				String name = item.getRegName();
+				boolean vanillaConflict = Item.itemRegistry.getObject("minecraft:" + name) != null;
+				if (vanillaConflict) {
+					Utils.setActiveModContainer(oldContainer);
+				} else {
+					Utils.setActiveModContainer(mcContainer);
+				}
+				// 冲突物品（名称含 _same）设置到 etfuturum.blocks 标签页
+				if (name.endsWith("_same")) {
+					item.get().setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
+				}
+				GameRegistry.registerItem(item.get(), name);
 			}
+		}
+		Utils.setActiveModContainer(oldContainer);
+	}
+
+	/**
+	 * Returns the registration name for this item.
+	 * Most items use the enum name lowercased, but some are overridden
+	 * to match official Minecraft 1.21.4 registry names (eliminating alias mapping).
+	 * DYE gets a "_same" suffix because "minecraft:dye" already exists in 1.7.10
+	 * (16-metadata vanilla item); it is placed in the etfuturum.blocks creative tab.
+	 */
+	public String getRegName() {
+		switch (this) {
+			case DYE: return "dye_same";
+			default:
+			return name().toLowerCase();
 		}
 	}
 

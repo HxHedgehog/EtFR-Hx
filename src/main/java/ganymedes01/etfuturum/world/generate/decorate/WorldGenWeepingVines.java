@@ -17,7 +17,7 @@ public class WorldGenWeepingVines extends WorldGenerator {
 			return false;
 		} else {
 			Block block = world.getBlock(x, y + 1, z);
-			if (!(block instanceof BlockNetherrack) && !(block == ModBlocks.NETHER_WART.get() && world.getBlockMetadata(x, y + 1, z) == 0)) {
+			if (!(block instanceof BlockNetherrack) && !(block == ModBlocks.NETHER_WART_BLOCK.get() && world.getBlockMetadata(x, y + 1, z) == 0)) {
 				return false;
 			} else {
 				this.placeRoofNetherWart(world, rand, x, y, z);
@@ -28,7 +28,7 @@ public class WorldGenWeepingVines extends WorldGenerator {
 	}
 
 	private void placeRoofNetherWart(World world, Random rand, int x, int y, int z) {
-		world.setBlock(x, y, z, ModBlocks.NETHER_WART.get());
+		world.setBlock(x, y, z, ModBlocks.NETHER_WART_BLOCK.get());
 
 		for (int i = 0; i < 200; ++i) {
 			int xOff = x + (rand.nextInt(6) - rand.nextInt(6));
@@ -39,7 +39,7 @@ public class WorldGenWeepingVines extends WorldGenerator {
 
 				for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
 					Block block = world.getBlock(xOff + dir.offsetX, yOff + dir.offsetY, zOff + dir.offsetZ);
-					if (block instanceof BlockNetherrack || (block == ModBlocks.NETHER_WART.get() && world.getBlockMetadata(x, y + 1, z) == 0)) {
+					if (block instanceof BlockNetherrack || (block == ModBlocks.NETHER_WART_BLOCK.get() && world.getBlockMetadata(x, y + 1, z) == 0)) {
 						++j;
 					}
 
@@ -49,7 +49,7 @@ public class WorldGenWeepingVines extends WorldGenerator {
 				}
 
 				if (j == 1) {
-					world.setBlock(xOff, yOff, zOff, ModBlocks.NETHER_WART.get());
+					world.setBlock(xOff, yOff, zOff, ModBlocks.NETHER_WART_BLOCK.get());
 				}
 			}
 		}
@@ -63,7 +63,7 @@ public class WorldGenWeepingVines extends WorldGenerator {
 			int zOff = z + (rand.nextInt(8) - rand.nextInt(8));
 			if (world.isAirBlock(xOff, yOff, zOff)) {
 				Block block = world.getBlock(xOff, yOff + 1, zOff);
-				if (block instanceof BlockNetherrack || (block == ModBlocks.NETHER_WART.get() && world.getBlockMetadata(x, y + 1, z) == 0)) {
+				if (block instanceof BlockNetherrack || (block == ModBlocks.NETHER_WART_BLOCK.get() && world.getBlockMetadata(x, y + 1, z) == 0)) {
 					int j = MathHelper.getRandomIntegerInRange(rand, 1, 8);
 					if (rand.nextInt(6) == 0) {
 						j *= 2;

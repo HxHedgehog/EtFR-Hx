@@ -22,7 +22,8 @@ tile.monsterStoneEgg.cobble.name=被虫蚀的圆石
 tile.monsterStoneEgg.brick.name=被虫蚀的石砖
 tile.monsterStoneEgg.mossybrick.name=被虫蚀的苔石砖
 tile.monsterStoneEgg.crackedbrick.name=被虫蚀的裂纹石砖
-tile.monsterStoneEgg.chiseledbrick.name=被虫蚀的錾制石砖
+tile.monsterStoneEgg.chiseledbrick.name=被虫蚀的雕纹石砖
+tile.stonebricksmooth.chiseled.name=雕纹石砖
 
 tile.log.name=原木
 tile.log.oak.name=橡木原木
@@ -54,10 +55,20 @@ tile.stoneSlab.wood.name=石化橡木台阶
 
 tile.doublePlant.grass.name=高草丛
 tile.quartzBlock.lines.name=石英柱
+tile.blockQuartz.chiseled.name=雕纹石英块
 tile.mobSpawner.name=刷怪笼
 tile.stoneMoss.name=苔石
-tile.sandStone.smooth.name=切制砂岩
+tile.sandStone.name=砂岩
+tile.sandStone.default.name=砂岩
+tile.sandStone.chiseled.name=雕纹砂岩
+tile.sandStone.smooth.name=平滑砂岩
 tile.netherBrick.name=下界砖块
+tile.netherFence.name=下界砖栅栏
+tile.stairsNetherBrick.name=下界砖楼梯
+tile.netherStalk.name=下界疣
+tile.hellrock.name=下界岩
+tile.lightgem.name=荧石
+tile.portal.name=下界传送门
 tile.daylightDetector.name=阳光探测器
 
 item.redstone.name=红石粉
@@ -65,6 +76,8 @@ item.melon.name=西瓜片
 item.fish.cod.raw.name=生鳕鱼
 item.fish.cod.cooked.name=熟鳕鱼
 item.seeds.name=小麦种子
+item.netherbrick.name=下界砖
+item.netherStalk.name=下界疣
 
 #These keys only enable if their respective item is enabled EG Red Bed only if colored beds are enabled, and Oak Boat only if new boats are enabled and replaceOldBoats is not true
 
@@ -81,3 +94,8 @@ tile.doorWood.name=橡木门
 tile.fence.name=橡木栅栏
 tile.fenceGate.name=橡木栅栏门
 tile.trapdoor.name=橡木活板门
+tile.mushroom_stem.name=蘑菇柄
+tile.brown_mushroom_block.name=棕色蘑菇方块
+tile.red_mushroom_block.name=红色蘑菇方块
+
+tile.flower2.poppy.name=虞美人

@@ -1,6 +1,5 @@
 package ganymedes01.etfuturum.client.gui.inventory;
 
-import com.gtnewhorizon.gtnhlib.util.font.FontRendering;
 import ganymedes01.etfuturum.blocks.BlockWoodSign;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -98,7 +97,7 @@ public class GuiEditWoodSign extends GuiScreen {
 			this.tileSign.signText[this.editLine] = this.tileSign.signText[this.editLine].substring(0, this.tileSign.signText[this.editLine].length() - 1);
 		}
 
-		if (ChatAllowedCharacters.isAllowedCharacter(typedChar) && this.tileSign.signText[this.editLine].length() < 90 && FontRendering.countVisibleChars(this.tileSign.signText[this.editLine]) < 15) {
+		if (ChatAllowedCharacters.isAllowedCharacter(typedChar) && this.tileSign.signText[this.editLine].length() < 90 && countVisibleChars(this.tileSign.signText[this.editLine]) < 15) {
 			this.tileSign.signText[this.editLine] = this.tileSign.signText[this.editLine] + typedChar;
 		}
 
@@ -155,5 +154,18 @@ public class GuiEditWoodSign extends GuiScreen {
 		this.tileSign.lineBeingEdited = -1;
 		GL11.glPopMatrix();
 		super.drawScreen(mouseX, mouseY, partialTicks);
+	}
+
+	private static int countVisibleChars(String str) {
+		if (str == null || str.isEmpty()) return 0;
+		int count = 0;
+		for (int i = 0; i < str.length(); i++) {
+			if (str.charAt(i) == '\u00a7' && i + 1 < str.length()) {
+				i++;
+			} else {
+				count++;
+			}
+		}
+		return count;
 	}
 }

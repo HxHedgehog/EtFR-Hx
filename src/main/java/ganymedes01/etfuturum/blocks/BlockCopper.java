@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -33,7 +34,7 @@ public class BlockCopper extends BaseSubtypesBlock implements IDegradable {
 		setHardness(3);
 		setResistance(6);
 		setHarvestLevel("pickaxe", 1);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		setBlockSound(ModSounds.soundCopper);
 		setTickRandomly(true);
 	}

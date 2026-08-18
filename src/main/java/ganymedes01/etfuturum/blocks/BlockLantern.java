@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -30,7 +31,7 @@ public class BlockLantern extends Block {
 		this.setResistance(3.5F);
 		this.setLightOpacity(500);
 		this.setBlockBounds(0.5F - f1, r * 1, 0.5F - f1, 0.5F + f1, r * 7, 0.5F + f1);
-		this.setCreativeTab(EtFuturum.creativeTabBlocks);
+		this.setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 		this.setBlockName(Utils.getUnlocalisedName(name));
 		this.setBlockTextureName(name);
 		this.setLightOpacity(0);

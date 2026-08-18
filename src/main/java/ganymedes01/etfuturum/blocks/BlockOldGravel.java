@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -14,7 +15,7 @@ public class BlockOldGravel extends BlockGravel {
 		setStepSound(soundTypeGravel);
 		setBlockTextureName("old_gravel");
 		setBlockName(Utils.getUnlocalisedName("old_gravel"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.items;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.core.utils.Utils;
@@ -10,6 +11,6 @@ public class ItemRabbitStew extends ItemSoup {
 		super(10);
 		setTextureName("rabbit_stew");
 		setUnlocalizedName(Utils.getUnlocalisedName("rabbit_stew"));
-		setCreativeTab(EtFuturum.creativeTabItems);
+		setCreativeTab(ModdedCreativeTabs.INGREDIENTS);
 	}
 }

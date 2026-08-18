@@ -793,7 +793,7 @@ public class StructureMesaMineshaftPieces {
 		}
 
 		protected Block getFence() {
-			return ModBlocks.FENCE_DARK_OAK.isEnabled() ? ModBlocks.FENCE_DARK_OAK.get() : Blocks.fence;
+			return ModBlocks.DARK_OAK_FENCE.isEnabled() ? ModBlocks.DARK_OAK_FENCE.get() : Blocks.fence;
 		}
 
 		protected int getFenceMeta() {

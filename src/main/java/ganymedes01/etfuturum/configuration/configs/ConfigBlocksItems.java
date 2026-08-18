@@ -43,6 +43,8 @@ public class ConfigBlocksItems extends ConfigBase {
 	public static boolean enableInvertedDaylightSensor;
 	public static boolean enableOldBaseDaylightSensor;
 	public static boolean enableCoarseDirt;
+	public static boolean enableRootedDirt;
+	public static boolean enableMossAzalea;
 	public static boolean enableRedSandstone;
 	public static boolean enableVanillaFences;
 	public static boolean enableNewFences;
@@ -109,7 +111,6 @@ public class ConfigBlocksItems extends ConfigBase {
 	public static boolean enableTears;
 	public static boolean enable5;
 	public static boolean enableEnchantingTable;
-	public static boolean enableAnvil;
 	public static boolean enableComposter;
 	public static boolean enableSmithingTable;
 	public static boolean enableStonecutter;
@@ -185,6 +186,8 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableNetherGold = getBoolean("enableNetherGold", catBlockNatural, true, "");
 		enablePrismarine = getBoolean("enablePrismarine", catBlockNatural, true, "");
 		enableCoarseDirt = getBoolean("enableCoarseDirt", catBlockNatural, true, "");
+		enableRootedDirt = getBoolean("enableRootedDirt", catBlockNatural, true, "Enables rooted dirt and hanging roots.");
+		enableMossAzalea = getBoolean("enableMossAzalea", catBlockNatural, true, "Enables moss blocks, moss carpets, azalea bushes and azalea leaves.");
 		enableRedSandstone = getBoolean("enableRedSandstone", catBlockNatural, true, "");
 		enableChorusFruit = getBoolean("enableChorusBlocks", catBlockNatural, true, "Enables chorus plants and purpur blocks");
 		enableGrassPath = getBoolean("enableGrassPath", catBlockNatural, true, "");
@@ -206,7 +209,6 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableDeepslateOres = getBoolean("enableDeepslateOres", catBlockNatural, true, "Enable deepslate ores for copper ore and vanilla ores when deepslate generates over them.");
 		enableAmethyst = getBoolean("enableAmethyst", catBlockNatural, true, "Enables tinted glass, amethyst blocks, budding amethyst and amethyst crystals. Also enables the item too.");
 		enableMud = getBoolean("enableMud", catBlockNatural, true, "Enables mud, packed mud and mud bricks, as well as the mud brick stairs, slabs and walls.");
-//		enableMoss = getBoolean("enableMoss", catBlockNatural, true, "Enables moss blocks and carpets");
 //		enableCrimsonBlocks = getBoolean("enableCrimsonBlocks", catBlockMisc, true, "Enables the crimson nylium, wood, and plants. This must be on for the crimson forest biome to generate unless Netherlicious is installed.\nThe nether wart block is still a separate toggle, both this and the wart toggle must be turned off to disable the nether wart block, because crimson trees need the wart blocks.");
 //		enableWarpedBlocks = getBoolean("enableWarpedBlocks", catBlockMisc, true, "Enables the warped nylium, wood, and plants. This must be on for the warped forest biome to generate unless Netherlicious is installed.");
 		enableBlackstone = getBoolean("enableBlackstone", catBlockMisc, true, "This must be on for the basalt deltas biome to generate unless Netherlicious is installed.");
@@ -289,9 +291,8 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableEnchantingTable = getBoolean("enableNewEnchantingTable", catBlockFunc, true, "Uses lapis as payment and has enchant previews and adjusted level costs. Requires tile entity replacement to be enabled in \"function.cfg\". It is compatible with CraftTweaker for adding and removing fuels." +
 				"\nThe mod prefix is \"mods.etfuturum.enchantingFuel\", and the function is \"addFuel\" and an ItemStack or OreDictionary tag. You can remove fuels using the \"remove\" function and an ItemStack or an OreDictionary tag." +
 				"\nExamples:" +
-				"\nmods.etfuturum.enchantingFuel.addFuel(<etfuturum:amethyst_shard>); //(Adds amethyst shards as an enchanting fuel)" +
+				"\nmods.etfuturum.enchantingFuel.addFuel(<minecraft:amethyst_shard>); //(Adds amethyst shards as an enchanting fuel)" +
 				"\nmods.etfuturum.enchantingFuel.remove(<minecraft:dye:4>); //(Removes lapis lazuli as an enchanting fuel)");
-		enableAnvil = getBoolean("enableNewAnvil", catBlockFunc, true, "Enables new anvil behavior, such as less expensive item renaming");
 		enableBrewingStands = getBoolean("enableNewBrewingStand", catBlockFunc, true, "Makes the brewing stand have a fuel slot like in 1.9+. The fuel slot is compatible with CraftTweaker and takes blaze powder by default. Blaze powder can brew 30 potion cycles." +
 				"\nThe mod prefix is \"mods.etfuturum.brewingFuel\", and the function is \"addFuel\" and an ItemStack or OreDictionary tag, then an integer for how many brew cycles. (Any brewing, regardless of if 1 or all 3 slots are filled, is still one \"cycle\") You can remove fuels using the \"remove\" function and an ItemStack or an OreDictionary tag." +
 				"\nExamples:" +

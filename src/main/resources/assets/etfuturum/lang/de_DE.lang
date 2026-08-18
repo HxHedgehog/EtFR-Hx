@@ -1,7 +1,3 @@
-# Kreativ-Tab
-itemGroup.etfuturum.items=Et-Futurum-Items
-itemGroup.etfuturum.blocks=Et-Futurum-Blöcke
-
 # Verzauberungen
 enchantment.frost_walker=Eisläufer
 enchantment.mending=Reparatur
@@ -412,8 +408,6 @@ tile.etfuturum.red_sandstone_slab.name=Rote Sandsteinstufe
 tile.etfuturum.cut_red_sandstone_slab.name=Geschnittene rote Sandsteinstufe
 tile.etfuturum.smooth_red_sandstone_slab.name=Glatte rote Sandsteinstufe
 tile.etfuturum.red_sandstone_stairs.name=Rote Sandsteintreppe
-tile.etfuturum.red_mushroom.name=Roter Pilzblock
-tile.etfuturum.brown_mushroom.name=Brauner Pilzblock
 tile.etfuturum.coarse_dirt.name=Grobe Erde
 tile.etfuturum.slime.name=Schleimblock
 tile.etfuturum.sponge.name=Schwamm
@@ -436,7 +430,6 @@ tile.etfuturum.frosted_ice.name=Brüchiges Eis
 tile.etfuturum.rose.name=Rose
 tile.etfuturum.ancient_debris.name=Antiker Schrott
 tile.etfuturum.netherite_block.name=Netheritblock
-tile.etfuturum.netherite_stairs.name=Treppe mit dem größten Swag überhaupt
 tile.etfuturum.blue_ice.name=Blaueis
 tile.etfuturum.smooth_stone.name=Glatter Stein
 tile.etfuturum.smooth_sandstone.name=Glatter Sandstein
@@ -449,12 +442,13 @@ tile.etfuturum.smooth_quartz.name=Glatter Quarzblock
 tile.etfuturum.smooth_quartz_slab.name=Glatte Quarzstufe
 tile.etfuturum.smooth_quartz_stairs.name=Glatte Quarztreppe
 tile.etfuturum.quartz_bricks.name=Quarzziegel
-tile.etfuturum.stone_slab.name=Steinstufe
+tile.etfuturum.smooth_stone_slab.name=Glatte Steinstufe
 tile.etfuturum.mossy_cobblestone_slab.name=Bemooste Bruchsteinstufe
 tile.etfuturum.mossy_stone_brick_slab.name=Bemooste Steinziegelstufe
 tile.etfuturum.cut_sandstone_slab.name=Geschnittene Sandsteinstufe
 tile.etfuturum.stone_stairs.name=Steintreppe
 tile.etfuturum.mossy_cobblestone_stairs.name=Bemooste Bruchsteintreppe
+tile.etfuturum.cobblestone_stairs.name=Bruchsteintreppe
 tile.etfuturum.mossy_stone_brick_stairs.name=Bemooste Steinziegeltreppe
 tile.etfuturum.lily_of_the_valley.name=Maiglöckchen
 tile.etfuturum.cornflower.name=Kornblume

@@ -26,6 +26,7 @@ import ganymedes01.etfuturum.api.BrewingFuelRegistry;
 import ganymedes01.etfuturum.api.CompostingRegistry;
 import ganymedes01.etfuturum.api.DeepslateOreRegistry;
 import ganymedes01.etfuturum.api.HoeRegistry;
+import ganymedes01.etfuturum.dispenser.DispenserBehaviourMudConversion;
 import ganymedes01.etfuturum.api.MultiBlockSoundRegistry;
 import ganymedes01.etfuturum.api.PistonBehaviorRegistry;
 import ganymedes01.etfuturum.api.RawOreRegistry;
@@ -33,7 +34,7 @@ import ganymedes01.etfuturum.api.StrippedLogRegistry;
 import ganymedes01.etfuturum.api.mappings.BasicMultiBlockSound;
 import ganymedes01.etfuturum.blocks.BlockSculk;
 import ganymedes01.etfuturum.blocks.BlockSculkCatalyst;
-import ganymedes01.etfuturum.blocks.BlockSponge;
+import net.minecraft.block.BlockSponge;
 import ganymedes01.etfuturum.client.BuiltInResourcePack;
 import ganymedes01.etfuturum.client.DynamicSoundsResourcePack;
 import ganymedes01.etfuturum.client.GrayscaleWaterResourcePack;
@@ -48,6 +49,8 @@ import ganymedes01.etfuturum.compat.CompatWaila;
 import ganymedes01.etfuturum.compat.ExternalContent;
 import ganymedes01.etfuturum.compat.ModsList;
 import ganymedes01.etfuturum.configuration.ConfigBase;
+import ganymedes01.etfuturum.creative.ItemCategoryHelper;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
 import ganymedes01.etfuturum.configuration.configs.ConfigExperiments;
@@ -59,8 +62,7 @@ import ganymedes01.etfuturum.core.handlers.WorldEventHandler;
 import ganymedes01.etfuturum.core.proxy.CommonProxy;
 import ganymedes01.etfuturum.core.utils.IInitAction;
 import ganymedes01.etfuturum.core.utils.Logger;
-import ganymedes01.etfuturum.entities.ModEntityList;
-import ganymedes01.etfuturum.items.ItemWoodSign;
+
 import ganymedes01.etfuturum.lib.Reference;
 
 import ganymedes01.etfuturum.network.ArmourStandInteractHandler;
@@ -89,12 +91,11 @@ import ganymedes01.etfuturum.world.nether.dimension.DimensionProviderEFRNether;
 import ganymedes01.etfuturum.world.structure.OceanMonument;
 import makamys.mclib.core.MCLib;
 import makamys.mclib.core.MCLibModules;
-import makamys.mclib.ext.assetdirector.ADConfig;
-import makamys.mclib.ext.assetdirector.AssetDirectorAPI;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Block.SoundType;
 import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.BlockHay;
 import net.minecraft.block.BlockHopper;
 import net.minecraft.block.BlockLeaves;
@@ -123,7 +124,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -150,72 +150,6 @@ public class EtFuturum {
 
 	public static SimpleNetworkWrapper networkWrapper;
 
-	public static CreativeTabs creativeTabItems = new CreativeTabs(MOD_ID + ".items") {
-		@Override
-		public Item getTabIconItem() {
-			return  ModItems.RAW_ORE.isEnabled() ? ModItems.RAW_ORE.get()
-					: ModItems.NETHERITE_SCRAP.isEnabled() ? ModItems.NETHERITE_SCRAP.get()
-					: ModItems.PRISMARINE_SHARD.isEnabled() ? ModItems.PRISMARINE_SHARD.get()
-					: Items.magma_cream;
-		}
-
-		@Override
-		public void displayAllReleventItems(List<ItemStack> p_78018_1_) {
-			for (byte i = 1; i <= 3; i++) {
-				ItemStack firework = new ItemStack(Items.fireworks);
-				NBTTagCompound nbt = new NBTTagCompound();
-				NBTTagCompound nbt2 = new NBTTagCompound();
-				nbt2.setByte("Flight", i);
-				nbt.setTag("Fireworks", nbt2);
-				firework.setTagCompound(nbt);
-				p_78018_1_.add(firework);
-			}
-			for (int i : ModEntityList.eggIDs) {
-				p_78018_1_.add(new ItemStack(Items.spawn_egg, 1, i));
-			}
-			super.displayAllReleventItems(p_78018_1_);
-		}
-	};
-
-	public static CreativeTabs creativeTabBlocks = new CreativeTabs(MOD_ID + ".blocks") {
-		@Override
-		public Item getTabIconItem() {
-			return ModBlocks.COPPER_BLOCK.isEnabled() ? ModBlocks.COPPER_BLOCK.getItem()
-					: ModBlocks.CHERRY_LOG.isEnabled() ? ModBlocks.CHERRY_LOG.getItem()
-					: ModBlocks.SMOKER.isEnabled() ? ModBlocks.SMOKER.getItem()
-					: ModBlocks.CHORUS_FLOWER.isEnabled() ? ModBlocks.CHORUS_FLOWER.getItem()
-					: Item.getItemFromBlock(Blocks.ender_chest);
-		}
-
-		@Override
-		public void displayAllReleventItems(List<ItemStack> list) {
-			list.add(new ItemStack(Blocks.mob_spawner));
-			super.displayAllReleventItems(list);
-
-			//Remove the sign items from the list; we'll add them back in a moment
-			Iterator<ItemStack> iterator = list.iterator();
-			while (iterator.hasNext()) {
-				ItemStack stack = iterator.next();
-				for (ModItems sign : ModItems.OLD_SIGN_ITEMS) {
-					if (stack.getItem() == sign.get()) {
-						iterator.remove();
-					}
-				}
-			}
-
-			//Add the sign items back but in a way so they are sorted by their block ID instead of their item ID.
-			//This allows them to be in the correct place instead of always at the bottom of the block ID list, since item IDs are always above block IDs
-			for (ModItems sign : ModItems.OLD_SIGN_ITEMS) {
-				for (ItemStack stack : list) {
-					if (Item.getIdFromItem(stack.getItem()) > Block.getIdFromBlock(((ItemWoodSign) sign.get()).getSignBlock())) {
-						list.add(list.indexOf(stack), sign.newItemStack());
-						break;
-					}
-				}
-			}
-		}
-	};
-
 	@EventHandler
 	public void onConstruction(FMLConstructionEvent event) {
 		if(Reference.SNAPSHOT_BUILD && !Reference.DEV_ENVIRONMENT) {
@@ -223,12 +157,6 @@ public class EtFuturum {
 		}
 
 		MCLib.init();
-
-		ADConfig config = new ADConfig();
-
-		getSounds(config);
-
-		AssetDirectorAPI.register(config);
 	}
 
 	static final String NETHER_FORTRESS = "netherFortress";
@@ -268,6 +196,8 @@ public class EtFuturum {
 		SpectatorMode.init();
 
 		if (event.getSide() == Side.CLIENT) {
+
+			BuiltInResourcePack.register("etfr_sounds");
 
 			if (ConfigFunctions.enableNewTextures || ConfigFunctions.enableLangReplacements) {
 				BuiltInResourcePack.register("vanilla_overrides");
@@ -332,6 +262,11 @@ public class EtFuturum {
 		CompatMisc.runModHooksInit();
 
 		ModRecipes.init();
+
+		// 注册发射器水瓶转化泥土/粗泥/缠根泥土为泥巴
+		if (ConfigBlocksItems.enableMud) {
+			BlockDispenser.dispenseBehaviorRegistry.putObject(Items.potionitem, new DispenserBehaviourMudConversion());
+		}
 	}
 
 	@EventHandler
@@ -370,23 +305,23 @@ public class EtFuturum {
 		Blocks.trapped_chest.setCreativeTab(CreativeTabs.tabRedstone);
 
 		if (ConfigBlocksItems.enableOtherside) {
-			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.OTHERSIDE_RECORD.get(), 0, 1, 1, 1));
-			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.OTHERSIDE_RECORD.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.MUSIC_DISC_OTHERSIDE.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.MUSIC_DISC_OTHERSIDE.get(), 0, 1, 1, 1));
 		}
 
 		if (ConfigBlocksItems.enablePrecipice) {
-			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.PRECIPICE_RECORD.get(), 0, 1, 1, 1));
-			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.PRECIPICE_RECORD.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.MUSIC_DISC_PRECIPICE.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.MUSIC_DISC_PRECIPICE.get(), 0, 1, 1, 1));
 		}
 
 		if (ConfigBlocksItems.enableCreatorMusicBox) {
-			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.CREATOR_MUSIC_BOX_RECORD.get(), 0, 1, 1, 1));
-			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.CREATOR_MUSIC_BOX_RECORD.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.MUSIC_DISC_CREATOR_MUSIC_BOX.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.MUSIC_DISC_CREATOR_MUSIC_BOX.get(), 0, 1, 1, 1));
 		}
 
 		if (ConfigBlocksItems.enableCreator) {
-			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.CREATOR_RECORD.get(), 0, 1, 1, 1));
-			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.CREATOR_RECORD.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.STRONGHOLD_CORRIDOR, new WeightedRandomChestContent(ModItems.MUSIC_DISC_CREATOR.get(), 0, 1, 1, 1));
+			ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(ModItems.MUSIC_DISC_CREATOR.get(), 0, 1, 1, 1));
 		}
 
 		if (ConfigBlocksItems.enable5) {
@@ -395,7 +330,7 @@ public class EtFuturum {
 		}
 
 		if (ConfigBlocksItems.enablePigstep) {
-			ChestGenHooks.addItem(NETHER_FORTRESS, new WeightedRandomChestContent(ModItems.PIGSTEP_RECORD.get(), 0, 1, 1, 5));
+			ChestGenHooks.addItem(NETHER_FORTRESS, new WeightedRandomChestContent(ModItems.MUSIC_DISC_PIGSTEP.get(), 0, 1, 1, 5));
 
 			if (fortressWeightedField != null) {
 				try {
@@ -442,6 +377,10 @@ public class EtFuturum {
 		CompostingRegistry.init();
 		BeePlantRegistry.init();
 		PistonBehaviorRegistry.init();
+
+		// Initialize modern creative tab system
+		ModdedCreativeTabs.init();
+		ItemCategoryHelper.reassignAllItems();
 
 		if (ModsList.TINKERS_CONSTRUCT.isLoaded()) {
 			CompatTinkersConstruct.postInit();
@@ -499,7 +438,7 @@ public class EtFuturum {
 					HoeRegistry.addToHoeArray(block);
 				}
 				HoeRegistry.addToHoeArray(ModBlocks.SHROOMLIGHT.get());
-				HoeRegistry.addToHoeArray(ModBlocks.SPONGE.get());
+				HoeRegistry.addToHoeArray(ModBlocks.WET_SPONGE.get());
 			}
 
 			if (ConfigSounds.newBlockSounds) {
@@ -553,11 +492,11 @@ public class EtFuturum {
 		MultiBlockSoundRegistry.addBasic(ModBlocks.AMETHYST_CLUSTER_1.get(), ModSounds.soundAmethystBudSmall, 0, 1, 2, 3, 4, 5, 6);
 		MultiBlockSoundRegistry.addBasic(ModBlocks.AMETHYST_CLUSTER_2.get(), ModSounds.soundAmethystBudLrg, 0, 1, 2, 3, 4, 5, 6);
 
-		MultiBlockSoundRegistry.addBasic(ModBlocks.SPONGE.get(), ModSounds.soundWetSponge, 1);
+		MultiBlockSoundRegistry.addBasic(ModBlocks.WET_SPONGE.get(), ModSounds.soundWetSponge, 0);
 		MultiBlockSoundRegistry.addBasic(Blocks.sponge, ModSounds.soundWetSponge, 1);
 
-		MultiBlockSoundRegistry.addBasic(ModBlocks.SAPLING.get(), ModSounds.soundCherrySapling, 1, 9);
-		MultiBlockSoundRegistry.addBasic(ModBlocks.LEAVES.get(), ModSounds.soundCherryLeaves, 1, 5, 9, 13);
+		MultiBlockSoundRegistry.addBasic(ModBlocks.CHERRY_SAPLING.get(), ModSounds.soundCherrySapling, 0, 8);
+		MultiBlockSoundRegistry.addBasic(ModBlocks.CHERRY_LEAVES.get(), ModSounds.soundCherryLeaves, 0, 4, 8, 12);
 
 		MultiBlockSoundRegistry.addBasic(ModBlocks.WOOD_PLANKS.get(), ModSounds.soundNetherWood, 0, 1);
 		MultiBlockSoundRegistry.addBasic(ModBlocks.WOOD_PLANKS.get(), ModSounds.soundCherryWood, 3);
@@ -806,297 +745,4 @@ public class EtFuturum {
 		return null;
 	}
 
-	private static void getSounds(ADConfig config) {
-		String ver = Reference.MCAssetVer.split("_")[1];
-		config.addObject(ver, "minecraft/sounds/ambient/cave/cave14.ogg");
-		config.addObject(ver, "minecraft/sounds/ambient/cave/cave15.ogg");
-		config.addObject(ver, "minecraft/sounds/ambient/cave/cave16.ogg");
-		config.addObject(ver, "minecraft/sounds/ambient/cave/cave17.ogg");
-		config.addObject(ver, "minecraft/sounds/ambient/cave/cave18.ogg");
-		config.addObject(ver, "minecraft/sounds/ambient/cave/cave19.ogg");
-
-		config.addSoundEvent(ver, "weather.rain", "weather");
-		config.addSoundEvent(ver, "weather.rain.above", "weather");
-		config.addSoundEvent(ver, "weather.end_flash", "weather");
-
-		config.addSoundEvent(ver, "music.nether.nether_wastes", "music");
-		config.addSoundEvent(ver, "ambient.nether_wastes.additions", "ambient");
-		config.addSoundEvent(ver, "ambient.nether_wastes.loop", "ambient");
-		config.addSoundEvent(ver, "ambient.nether_wastes.mood", "ambient");
-
-		config.addSoundEvent(ver, "music.nether.crimson_forest", "music");
-		config.addSoundEvent(ver, "ambient.crimson_forest.additions", "ambient");
-		config.addSoundEvent(ver, "ambient.crimson_forest.loop", "ambient");
-		config.addSoundEvent(ver, "ambient.crimson_forest.mood", "ambient");
-
-		config.addSoundEvent(ver, "music.nether.warped_forest", "music");
-		config.addSoundEvent(ver, "ambient.warped_forest.additions", "ambient");
-		config.addSoundEvent(ver, "ambient.warped_forest.loop", "ambient");
-		config.addSoundEvent(ver, "ambient.warped_forest.mood", "ambient");
-
-		config.addSoundEvent(ver, "music.nether.soul_sand_valley", "music");
-		config.addSoundEvent(ver, "ambient.soul_sand_valley.additions", "ambient");
-		config.addSoundEvent(ver, "ambient.soul_sand_valley.loop", "ambient");
-		config.addSoundEvent(ver, "ambient.soul_sand_valley.mood", "ambient");
-
-		config.addSoundEvent(ver, "music.nether.basalt_deltas", "music");
-		config.addSoundEvent(ver, "ambient.basalt_deltas.additions", "ambient");
-		config.addSoundEvent(ver, "ambient.basalt_deltas.loop", "ambient");
-		config.addSoundEvent(ver, "ambient.basalt_deltas.mood", "ambient");
-
-		config.addSoundEvent(ver, "music_disc.pigstep", "record");
-		config.addSoundEvent(ver, "music_disc.otherside", "record");
-		config.addSoundEvent(ver, "music_disc.precipice", "record");
-		config.addSoundEvent(ver, "music_disc.creator_music_box", "record");
-		config.addSoundEvent(ver, "music_disc.creator", "record");
-		config.addSoundEvent(ver, "music_disc.tears", "record");
-		config.addSoundEvent(ver, "music_disc.lava_chicken", "record");
-		config.addSoundEvent(ver, "music_disc.5", "record");
-
-		config.addSoundEvent(ver, "item.elytra.flying", "player");
-		config.addSoundEvent(ver, "enchant.thorns.hit", "player");
-		config.addSoundEvent(ver, "entity.boat.paddle_land", "player");
-		config.addSoundEvent(ver, "entity.boat.paddle_water", "player");
-		config.addSoundEvent(ver, "entity.rabbit.ambient", "neutral");
-		config.addSoundEvent(ver, "entity.rabbit.jump", "neutral");
-		config.addSoundEvent(ver, "entity.rabbit.attack", "neutral");
-		config.addSoundEvent(ver, "entity.rabbit.hurt", "neutral");
-		config.addSoundEvent(ver, "entity.rabbit.death", "neutral");
-		config.addSoundEvent(ver, "entity.zombie_villager.ambient", "hostile");
-		config.addSoundEvent(ver, "entity.zombie_villager.step", "hostile");
-		config.addSoundEvent(ver, "entity.zombie_villager.hurt", "hostile");
-		config.addSoundEvent(ver, "entity.zombie_villager.death", "hostile");
-		config.addSoundEvent(ver, "entity.husk.ambient", "hostile");
-		config.addSoundEvent(ver, "entity.husk.step", "hostile");
-		config.addSoundEvent(ver, "entity.husk.hurt", "hostile");
-		config.addSoundEvent(ver, "entity.husk.death", "hostile");
-		config.addSoundEvent(ver, "entity.zombie.converted_to_drowned", "hostile");
-		config.addSoundEvent(ver, "entity.husk.converted_to_zombie", "hostile");
-		config.addSoundEvent(ver, "entity.stray.ambient", "hostile");
-		config.addSoundEvent(ver, "entity.stray.step", "hostile");
-		config.addSoundEvent(ver, "entity.stray.hurt", "hostile");
-		config.addSoundEvent(ver, "entity.stray.death", "hostile");
-		config.addSoundEvent(ver, "entity.skeleton.converted_to_stray", "hostile");
-		config.addSoundEvent(ver, "entity.shulker_bullet.hurt", "hostile");
-		config.addSoundEvent(ver, "entity.shulker_bullet.hit", "hostile");
-		config.addSoundEvent(ver, "entity.shulker.ambient", "hostile");
-		config.addSoundEvent(ver, "entity.shulker.open", "hostile");
-		config.addSoundEvent(ver, "entity.shulker.close", "hostile");
-		config.addSoundEvent(ver, "entity.shulker.shoot", "hostile");
-		config.addSoundEvent(ver, "entity.shulker.hurt", "hostile");
-		config.addSoundEvent(ver, "entity.shulker.hurt_closed", "hostile");
-		config.addSoundEvent(ver, "entity.shulker.death", "hostile");
-		config.addSoundEvent(ver, "entity.shulker.teleport", "hostile");
-		config.addSoundEvent(ver, "entity.snow_golem.ambient", "neutral");
-		config.addSoundEvent(ver, "entity.snow_golem.hurt", "neutral");
-		config.addSoundEvent(ver, "entity.snow_golem.death", "neutral");
-		config.addSoundEvent(ver, "entity.wither_skeleton.ambient", "hostile");
-		config.addSoundEvent(ver, "entity.wither_skeleton.hurt", "hostile");
-		config.addSoundEvent(ver, "entity.wither_skeleton.death", "hostile");
-		config.addSoundEvent(ver, "entity.wither_skeleton.step", "hostile");
-		config.addSoundEvent(ver, "entity.squid.ambient", "neutral");
-		config.addSoundEvent(ver, "entity.squid.hurt", "neutral");
-		config.addSoundEvent(ver, "entity.squid.death", "neutral");
-		config.addSoundEvent(ver, "entity.squid.squirt", "neutral");
-		config.addSoundEvent(ver, "entity.witch.ambient", "hostile");
-		config.addSoundEvent(ver, "entity.witch.hurt", "hostile");
-		config.addSoundEvent(ver, "entity.witch.death", "hostile");
-		config.addSoundEvent(ver, "entity.witch.drink", "hostile");
-		config.addSoundEvent(ver, "entity.item_frame.add_item", "player");
-		config.addSoundEvent(ver, "entity.item_frame.break", "player");
-		config.addSoundEvent(ver, "entity.item_frame.place", "player");
-		config.addSoundEvent(ver, "entity.item_frame.remove_item", "player");
-		config.addSoundEvent(ver, "entity.item_frame.rotate_item", "player");
-		config.addSoundEvent(ver, "entity.painting.break", "player");
-		config.addSoundEvent(ver, "entity.painting.place", "player");
-		config.addSoundEvent(ver, "entity.leash_knot.break", "player");
-		config.addSoundEvent(ver, "entity.leash_knot.place", "player");
-		config.addSoundEvent(ver, "entity.ender_eye.death", "neutral");
-		config.addSoundEvent(ver, "entity.ender_eye.launch", "neutral");
-		config.addSoundEvent(ver, "entity.fishing_bobber.retrieve", "neutral");
-		config.addSoundEvent(ver, "entity.fishing_bobber.throw", "neutral");
-		config.addSoundEvent(ver, "entity.horse.eat", "neutral");
-		config.addSoundEvent(ver, "entity.cow.milk", "neutral");
-		config.addSoundEvent(ver, "entity.mooshroom.milk", "neutral");
-		config.addSoundEvent(ver, "entity.mooshroom.convert", "neutral");
-		config.addSoundEvent(ver, "entity.bee.loop", "neutral");
-		config.addSoundEvent(ver, "entity.bee.loop_aggressive", "neutral");
-		config.addSoundEvent(ver, "entity.bee.hurt", "neutral");
-		config.addSoundEvent(ver, "entity.bee.death", "neutral");
-		config.addSoundEvent(ver, "entity.bee.pollinate", "neutral");
-		config.addSoundEvent(ver, "entity.bee.sting", "neutral");
-		config.addSoundEvent(ver, "entity.fox.eat", "neutral");
-		config.addSoundEvent(ver, "entity.fox.aggro", "neutral");
-		config.addSoundEvent(ver, "entity.fox.spit", "neutral");
-		config.addSoundEvent(ver, "entity.fox.screech", "neutral");
-		config.addSoundEvent(ver, "entity.fox.sleep", "neutral");
-		config.addSoundEvent(ver, "entity.fox.ambient", "neutral");
-		config.addSoundEvent(ver, "entity.fox.hurt", "neutral");
-		config.addSoundEvent(ver, "entity.fox.death", "neutral");
-		config.addSoundEvent(ver, "entity.fox.bite", "neutral");
-		config.addSoundEvent(ver, "entity.fox.sniff", "neutral");
-
-
-		config.addSoundEvent(ver, "entity.player.hurt_on_fire", "player");
-		config.addSoundEvent(ver, "entity.player.hurt_drown", "player");
-		config.addSoundEvent(ver, "entity.player.hurt_sweet_berry_bush", "player");
-		config.addSoundEvent(ver, "entity.player.attack.crit", "player");
-		config.addSoundEvent(ver, "entity.player.attack.knockback", "player");
-		config.addSoundEvent(ver, "entity.player.attack.nodamage", "player");
-		config.addSoundEvent(ver, "entity.player.attack.strong", "player");
-		config.addSoundEvent(ver, "entity.player.attack.sweep", "player");
-		config.addSoundEvent(ver, "entity.player.attack.weak", "player");
-		config.addSoundEvent(ver, "entity.player.splash.high_speed", "player");
-
-		config.addSoundEvent(ver, "item.axe.scrape", "player");
-		config.addSoundEvent(ver, "item.axe.wax_off", "player");
-		config.addSoundEvent(ver, "item.axe.strip", "player");
-		config.addSoundEvent(ver, "item.hoe.till", "player");
-		config.addSoundEvent(ver, "item.honeycomb.wax_on", "player");
-		config.addSoundEvent(ver, "item.totem.use", "player");
-		config.addSoundEvent(ver, "item.shovel.flatten", "player");
-		config.addSoundEvent(ver, "item.chorus_fruit.teleport", "player");
-		config.addSoundEvent(ver, "item.book.page_turn", "player");
-		config.addSoundEvent(ver, "item.bucket.fill", "player");
-		config.addSoundEvent(ver, "item.bucket.fill_lava", "player");
-		config.addSoundEvent(ver, "item.bucket.empty", "player");
-		config.addSoundEvent(ver, "item.bucket.empty_lava", "player");
-		config.addSoundEvent(ver, "item.bottle.fill", "player");
-		config.addSoundEvent(ver, "item.bottle.empty", "player");
-		config.addSoundEvent(ver, "item.bone_meal.use", "player");
-		config.addSoundEvent(ver, "item.honey_bottle.drink", "player");
-
-		config.addSoundEvent(ver, "item.armor.equip_leather", "player");
-		config.addSoundEvent(ver, "item.armor.equip_gold", "player");
-		config.addSoundEvent(ver, "item.armor.equip_chain", "player");
-		config.addSoundEvent(ver, "item.armor.equip_iron", "player");
-		config.addSoundEvent(ver, "item.armor.equip_diamond", "player");
-		config.addSoundEvent(ver, "item.armor.equip_netherite", "player");
-		config.addSoundEvent(ver, "item.armor.equip_turtle", "player");
-		config.addSoundEvent(ver, "item.armor.equip_generic", "player");
-		config.addSoundEvent(ver, "item.armor.equip_elytra", "player");
-
-		config.addSoundEvent(ver, "block.note_block.banjo", "record");
-		config.addSoundEvent(ver, "block.note_block.bell", "record");
-		config.addSoundEvent(ver, "block.note_block.bit", "record");
-		config.addSoundEvent(ver, "block.note_block.chime", "record");
-		config.addSoundEvent(ver, "block.note_block.cow_bell", "record");
-		config.addSoundEvent(ver, "block.note_block.didgeridoo", "record");
-		config.addSoundEvent(ver, "block.note_block.flute", "record");
-		config.addSoundEvent(ver, "block.note_block.guitar", "record");
-		config.addSoundEvent(ver, "block.note_block.harp", "record");
-		config.addSoundEvent(ver, "block.note_block.iron_xylophone", "record");
-		config.addSoundEvent(ver, "block.note_block.xylophone", "record");
-
-		config.addSoundEvent(ver, "block.barrel.open", "block");
-		config.addSoundEvent(ver, "block.barrel.close", "block");
-		config.addSoundEvent(ver, "block.chorus_flower.grow", "block");
-		config.addSoundEvent(ver, "block.chorus_flower.death", "block");
-		config.addSoundEvent(ver, "block.end_portal.spawn", "ambient");
-		config.addSoundEvent(ver, "block.end_portal_frame.fill", "block");
-		config.addSoundEvent(ver, "block.shulker_box.open", "block");
-		config.addSoundEvent(ver, "block.shulker_box.close", "block");
-		config.addSoundEvent(ver, "block.sweet_berry_bush.pick_berries", "player");
-		config.addSoundEvent(ver, "block.brewing_stand.brew", "block");
-		config.addSoundEvent(ver, "block.furnace.fire_crackle", "block");
-		config.addSoundEvent(ver, "block.blastfurnace.fire_crackle", "block");
-		config.addSoundEvent(ver, "block.smoker.smoke", "block");
-		config.addSoundEvent(ver, "block.chest.close", "block");
-		config.addSoundEvent(ver, "block.ender_chest.open", "block");
-		config.addSoundEvent(ver, "block.ender_chest.close", "block");
-		config.addSoundEvent(ver, "block.composter.empty", "block");
-		config.addSoundEvent(ver, "block.composter.fill", "block");
-		config.addSoundEvent(ver, "block.composter.fill_success", "block");
-		config.addSoundEvent(ver, "block.composter.ready", "block");
-		config.addSoundEvent(ver, "block.amethyst_block.hit", "block");
-		config.addSoundEvent(ver, "block.amethyst_block.chime", "block");
-		config.addSoundEvent(ver, "block.smithing_table.use", "player");
-		config.addSoundEvent(ver, "block.enchantment_table.use", "player");
-		config.addSoundEvent(ver, "block.beacon.activate", "block");
-		config.addSoundEvent(ver, "block.beacon.ambient", "block");
-		config.addSoundEvent(ver, "block.beacon.deactivate", "block");
-		config.addSoundEvent(ver, "block.beacon.power_select", "block");
-		config.addSoundEvent(ver, "block.honey_block.slide", "neutral");
-		config.addSoundEvent(ver, "block.beehive.drip", "block");
-		config.addSoundEvent(ver, "block.beehive.enter", "neutral");
-		config.addSoundEvent(ver, "block.beehive.exit", "neutral");
-		config.addSoundEvent(ver, "block.beehive.work", "neutral");
-		config.addSoundEvent(ver, "block.beehive.shear", "player");
-		config.addSoundEvent(ver, "block.sponge.absorb", "block");
-		config.addSoundEvent(ver, "block.copper_bulb.turn_on", "block");
-		config.addSoundEvent(ver, "block.copper_bulb.turn_off", "block");
-		config.addSoundEvent(ver, "block.bubble_column.bubble_pop", "block");
-		config.addSoundEvent(ver, "block.bubble_column.upwards_ambient", "block");
-		config.addSoundEvent(ver, "block.bubble_column.upwards_inside", "neutral");
-		config.addSoundEvent(ver, "block.bubble_column.whirlpool_ambient", "block");
-		config.addSoundEvent(ver, "block.bubble_column.whirlpool_inside", "neutral");
-
-		config.addSoundEvent(ver, "block.fence_gate.open", "block");
-		config.addSoundEvent(ver, "block.fence_gate.close", "block");
-		config.addSoundEvent(ver, "block.nether_wood_fence_gate.open", "block");
-		config.addSoundEvent(ver, "block.nether_wood_fence_gate.close", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_fence_gate.open", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_fence_gate.close", "block");
-		config.addSoundEvent(ver, "block.bamboo_wood_fence_gate.open", "block");
-		config.addSoundEvent(ver, "block.bamboo_wood_fence_gate.close", "block");
-
-		config.addSoundEvent(ver, "block.wooden_door.open", "block");
-		config.addSoundEvent(ver, "block.wooden_door.close", "block");
-		config.addSoundEvent(ver, "block.nether_wood_door.open", "block");
-		config.addSoundEvent(ver, "block.nether_wood_door.close", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_door.open", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_door.close", "block");
-		config.addSoundEvent(ver, "block.bamboo_wood_door.open", "block");
-		config.addSoundEvent(ver, "block.bamboo_wood_door.close", "block");
-		config.addSoundEvent(ver, "block.iron_door.open", "block");
-		config.addSoundEvent(ver, "block.iron_door.close", "block");
-		config.addSoundEvent(ver, "block.copper_door.open", "block");
-		config.addSoundEvent(ver, "block.copper_door.close", "block");
-
-		config.addSoundEvent(ver, "block.wooden_trapdoor.open", "block");
-		config.addSoundEvent(ver, "block.wooden_trapdoor.close", "block");
-		config.addSoundEvent(ver, "block.nether_wood_trapdoor.open", "block");
-		config.addSoundEvent(ver, "block.nether_wood_trapdoor.close", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_trapdoor.open", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_trapdoor.close", "block");
-		config.addSoundEvent(ver, "block.bamboo_wood_trapdoor.open", "block");
-		config.addSoundEvent(ver, "block.bamboo_wood_trapdoor.close", "block");
-		config.addSoundEvent(ver, "block.iron_trapdoor.open", "block");
-		config.addSoundEvent(ver, "block.iron_trapdoor.close", "block");
-		config.addSoundEvent(ver, "block.copper_trapdoor.open", "block");
-		config.addSoundEvent(ver, "block.copper_trapdoor.close", "block");
-
-		config.addSoundEvent(ver, "block.wooden_button.click_off", "block");
-		config.addSoundEvent(ver, "block.wooden_button.click_on", "block");
-		config.addSoundEvent(ver, "block.nether_wood_button.click_off", "block");
-		config.addSoundEvent(ver, "block.nether_wood_button.click_on", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_button.click_off", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_button.click_on", "block");
-		config.addSoundEvent(ver, "block.bamboo_wood_button.click_off", "block");
-		config.addSoundEvent(ver, "block.bamboo_wood_button.click_on", "block");
-
-		config.addSoundEvent(ver, "block.wooden_pressure_plate.click_off", "block");
-		config.addSoundEvent(ver, "block.wooden_pressure_plate.click_on", "block");
-		config.addSoundEvent(ver, "block.nether_wood_pressure_plate.click_off", "block");
-		config.addSoundEvent(ver, "block.nether_wood_pressure_plate.click_on", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_pressure_plate.click_off", "block");
-		config.addSoundEvent(ver, "block.cherry_wood_pressure_plate.click_on", "block");
-		config.addSoundEvent(ver, "block.metal_pressure_plate.click_off", "block");
-		config.addSoundEvent(ver, "block.metal_pressure_plate.click_on", "block");
-
-		//Automatically register block sounds for AssetDirector, but only if they contain the MC version (which means it needs to be registered here)
-		//Then we remove the mc version prefix and register that sound.
-
-		for (ModSounds.CustomSound sound : ModSounds.getSounds()) {
-			if (sound.getStepResourcePath().startsWith(Reference.MCAssetVer)) { //Step sound
-				config.addSoundEvent(ver, sound.getStepResourcePath().substring(Reference.MCAssetVer.length() + 1), "neutral");
-			}
-			if (sound.func_150496_b/*getPlaceSound*/().startsWith(Reference.MCAssetVer)) { //Place sound
-				config.addSoundEvent(ver, sound.func_150496_b/*getPlaceSound*/().substring(Reference.MCAssetVer.length() + 1), "block");
-			}
-			if (sound.getBreakSound().startsWith(Reference.MCAssetVer)) { //Break sound
-				config.addSoundEvent(ver, sound.getBreakSound().substring(Reference.MCAssetVer.length() + 1), "block");
-			}
-		}
-	}
 }

@@ -67,9 +67,11 @@ public abstract class MixinEntityPlayer extends EntityLivingBase implements IEly
 
 	@Inject(method = "getEyeHeight", at = @At("HEAD"), cancellable = true)
 	private void getElytraEyeHeight(CallbackInfoReturnable<Float> cir) {
-		if (this.etfu$isElytraFlying() && !this.isPlayerSleeping()) {
-			cir.setReturnValue(0.4f);
-		}
+		// Do NOT change getEyeHeight for elytra flight.
+		// Changing it alters the stance value in C03PacketPlayer,
+		// causing "Illegal stance" kicks when the server hasn't
+		// processed the elytra flag yet.
+		// The camera offset is handled in MixinEntityRenderer instead.
 	}
 
 	private float etfu$ticksElytraFlying = 0;

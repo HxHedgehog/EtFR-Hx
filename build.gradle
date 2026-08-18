@@ -3,3 +3,7 @@
 plugins {
     id 'com.gtnewhorizons.gtnhconvention'
 }
+
+shadowJar {
+    relocate 'it.unimi.dsi.fastutil', 'ganymedes01.etfuturum.repack.fastutil'
+}

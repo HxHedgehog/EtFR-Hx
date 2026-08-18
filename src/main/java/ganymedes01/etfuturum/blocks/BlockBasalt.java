@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -29,7 +30,7 @@ public class BlockBasalt extends BlockRotatedPillar implements ISubBlocksBlock {
 		setBlockTextureName("basalt");
 		setHarvestLevel("pickaxe", 0);
 		Utils.setBlockSound(this, ModSounds.soundBasalt);
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

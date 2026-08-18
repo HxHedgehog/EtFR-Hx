@@ -21,6 +21,7 @@ import ganymedes01.etfuturum.client.loading.LoadingScreenStateTracker;
 import ganymedes01.etfuturum.client.WorldIconManager;
 import ganymedes01.etfuturum.client.gui.GuiConfigWarning;
 import ganymedes01.etfuturum.client.gui.GuiGamemodeSwitcher;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 import ganymedes01.etfuturum.client.particle.CustomParticles;
 import ganymedes01.etfuturum.client.particle.DeferredBubbleFX;
 import ganymedes01.etfuturum.client.renderer.entity.elytra.LayerBetterElytra;
@@ -157,6 +158,18 @@ public class ClientEventHandler {
 
 	@SubscribeEvent
 	public void onKeyInput(InputEvent.KeyInputEvent event) {
+		// F7: 导出创造栏内容到文件（调试用）
+		if (Keyboard.getEventKey() == Keyboard.KEY_F7 && Keyboard.getEventKeyState()) {
+			ModdedCreativeTabs.dumpAllTabs();
+			ModdedCreativeTabs.dumpNotInCreative();
+			if (mc.thePlayer != null) {
+				mc.thePlayer.addChatComponentMessage(new ChatComponentText(
+						EnumChatFormatting.GREEN + "[EtFuturum] 创造栏内容已导出到 mods/creative_tab_dump.txt"));
+				mc.thePlayer.addChatComponentMessage(new ChatComponentText(
+						EnumChatFormatting.GREEN + "[EtFuturum] 未显示物品已导出到 mods/creative_tab_missing.txt"));
+			}
+		}
+
 		if (ConfigFunctions.enableNewF3Behavior) {
 			if (Keyboard.getEventKey() == Keyboard.KEY_F3) {
 				boolean pressedF3 = Keyboard.getEventKeyState();
@@ -806,8 +819,6 @@ public class ClientEventHandler {
 		}
 	}
 
-	private float prevYOffset;
-
 	@SubscribeEvent
 	public void onRenderTick(TickEvent.RenderTickEvent event) {
 		if (ConfigMixins.worldSaveThumbnails && event.phase == Phase.END) {
@@ -822,21 +833,11 @@ public class ClientEventHandler {
 			SpawnChunkProgress.reset();
 			LoadingScreenHooks.reset();
 		}
-		if (!ConfigMixins.enableElytra)
-			return;
-		EntityPlayerSP player = mc.thePlayer;
-		if (!(player instanceof IElytraPlayer))
-			return;
-		if (((IElytraPlayer) player).etfu$isElytraFlying()) {
-			if (event.phase == Phase.START) {
-				prevYOffset = player.yOffset;
-				/* TODO find the right number here */
-				if (mc.gameSettings.thirdPersonView == 0)
-					player.yOffset = 3.02f;
-			} else {
-				player.yOffset = prevYOffset;
-			}
-		}
+		// Do NOT modify yOffset for elytra flight.
+		// Changing yOffset alters the stance value in C03PacketPlayer,
+		// causing "Illegal stance" kicks when stance - posY > 1.65.
+		// The camera offset for first-person elytra is handled in
+		// MixinEntityRenderer.orientCamera instead.
 	}
 
 	@SubscribeEvent

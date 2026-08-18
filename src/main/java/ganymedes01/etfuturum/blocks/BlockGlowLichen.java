@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -41,7 +42,7 @@ public class BlockGlowLichen extends BlockContainer implements IShearable, IGrow
         this.lightValue = 7;
         this.setStepSound(soundTypeGrass)
                 .setHardness(0.2F)
-                .setCreativeTab(EtFuturum.creativeTabBlocks)
+                .setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS)
                 .setBlockTextureName("glow_lichen")
                 .setBlockName(Utils.getUnlocalisedName("glow_lichen"));
     }

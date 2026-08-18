@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
@@ -20,7 +21,7 @@ public class BlockInfestedDeepslate extends BlockSilverfish {
 	public BlockInfestedDeepslate() {
 		super();
 		setBlockName(Utils.getUnlocalisedName("infested_deepslate"));
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

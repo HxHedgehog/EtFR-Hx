@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import ganymedes01.etfuturum.client.particle.CustomParticles;
 import ganymedes01.etfuturum.core.utils.helpers.BlockPos;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.EntityFX;
@@ -36,6 +37,7 @@ public class BlockBarrier extends BaseBlock implements IFloatingParticleBlock {
 		setNames("barrier");
 		useNeighborBrightness = true;
 		canBlockGrass = false;
+		this.setCreativeTab(ModdedCreativeTabs.TEMPORARY);
 	}
 
 	@Override

@@ -1,4 +1,5 @@
 package ganymedes01.etfuturum.blocks;
+import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
 import com.google.common.collect.Maps;
 import cpw.mods.fml.relauncher.Side;
@@ -35,7 +36,7 @@ public class BaseWall extends BlockWall implements ISubBlocksBlock {
 		blockMaterial = material;
 		this.types = names;
 		setNames(names[0].replace("bricks", "brick").replace("tiles", "tile") + "_wall");
-		setCreativeTab(EtFuturum.creativeTabBlocks);
+		setCreativeTab(ModdedCreativeTabs.BUILDING_BLOCKS);
 	}
 
 	@Override

@@ -176,7 +176,7 @@ public class WorldGenCherryTrees extends WorldGenAbstractTree {
 							return;
 						}
 						if (world.getBlock(mx, my + offset, mz).isReplaceable(world, mx, my + offset, mz)
-								&& world.getBlock(mx, my + offset + 1, mz) == ModBlocks.LEAVES.get() && world.getBlockMetadata(mx, my + offset + 1, mz) == 1) {
+								&& world.getBlock(mx, my + offset + 1, mz) == ModBlocks.CHERRY_LEAVES.get()) {
 							break;
 						}
 					}
@@ -224,7 +224,7 @@ public class WorldGenCherryTrees extends WorldGenAbstractTree {
 
 	private void placeLeaves(World world, int x, int y, int z) {
 		if (!(world.getBlock(x, y, z) instanceof BlockLog)) {
-			setBlockAndNotifyAdequately(world, x, y, z, ModBlocks.LEAVES.get(), 1);
+			setBlockAndNotifyAdequately(world, x, y, z, ModBlocks.CHERRY_LEAVES.get(), 0);
 		}
 	}
 
