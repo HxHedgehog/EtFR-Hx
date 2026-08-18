@@ -65,11 +65,11 @@ public class ConfigWorld extends ConfigBase {
 	public static boolean enableModernCaves;
 	public static boolean cavePillars;
 	public static float caveCavityWeight;
+	public static float caveCavityScale;
 	public static float caveTunnelWeight;
 	public static float caveFillWeight;
 	public static float caveLedgeStrength;
 	public static float caveMountainVerticalScale;
-	public static boolean debugCaveMarkers;
 	public static float caveFloorY;
 	public static float caveFloorVariation;
 
@@ -198,11 +198,11 @@ public class ConfigWorld extends ConfigBase {
 		enableModernCaves = getBoolean("enableModernCaves", catGeneration, true, "Replaces the vanilla cave generator with modern noise-based caves (large open chambers, tunnels, ledges and stone pillars). Vanilla worm caves are still generated and may connect to the noise caves. Disabling this restores vanilla cave generation entirely.");
 		cavePillars = getBoolean("cavePillars", catGeneration, true, "Generate the tall stone pillars that connect the floor and ceiling of large caves. Only has an effect when enableModernCaves is true.");
 		caveCavityWeight = getFloat("caveCavityWeight", catGeneration, 1.0F, 0.0F, 4.0F, "Weight of the main cave chambers (the hollow areas). Higher = bigger/more caverns. Only has an effect when enableModernCaves is true.");
+		caveCavityScale = getFloat("caveCavityScale", catGeneration, 1.0F, 0.1F, 4.0F, "Global scale multiplier for cave cavity size. Higher = larger cavities. Only has an effect when enableModernCaves is true.");
 		caveTunnelWeight = getFloat("caveTunnelWeight", catGeneration, 0.5F, 0.0F, 4.0F, "Weight of the noise tunnels. Lower = shorter/weaker tunnels (0 disables them). Vanilla worm caves are separate and unaffected. Only has an effect when enableModernCaves is true.");
 		caveFillWeight = getFloat("caveFillWeight", catGeneration, 1.0F, 0.0F, 4.0F, "Weight of the solid fill offset. Higher = more rock filled in, fewer/smaller caves. Only has an effect when enableModernCaves is true.");
 		caveLedgeStrength = getFloat("caveLedgeStrength", catGeneration, 1.0F, 0.0F, 4.0F, "Strength of the ledges/terraces carved into cave walls. 0 disables ledges. Only has an effect when enableModernCaves is true.");
 		caveMountainVerticalScale = getFloat("caveMountainVerticalScale", catGeneration, 1.5F, 1.0F, 4.0F, "How much taller caves become under tall terrain such as mountains. Higher = taller, potentially vertically overlapping caves. Only has an effect when enableModernCaves is true.");
-		debugCaveMarkers = getBoolean("debugCaveMarkers", catGeneration, false, "DEBUG: Places small 2x2x2 marker block piles inside generated caves to identify their structure. Gold = main chamber, lapis = noise tunnel, diamond = stone pillar, iron = ledge, redstone = vanilla worm cave. Only for testing world generation.");
 		caveFloorY = getFloat("caveFloorY", catGeneration, 6.0F, 0.0F, 32.0F, "Base height (blocks above bedrock) of the noise cave floor. Higher = higher, flatter cave floors. Only has an effect when enableModernCaves is true.");
 		caveFloorVariation = getFloat("caveFloorVariation", catGeneration, 5.0F, 0.0F, 16.0F, "Vertical variation of the smooth cave floor hills. Lower = flatter floor, higher = more rolling hills. Only has an effect when enableModernCaves is true.");
 

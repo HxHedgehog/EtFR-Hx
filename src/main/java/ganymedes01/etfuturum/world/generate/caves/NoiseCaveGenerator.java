@@ -25,9 +25,8 @@ public final class NoiseCaveGenerator {
 	// 低频洞底噪声：让洞穴底部平坦并带小丘
 	private final DoublePerlinNoiseSampler floorNoise;
 
-	public enum FeatureType {
-		NONE, CHAMBER, TUNNEL, PILLAR, LEDGE
-	}
+	// 石柱生成阈值
+	private static final double PILLAR_THRESHOLD = 0.03D;
 
 	public NoiseCaveGenerator(Random random) {
 		this.pillarNoise = DoublePerlinNoiseSampler.create(new Random(random.nextLong()), -7, 1.0D, 1.0D);
@@ -48,7 +47,7 @@ public final class NoiseCaveGenerator {
 		this.floorNoise = DoublePerlinNoiseSampler.create(new Random(random.nextLong()), -7, 1.0D);
 	}
 
-	public double sample(double noise, int y, int z, int x, double terrainDepth, double terrainScale) {
+	public double sample(double noise, int y, int z, int x, double terrainScale) {
 		boolean generateLimited = noise < 170.0D;
 		double tunnelOffset = this.getTunnelOffsetNoise(x, y, z);
 		double tunnel = this.getTunnelNoise(x, y, z);
@@ -56,16 +55,16 @@ public final class NoiseCaveGenerator {
 		if (generateLimited) {
 			return Math.min(noise, (tunnel + tunnelOffset) * 128.0D * 5.0D);
 		} else {
-			boolean ocean = terrainDepth < 0.0D;
 			double mountainFactor = MathHelper.clamp((terrainScale - 0.4D) / 0.4D, 0.0D, 1.0D);
 
 			double caveDensity = this.caveDensityNoise.sample((double) x, (double) y / 1.5D, (double) z);
 			double scaledCaveDensity = MathHelper.clamp(caveDensity + 0.25D, -1.0D, 1.0D);
-			double yScale = (float) (30 - y) / 8.0F;
+			double yLimit = 30.0D + 30.0D * mountainFactor;
+			double yScale = (float) (yLimit - y) / 8.0F;
 			double caveOffset = scaledCaveDensity + MathHelper.clampedLerp(0.5D, 0.0D, yScale);
 
 			double terrainAddition = this.getTerrainAdditionNoise(x, y, z);
-			double caveNoise = this.getCaveNoise(x, y, z, ocean, mountainFactor);
+			double caveNoise = this.getCaveNoise(x, y, z, mountainFactor);
 
 			double offset = caveOffset * ConfigWorld.caveFillWeight + terrainAddition * ConfigWorld.caveLedgeStrength;
 			double smallerNoise = Math.min(offset,
@@ -99,70 +98,6 @@ public final class NoiseCaveGenerator {
 		return result;
 	}
 
-	/**
-	 * 仅用于调试标记：在给定坐标重新采样各噪声成分，判断该位置属于哪种洞穴结构。
-	 * 与 {@link #sample} 的现代洞穴分支保持一致（不含原版蠕虫洞的 limited 分支）。
-	 */
-	public FeatureType classifyFeature(int y, int z, int x, double terrainDepth, double terrainScale) {
-		boolean ocean = terrainDepth < 0.0D;
-		double mountainFactor = MathHelper.clamp((terrainScale - 0.4D) / 0.4D, 0.0D, 1.0D);
-
-		double tunnelOffset = this.getTunnelOffsetNoise(x, y, z);
-		double tunnel = this.getTunnelNoise(x, y, z);
-
-		double caveDensity = this.caveDensityNoise.sample((double) x, (double) y / 1.5D, (double) z);
-		double scaledCaveDensity = MathHelper.clamp(caveDensity + 0.25D, -1.0D, 1.0D);
-		double yScale = (float) (30 - y) / 8.0F;
-		double caveOffset = scaledCaveDensity + MathHelper.clampedLerp(0.5D, 0.0D, yScale);
-
-		double terrainAddition = this.getTerrainAdditionNoise(x, y, z);
-		double caveNoise = this.getCaveNoise(x, y, z, ocean, mountainFactor);
-
-		double offset = caveOffset * ConfigWorld.caveFillWeight + terrainAddition * ConfigWorld.caveLedgeStrength;
-		double tunnelTerm = tunnel * ConfigWorld.caveTunnelWeight;
-		double chamberTerm = caveNoise * ConfigWorld.caveCavityWeight;
-		double inner = Math.min(tunnelTerm, chamberTerm) + tunnelOffset;
-		double smallerNoise = Math.min(offset, inner);
-
-		double pillarNoise = ConfigWorld.cavePillars ? this.getPillarNoise(x, y, z) : Double.NEGATIVE_INFINITY;
-		double finalNoise = Math.max(smallerNoise, pillarNoise);
-
-		double result = 128.0D * MathHelper.clamp(finalNoise, -1.0D, 1.0D);
-
-		// 洞底平滑：与 sample 一致，洞底以下平滑推向实心
-		double floorY = this.getFloorY(x, z);
-		double margin = 3.0D;
-		if (y < floorY + margin) {
-			double t = MathHelper.clamp((floorY + margin - y) / margin, 0.0D, 1.0D);
-			t = t * t * (3.0D - 2.0D * t);
-			result = MathHelper.lerp(t, result, 128.0D);
-		}
-
-		// 地表衰减：与 generateNoiseCavesNoise 一致，接近/高于地表时强制实心，避免标记上天
-		int sub = (int) ((56.0D + terrainDepth * 20.0D) / 8.0D);
-		double surfaceDelta = (y / 8.0D - sub + 2.0D) / 2.0D;
-		if (surfaceDelta >= 1.0D) {
-			return FeatureType.NONE;
-		}
-		result = MathHelper.clampedLerp(result, terrainDepth * -30.0D + 20.0D, surfaceDelta);
-
-		if (result < 0.0D) {
-			return tunnelTerm < chamberTerm ? FeatureType.TUNNEL : FeatureType.CHAMBER;
-		}
-
-		// 石柱：本应是洞穴空气，却被上下联通的柱子顶成实心
-		if (ConfigWorld.cavePillars && y >= floorY && pillarNoise > 0.03D && smallerNoise < 0.0D) {
-			return FeatureType.PILLAR;
-		}
-
-		// 岩架：洞壁台阶带，由 terrainAddition 主导 offset 项形成
-		if (y >= floorY && offset < inner && terrainAddition * ConfigWorld.caveLedgeStrength > 0.25D) {
-			return FeatureType.LEDGE;
-		}
-
-		return FeatureType.NONE;
-	}
-
 	private double getFloorY(int x, int z) {
 		double variation = this.floorNoise.sample(x * 0.2D, 0.0D, z * 0.2D);
 		return ConfigWorld.caveFloorY + variation * ConfigWorld.caveFloorVariation;
@@ -178,7 +113,7 @@ public final class NoiseCaveGenerator {
 		pillarNoise = pillarScale * (pillarNoise * 2.0D - pillarFalloff);
 
 		// 石柱只出现在特定区域，形成上下联通的石柱
-		return pillarNoise > 0.03D ? pillarNoise : Double.NEGATIVE_INFINITY;
+		return pillarNoise > PILLAR_THRESHOLD ? pillarNoise : Double.NEGATIVE_INFINITY;
 	}
 
 	private double getTerrainAdditionNoise(int x, int y, int z) {
@@ -203,12 +138,9 @@ public final class NoiseCaveGenerator {
 		return clamp(Math.max(scaledTunnelNoise1, scaledTunnelNoise2));
 	}
 
-	private double getCaveNoise(int x, int y, int z, boolean ocean, double mountainFactor) {
+	private double getCaveNoise(int x, int y, int z, double mountainFactor) {
 		double caveScaleNoise = this.caveScaleNoise.sample((x * 2), y, (z * 2));
-		double caveScale = scaleCaves(caveScaleNoise);
-		if (ocean) {
-			caveScale *= 1.5D;
-		}
+		double caveScale = scaleCaves(caveScaleNoise) * ConfigWorld.caveCavityScale;
 
 		double caveFalloff = lerpFromProgress(this.caveFalloffNoise, (x * 2), y, (z * 2), 0.6D, 1.3D);
 		// 高山 → 纵向拉伸洞穴，允许更高的洞室甚至上下重叠
@@ -220,9 +152,7 @@ public final class NoiseCaveGenerator {
 		int yStart = -4;
 		double horizontalCaveNoise = lerpFromProgress(this.horizontalCaveNoise, x, 0.0D, z, yStart, 4.0D) + 4;
 
-		// 水平带中线加 Y 方向扰动，避免洞顶平整
-		double ceilingWobble = sample(this.caveNoise, x, y, z, caveScale * 0.5D) * 0.3D;
-		double caveFalloffNoise = (Math.abs((horizontalCaveNoise + ceilingWobble - (double) y / 8.0D)) - (2.0D * caveFalloff));
+		double caveFalloffNoise = (Math.abs((horizontalCaveNoise - (double) y / 8.0D)) - (2.0D * caveFalloff));
 		caveFalloffNoise = caveFalloffNoise * caveFalloffNoise * caveFalloffNoise;
 		return clamp(Math.max(caveFalloffNoise, scaledCaveNoise));
 	}

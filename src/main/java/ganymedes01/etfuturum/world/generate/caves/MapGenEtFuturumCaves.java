@@ -1,7 +1,5 @@
 package ganymedes01.etfuturum.world.generate.caves;
 
-import ganymedes01.etfuturum.configuration.configs.ConfigWorld;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.init.Blocks;
@@ -26,19 +24,16 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 	private double[] lowerInterpolatedNoises;
 	private double[] upperInterpolatedNoises;
 	private double[] depthNoises;
-	// 5x5 网格上每个采样点的地形深度/起伏，供调试标记分类复用
-	private final double[] terrainDepths = new double[25];
-	private final double[] terrainScales = new double[25];
 
 	@Override
 	public void func_151539_a(IChunkProvider provider, World world, int chunkX, int chunkZ, Block[] blocks) {
 		if (this.worldObj != world) {
 			this.caveNoise = new double[825];
 			this.biomeWeightTable = new float[25];
-			this.field_147431_j = new NoiseGeneratorOctaves(this.rand, 16);
-			this.field_147432_k = new NoiseGeneratorOctaves(this.rand, 16);
-			this.interpolationNoise = new NoiseGeneratorOctaves(this.rand, 8);
-			this.noiseGen6 = new NoiseGeneratorOctaves(this.rand, 16);
+			this.field_147431_j = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x998244353L), 16);
+			this.field_147432_k = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x114514191L), 16);
+			this.interpolationNoise = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x123456789L), 8);
+			this.noiseGen6 = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x271828182L), 16);
 			// 现代噪声洞穴必须绑定世界种子：用独立 Random(world.getSeed()) 派生，避免同一种子跨会话得到不同洞穴
 			this.noiseCaves = new NoiseCaveGenerator(new Random(world.getSeed()));
 			for (int j = -2; j <= 2; ++j) {
@@ -64,51 +59,6 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 		}
 		this.generateNoiseCaves(chunkX, chunkZ, blocks);
 		BlockFalling.fallInstantly = false;
-	}
-
-	@Override
-	protected void func_151538_a(World world, int noiseX, int noiseZ, int chunkX, int chunkZ, Block[] blocks) {
-		super.func_151538_a(world, noiseX, noiseZ, chunkX, chunkZ, blocks);
-		// 调试：在原版蠕虫洞里随机放红石块标记
-		if (ConfigWorld.debugCaveMarkers && noiseX == chunkX && noiseZ == chunkZ) {
-			for (int i = 0; i < 3; i++) {
-				tryPlaceDebugMarker(blocks, this.rand.nextInt(16), 5 + this.rand.nextInt(50), this.rand.nextInt(16), Blocks.redstone_block);
-			}
-		}
-	}
-
-	private void tryPlaceDebugMarker(Block[] blocks, int x, int y, int z, Block marker) {
-		for (int dx = 0; dx < 2; dx++) {
-			for (int dy = 0; dy < 2; dy++) {
-				for (int dz = 0; dz < 2; dz++) {
-					int bx = x + dx;
-					int by = y + dy;
-					int bz = z + dz;
-					if (bx < 16 && bz < 16 && by > 0 && by < 256) {
-						int idx = (bx * 16 + bz) * 256 + by;
-						Block existing = blocks[idx];
-						if (existing == null || existing == Blocks.stone) {
-							blocks[idx] = marker;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	private Block markerForFeature(NoiseCaveGenerator.FeatureType type) {
-		switch (type) {
-			case CHAMBER:
-				return Blocks.gold_block;
-			case TUNNEL:
-				return Blocks.lapis_block;
-			case PILLAR:
-				return Blocks.diamond_block;
-			case LEDGE:
-				return Blocks.iron_block;
-			default:
-				return null;
-		}
 	}
 
 	private void generateNoiseCaves(int chunkX, int chunkZ, Block[] blocks) {
@@ -157,19 +107,6 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 										} else {
 											blocks[index] = null;
 										}
-									}
-								}
-
-								// 调试：按结构类型随机放置对应的 2x2x2 方块堆标记
-								if (ConfigWorld.debugCaveMarkers && y > 0 && y < 256 && this.rand.nextInt(2000) == 0) {
-									double td = this.terrainDepths[noiseX + noiseZ * 5];
-									double ts = this.terrainScales[noiseX + noiseZ * 5];
-									int worldX = chunkX * 16 + noiseX * 4 + pieceX;
-									int worldZ = chunkZ * 16 + noiseZ * 4 + pieceZ;
-									NoiseCaveGenerator.FeatureType type = this.noiseCaves.classifyFeature(y, worldZ, worldX, td, ts);
-									Block marker = markerForFeature(type);
-									if (marker != null) {
-										tryPlaceDebugMarker(blocks, noiseX * 4 + pieceX, y, noiseZ * 4 + pieceZ, marker);
 									}
 								}
 							}
@@ -222,7 +159,7 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 						scale += scaleHere * weightHere;
 						depth += depthHere * weightHere;
 						weight += weightHere;
-						// 海洋中禁用
+						// 追踪最低地形深度，用于压实海洋/河流区域的洞穴
 						lowestScaledDepth = Math.min(lowestScaledDepth, biome.rootHeight);
 					}
 				}
@@ -265,9 +202,6 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 				double startLevel = 56 + (lowestScaledDepth * 20);
 				int sub = (int) (startLevel / 8);
 
-				this.terrainDepths[x + z * 5] = lowestScaledDepth;
-				this.terrainScales[x + z * 5] = scaledScale;
-
 				for (int y = 0; y < 33; y++) {
 					double falloff = ((double) y - terrainHeight) * 12.0D * 128.0D / 256.0D / scaledScale;
 
@@ -285,7 +219,7 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 						noise = noise * (1.0D - lerp) + -10.0D * lerp;
 					}
 
-					double caveNoise = this.noiseCaves.sample(noise, y * 8, chunkZ * 16 + (z * 4), chunkX * 16 + (x * 4), lowestScaledDepth, scaledScale);
+					double caveNoise = this.noiseCaves.sample(noise, y * 8, chunkZ * 16 + (z * 4), chunkX * 16 + (x * 4), scaledScale);
 
 					// 衰减，避免挖穿地表
 					caveNoise = ganymedes01.etfuturum.world.generate.caves.util.MathHelper.clampedLerp(caveNoise, (lowestScaledDepth * -30) + 20, (y - sub + 2) / 2.0);
