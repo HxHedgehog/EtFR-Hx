@@ -52,6 +52,7 @@ public class ConfigMixins extends ConfigBase {
 	public static boolean adjustedLiquidPhysics;
 	public static boolean liquidItemFloat;
 	public static boolean riddenHorsesInWater;
+	public static boolean noteBlockObservable;
 
 
 	static final String catBackport = "backported features";
@@ -123,6 +124,7 @@ public class ConfigMixins extends ConfigBase {
 		adjustedLiquidPhysics = getBoolean("adjustedLiquidPhysics", catBackport, true, "Moves entities in lava, speeds up items in all liquids, floats items in liquids, changes some other liquid to entity interactions.\nModified Classes: net.minecraft.world.World net.minecraft.entity.Entity net.minecraft.block.BlockLiquid");
 		liquidItemFloat = getBoolean("liquidItemFloat", catBackport, true, "Floats items upwards in liquids.\nModified Classes: net.minecraft.entity.item.EntityItem");
 		riddenHorsesInWater = getBoolean("riddenHorsesInWater", catBackport, true, "Allows ridden horses to float in water like in modern Minecraft versions.");
+		noteBlockObservable = getBoolean("noteBlockObservable", catBackport, true, "Note blocks emit a transient, observable block update when they play, so observers around them can detect the note, matching modern behavior. Since the 1.7.10 note/redstone state lives in the tile entity (never in metadata), observers otherwise see nothing.\nModified Class: net.minecraft.block.BlockNote");
 
 		stepHeightFix = getBoolean("stepHeightFix", catFixes, true, "Makes the player able to step up even if a block would be above their head at the destination.\nModified classes: net.minecraft.entity.Entity");
 		arrowFallingFix = getBoolean("arrowFallingFix", catFixes, true, "Prevents arrows from falling off of blocks too easily\nModified classes: net.minecraft.entity.EntityArrow");
