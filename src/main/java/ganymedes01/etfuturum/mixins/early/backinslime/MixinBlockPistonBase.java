@@ -103,9 +103,11 @@ public class MixinBlockPistonBase extends Block {
 					}
 				}
 
-				if (etfuturum$getPushableBlocks(world, x + xoffset2, y + yoffset2, z + zoffset2, oppositeSide, oppositeSide, x + xoffset, y + yoffset, z + zoffset, Lists.newArrayList(), Lists.newArrayList()) > 12) {
-					return; //Unable to pull
-				}
+				// A sticky piston must always retract when depowered, even if the
+				// attached block(s) cannot be pulled (e.g. obsidian, an extended
+				// piston, or more than 12 stuck blocks), matching modern behavior.
+				// Pullability is handled during the pull itself, not here, so the
+				// arm retreats and the immovable block simply stays in place.
 			}
 			world.addBlockEvent(x, y, z, this, 1, side); //pull piston
 		}
@@ -153,11 +155,15 @@ public class MixinBlockPistonBase extends Block {
 				int metaToPull = world.getBlockMetadata(x + xoffset2, y + yoffset2, z + zoffset2);
 
 				if (blockToPull.getMobilityFlag() != 1 && !PistonBehaviorRegistry.isNonStickyBlock(blockToPull, metaToPull)) {
-					if (etfuturum$getPushableBlocks(world, x + xoffset2, y + yoffset2, z + zoffset2, oppositeSide, oppositeSide, x + xoffset, y + yoffset, z + zoffset, pushedBlockList, pushedBlockPosList) == 0) {
+					int pullCount = etfuturum$getPushableBlocks(world, x + xoffset2, y + yoffset2, z + zoffset2, oppositeSide, oppositeSide, x + xoffset, y + yoffset, z + zoffset, pushedBlockList, pushedBlockPosList);
+					if (pullCount == 0) {
 						world.setBlockToAir(x + xoffset, y + yoffset, z + zoffset);
-					} else {
+					} else if (pullCount <= 12) {
 						etfuturum$pushBlocks(world, x + xoffset, y + yoffset, z + zoffset, oppositeSide, false, pushedBlockList, pushedBlockPosList);
 					}
+					// pullCount > 12 (immovable block such as obsidian/an extended
+					// piston, or more than 12 stuck blocks): cannot pull, so the
+					// piston simply retracts its arm and leaves the blocks in place.
 				}
 			}
 			world.playSoundEffect((double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, "tile.piston.in", 0.5F, world.rand.nextFloat() * 0.15F + 0.6F);
