@@ -212,6 +212,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("observer.MixinChunk");
 		}
 
+		if (ConfigMixins.noteBlockObservable) {
+			mixins.add("noteblockupdate.MixinBlockNote");
+		}
+
 		if (ConfigMixins.arrowFallingFix) {
 			mixins.add("fallingarrowfix.MixinEntityArrow");
 		}
