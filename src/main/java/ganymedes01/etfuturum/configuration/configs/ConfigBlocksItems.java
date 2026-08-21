@@ -101,6 +101,7 @@ public class ConfigBlocksItems extends ConfigBase {
 	public static boolean enableNewTileEntities;
 	public static boolean enableSuspiciousStew;
 	public static boolean enableGlazedTerracotta;
+	public static boolean betterLookGlazedTerracotta;
 	public static boolean enableIronNugget;
 	public static boolean enablePigstep;
 	public static boolean enableOtherside;
@@ -322,6 +323,7 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableExtraVanillaStairs = getBoolean("enableExtraVanillaStairs", catBlockMisc, true, "Stairs for vanilla blocks: stone, mossy stone brick, mossy cobble");
 		enableExtraVanillaWalls = getBoolean("enableExtraVanillaWalls", catBlockMisc, true, "Stairs for vanilla blocks: stone brick, mossy stone brick, sandstone, brick, nether brick");
 		enableGlazedTerracotta = getBoolean("enableGlazedTerracotta", catBlockMisc, true, "");
+		betterLookGlazedTerracotta = getBoolean("BetterlookGlazedTerracotta", catBlockMisc, true, "Use the alternate glazed terracotta textures for the glazed terracotta blocks. Disable to use the default Et Futurum terracotta textures.");
 		enableBarrier = getBoolean("enableBarrier", catBlockMisc, true, "A solid, indestructible and invisible block. Can be seen when holding it in Creative mode.");
 		enableLightBlock = getBoolean("enableLightBlock", catBlockMisc, true, "Invisible light blocks. Only has a selection box when held, right click to change light level. Otherwise functionally identical to air and can be replaced by placing blocks into it. Invisible, but can be seen when holding it in Creative mode.");
 		enableChain = getBoolean("enableChain", catBlockMisc, true, "");

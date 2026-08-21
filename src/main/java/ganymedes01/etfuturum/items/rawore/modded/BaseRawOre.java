@@ -13,7 +13,10 @@ public class BaseRawOre extends BaseItem {
 
 	@Override
 	public String getTextureSubfolder() {
-		return subfolder;
+		// Raw ores are placed flat in the item atlas (textures/items/raw_*.png),
+		// alongside the vanilla raw_* set, instead of a per-mod sub-folder.
+		// See getTextureSubfolder()/setTextureName() in BaseItem.
+		return "";
 	}
 
 	@Override
@@ -23,6 +26,9 @@ public class BaseRawOre extends BaseItem {
 
 	@Override
 	public String getNameDomain() {
-		return super.getNameDomain() + (getTextureSubfolder().isEmpty() ? "" : (super.getNameDomain().isEmpty() ? "" : ".") + getTextureSubfolder());
+		// The owning mod still labels the item's registry/name domain (e.g.
+		// "etfuturum.simpleores.raw_adamantium") so this is separate from the
+		// flat texture path above.
+		return super.getNameDomain() + (subfolder.isEmpty() ? "" : (super.getNameDomain().isEmpty() ? "" : ".") + subfolder);
 	}
 }

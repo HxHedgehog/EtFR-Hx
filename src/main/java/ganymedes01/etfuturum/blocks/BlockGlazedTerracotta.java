@@ -1,5 +1,6 @@
 package ganymedes01.etfuturum.blocks;
 
+import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
 import ganymedes01.etfuturum.lib.RenderIDs;
 import ganymedes01.etfuturum.recipes.ModRecipes;
 import net.minecraft.block.material.MapColor;
@@ -51,7 +52,11 @@ public class BlockGlazedTerracotta extends BaseBlock {
 
 	@Override
 	public void registerBlockIcons(IIconRegister reg) {
-		super.registerBlockIcons(reg);
+		String name = ModRecipes.dye_names[meta] + "_glazed_terracotta";
+		if (ConfigBlocksItems.betterLookGlazedTerracotta) {
+			name += "_new";
+		}
+		this.blockIcon = reg.registerIcon(name);
 		blockIconFlipped = new IconFlipped(blockIcon, true, false);
 	}
 
