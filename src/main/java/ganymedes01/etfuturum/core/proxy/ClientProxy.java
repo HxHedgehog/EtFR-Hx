@@ -66,6 +66,7 @@ import ganymedes01.etfuturum.client.renderer.tileentity.TileEntityGatewayRendere
 import ganymedes01.etfuturum.client.renderer.tileentity.TileEntityNewBeaconRenderer;
 import ganymedes01.etfuturum.client.renderer.tileentity.TileEntityShulkerBoxRenderer;
 import ganymedes01.etfuturum.client.renderer.tileentity.TileEntityWoodSignRenderer;
+import ganymedes01.etfuturum.client.SpawnEggFaceTextureHandler;
 import ganymedes01.etfuturum.client.skins.NewRenderPlayer;
 import ganymedes01.etfuturum.client.skins.NewSkinManager;
 import ganymedes01.etfuturum.client.subtitle.GuiSubtitles;
@@ -138,6 +139,9 @@ public class ClientProxy extends CommonProxy {
 
 		if (ConfigMixins.betterBookTextures) {
 			MinecraftForge.EVENT_BUS.register(EnchantedBookTextureHandler.INSTANCE);
+		}
+		if (ConfigMixins.betterSpawnEggTextures) {
+			MinecraftForge.EVENT_BUS.register(SpawnEggFaceTextureHandler.INSTANCE);
 		}
 	}
 
