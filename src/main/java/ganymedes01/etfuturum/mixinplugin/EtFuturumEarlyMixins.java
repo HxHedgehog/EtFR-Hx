@@ -220,6 +220,11 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("enderpearl.MixinItemEnderPearl");
 		}
 
+		if (ConfigMixins.betterBookTextures && side == MixinEnvironment.Side.CLIENT) {
+			mixins.add("enchantedbook.MixinItemEnchantedBook");
+			mixins.add("enchantedbook.MixinEntityLivingBaseEnchantedBook");
+		}
+
 		if (ConfigMixins.arrowFallingFix) {
 			mixins.add("fallingarrowfix.MixinEntityArrow");
 		}

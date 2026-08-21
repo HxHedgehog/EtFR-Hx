@@ -54,6 +54,7 @@ public class ConfigMixins extends ConfigBase {
 	public static boolean riddenHorsesInWater;
 	public static boolean noteBlockObservable;
 	public static boolean creativeEnderPearls;
+	public static boolean betterBookTextures;
 
 
 	static final String catBackport = "backported features";
@@ -127,6 +128,7 @@ public class ConfigMixins extends ConfigBase {
 		riddenHorsesInWater = getBoolean("riddenHorsesInWater", catBackport, true, "Allows ridden horses to float in water like in modern Minecraft versions.");
 		noteBlockObservable = getBoolean("noteBlockObservable", catBackport, true, "Note blocks emit a transient, observable block update when they play, so observers around them can detect the note, matching modern behavior. Since the 1.7.10 note/redstone state lives in the tile entity (never in metadata), observers otherwise see nothing.\nModified Class: net.minecraft.block.BlockNote");
 		creativeEnderPearls = getBoolean("creativeEnderPearls", catBackport, true, "Lets creative-mode players throw ender pearls without consuming them, matching modern behavior. Vanilla 1.7.10 does nothing when a creative player right-clicks an ender pearl.\nModified Class: net.minecraft.item.ItemEnderPearl");
+		betterBookTextures = getBoolean("betterBookTextures", catBackport, true, "Shows featured (Bibliophilia-style) textures for enchanted books, with one sprite per enchantment. Setting the icon is driven by our bundled enchantments.txt, so the textures of third-party mod books are preserved and applied automatically when the corresponding enchantment is registered.\nModified Class: net.minecraft.item.ItemEnchantedBook");
 
 		stepHeightFix = getBoolean("stepHeightFix", catFixes, true, "Makes the player able to step up even if a block would be above their head at the destination.\nModified classes: net.minecraft.entity.Entity");
 		arrowFallingFix = getBoolean("arrowFallingFix", catFixes, true, "Prevents arrows from falling off of blocks too easily\nModified classes: net.minecraft.entity.EntityArrow");

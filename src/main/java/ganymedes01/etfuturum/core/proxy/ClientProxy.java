@@ -55,6 +55,7 @@ import ganymedes01.etfuturum.client.renderer.entity.ShulkerRenderer;
 import ganymedes01.etfuturum.client.renderer.entity.StrayRenderer;
 import ganymedes01.etfuturum.client.renderer.entity.VillagerZombieRenderer;
 import ganymedes01.etfuturum.client.renderer.item.Item3DBedRenderer;
+import ganymedes01.etfuturum.client.renderer.item.EnchantedBookHandRenderer;
 import ganymedes01.etfuturum.client.renderer.item.ItemBannerRenderer;
 import ganymedes01.etfuturum.client.renderer.item.ItemBowRenderer;
 import ganymedes01.etfuturum.client.renderer.item.ItemShulkerBoxRenderer;
@@ -71,6 +72,7 @@ import ganymedes01.etfuturum.client.subtitle.GuiSubtitles;
 import ganymedes01.etfuturum.configuration.configs.ConfigFunctions;
 import ganymedes01.etfuturum.configuration.configs.ConfigMixins;
 import ganymedes01.etfuturum.core.handlers.ClientEventHandler;
+import ganymedes01.etfuturum.enchantment.EnchantedBookTextureHandler;
 
 import ganymedes01.etfuturum.entities.EntityArmourStand;
 import ganymedes01.etfuturum.entities.EntityBee;
@@ -133,6 +135,10 @@ public class ClientProxy extends CommonProxy {
 		
 		MinecraftForge.EVENT_BUS.register(new GlowLichenHighlightEvent());
 		MinecraftForge.EVENT_BUS.register(BiomeFogEventHandler.INSTANCE);
+
+		if (ConfigMixins.betterBookTextures) {
+			MinecraftForge.EVENT_BUS.register(EnchantedBookTextureHandler.INSTANCE);
+		}
 	}
 
 	@Override
@@ -146,6 +152,9 @@ public class ClientProxy extends CommonProxy {
 		MinecraftForgeClient.registerItemRenderer(Item.getItemFromBlock(ModBlocks.BANNER.get()), new ItemBannerRenderer());
 		MinecraftForgeClient.registerItemRenderer(Items.skull, new ItemSkullRenderer());
 		MinecraftForgeClient.registerItemRenderer(Items.bow, new ItemBowRenderer());
+		if (ConfigMixins.betterBookTextures) {
+			MinecraftForgeClient.registerItemRenderer(Items.enchanted_book, new EnchantedBookHandRenderer());
+		}
 		MinecraftForgeClient.registerItemRenderer(Item.getItemFromBlock(ModBlocks.SHULKER_BOX.get()), new ItemShulkerBoxRenderer());
 		if (ConfigFunctions.inventoryBedModels) {
 			MinecraftForgeClient.registerItemRenderer(Items.bed, new Item3DBedRenderer((BlockBed) Blocks.bed));

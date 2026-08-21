@@ -162,7 +162,16 @@ public class ItemCategoryHelper {
 			if (obj instanceof Item) {
 				Item item = (Item) obj;
 				CreativeTabs currentTab = item.getCreativeTab();
-				if (currentTab == null) continue;
+				// 附魔书在 1.7.10 原版中未归属任何创造标签页（getCreativeTab()==null），
+				// 但 1.21.4 官方将其归入原材料（INGREDIENTS）。这里手动分配，
+				// 否则 displayAllReleventItems 中 enchantedBook.getCreativeTab()==this 恒不成立，附魔书不显示。
+				if (currentTab == null) {
+					if ((Item) Item.itemRegistry.getObject("minecraft:enchanted_book") == item) {
+						setCreativeTab(item, ModdedCreativeTabs.INGREDIENTS);
+						redirected++;
+					}
+					continue;
+				}
 
 				CreativeTabs target = getTabForItem(item);
 			if (target != null && target != currentTab) {
