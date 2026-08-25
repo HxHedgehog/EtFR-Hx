@@ -64,7 +64,12 @@ public class ModdedCreativeTabs {
 	public static final CreativeTabs COLORED_BLOCKS = new SortedCreativeTab(1, LANG_PREFIX + "coloredBlocks", CreativeTabs.tabDecorations) {
 		@Override
 		public Item getTabIconItem() {
-			return Item.getItemFromBlock(Blocks.lapis_block);
+			return Item.getItemFromBlock(Blocks.wool);
+		}
+
+		@Override
+		public ItemStack getIconItemStack() {
+			return new ItemStack(Blocks.wool, 1, 9); // 9 = 青色
 		}
 	};
 
@@ -104,7 +109,7 @@ public class ModdedCreativeTabs {
 	public static final CreativeTabs COMBAT = new SortedCreativeTab(7, LANG_PREFIX + "combat", CreativeTabs.tabCombat) {
 		@Override
 		public Item getTabIconItem() {
-			return Items.diamond_sword;
+			return ModItems.NETHERITE_SWORD.isEnabled() ? ModItems.NETHERITE_SWORD.get() : Items.diamond_sword;
 		}
 	};
 
@@ -129,6 +134,11 @@ public class ModdedCreativeTabs {
 		@Override
 		public Item getTabIconItem() {
 			return Items.spawn_egg;
+		}
+
+		@Override
+		public ItemStack getIconItemStack() {
+			return new ItemStack(Items.spawn_egg, 1, 97); // 97 = 雪傀儡（新版贴图）
 		}
 	};
 

@@ -304,6 +304,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		}
 
 		if (side == MixinEnvironment.Side.CLIENT) {
+			// Creative tab row count fix: always applied.
+			mixins.add("creative.MixinGuiContainerCreative");
+			mixins.add("creative.MixinGuiContainerCreative$ContainerCreative");
+
 			if (ConfigMixins.dustUnderFallingBlocks) {
 				mixins.add("blockfallingparticles.client.MixinBlockFalling");
 			}
