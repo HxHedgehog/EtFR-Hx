@@ -9,6 +9,7 @@ import java.io.File;
 public class ConfigMixins extends ConfigBase {
 
 	public static boolean endPortalFix;
+	public static boolean mushroomGrowBreaksEndPortalFrame;
 	public static boolean fenceWallConnectFix;
 	public static boolean furnaceCrackle;
 	public static boolean stepHeightFix;
@@ -89,6 +90,7 @@ public class ConfigMixins extends ConfigBase {
 		}
 
 		endPortalFix = getBoolean("endPortalFix", catBackport, true, "Makes the End Portal block (the actual portal, not the frame) have an item icon, proper hitbox and will not instantly destroy itself in other dimensions.\nModified classes: net.minecraft.block.BlockEndPortal");
+		mushroomGrowBreaksEndPortalFrame = getBoolean("mushroomGrowBreaksEndPortalFrame", catBackport, true, "Allows red/brown mushroom trees to replace end portal frames when grown with bonemeal, restoring the modern sand duplicator. The space check is left to vanilla (which already lets the mushroom grow in some spots); only replacing the frame is guaranteed. The end portal itself can never be replaced.\nModified classes: net.minecraft.world.gen.feature.WorldGenBigMushroom");
 		fenceWallConnectFix = getBoolean("fenceWallConnectFix", catBackport, true, "Makes vanilla fences connect to modded ones of the same material. Might have connection issue with mods that don't reference BlockFence super code.\nModified classes: net.minecraft.block.BlockFence net.minecraft.block.BlockWall");
 		avoidDroppingItemsWhenClosing = getBoolean("avoidDroppingItemsWhenClosing", catBackport, false, "Experimental: avoid dropping items when closing an inventory, like in modern versions.\nModified Classes: net.minecraft.entity.player.EntityPlayerMP");
 		enableSpectatorMode = getBoolean("enableSpectatorMode", catBackport, true, "VERY EXPERIMENTAL!\nModified Classes: net.minecraft.world.WorldSettings.GameType net.minecraft.entity.Entity net.minecraft.world.World net.minecraft.entity.player.EntityPlayer net.minecraft.network.NetHandlerPlayServer net.minecraft.entity.player.InventoryPlayer net.minecraft.inventory.ContainerChest\nModified Client Classes: net.minecraft.client.renderer.EntityRenderer net.minecraft.entity.player.EntityPlayer net.minecraft.client.renderer.WorldRenderer");

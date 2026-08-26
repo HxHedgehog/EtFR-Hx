@@ -374,6 +374,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("mushroom.MixinBlockHugeMushroom");
 		}
 
+		if (ConfigMixins.mushroomGrowBreaksEndPortalFrame) {
+			mixins.add("mushroom.MixinWorldGenBigMushroom");
+		}
+
 		return mixins;
 	}
 

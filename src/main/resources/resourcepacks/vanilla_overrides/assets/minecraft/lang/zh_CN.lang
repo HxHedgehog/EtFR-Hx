@@ -69,6 +69,7 @@ tile.netherStalk.name=下界疣
 tile.hellrock.name=下界岩
 tile.lightgem.name=荧石
 tile.portal.name=下界传送门
+tile.endPortalFrame.name=末地传送门框架
 tile.daylightDetector.name=阳光探测器
 
 item.redstone.name=红石粉
