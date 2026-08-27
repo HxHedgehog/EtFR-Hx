@@ -1977,6 +1977,12 @@ public class ServerEventHandler {
 		if (ConfigMixins.avoidDroppingItemsWhenClosing && event.player instanceof EntityPlayerMP && playersClosedContainers.contains(event.player)) {
 			if (event.player.inventory.addItemStackToInventory(event.entityItem.getEntityItem())) {
 				event.setCanceled(true);
+				// 返还的物品并入已有堆叠后，inventoryContainer 的检测快照仍停留在打开容器前的值
+				//（打开其他容器期间该容器不运行 detectAndSendChanges），若合并后的数量恰与快照相等，
+				// 下一 tick 的 detectAndSendChanges 将检测不到变化，导致客户端数量不刷新（看着像少了）。
+				// 这里主动全量同步主物品栏（windowId 0），客户端无论 openContainer 是哪个都会应用该更新。
+				EntityPlayerMP playerMP = (EntityPlayerMP) event.player;
+				playerMP.sendContainerAndContentsToPlayer(playerMP.inventoryContainer, playerMP.inventoryContainer.getInventory());
 			}
 		}
 	}

@@ -378,6 +378,9 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("mushroom.MixinWorldGenBigMushroom");
 		}
 
+		// Shears durability aligned with 26.2: always applied.
+		mixins.add("shears.MixinItemShears");
+
 		return mixins;
 	}
 
