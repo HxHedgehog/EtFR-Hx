@@ -47,6 +47,9 @@ public class BlockHangingRoots extends Block {
 				|| !(harvesters.get().getHeldItem().getItem() instanceof ItemShears)) {
 			return 0;
 		}
+		// 与垂泪藤/缠怨藤统一：剪刀采集消耗 1 点耐久。
+		// 创造模式下 damageItem 内部不扣耐久（原版行为），故不在此修复。
+		harvesters.get().getHeldItem().damageItem(1, harvesters.get());
 		return 1;
 	}
 

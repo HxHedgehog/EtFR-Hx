@@ -1983,6 +1983,10 @@ public class ServerEventHandler {
 
 	@SubscribeEvent
 	public void onItemCrafted(ItemCraftedEvent event) {
+		// 不能以 isRemote 跳过：1.7.10 客户端 windowClick 会本地执行一次容器点击逻辑，
+		// 客户端与服务端必须各自按同一确定性逻辑处理（伤害剪刀 + stackSize 技巧），
+		// 否则本地网格与服务端状态脱节（剪刀隐身/玫瑰丛残留）。
+		// 客户端 damageItem 的 addStat 仅对 isIndependent 统计生效，无副作用。
 		RecipeOldRose.damageShears(event.crafting, event.craftMatrix, event.player);
 	}
 
