@@ -5,9 +5,12 @@ import ganymedes01.etfuturum.core.utils.Utils;
 import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.item.ItemShears;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import java.util.Random;
 
 /**
  * 垂根 —— 复刻官方 1.17+ HangingRootsBlock。
@@ -34,6 +37,23 @@ public class BlockHangingRoots extends Block {
 	@Override
 	public boolean canBlockStay(World world, int x, int y, int z) {
 		return canPlaceBlockAt(world, x, y, z);
+	}
+
+	@Override
+	public int quantityDropped(int meta, int fortune, Random random) {
+		// 官方 1.17+：空手/其他工具不掉落，仅剪刀采集时掉落自身。
+		// 无玩家破坏（方块更新/自然脱落）时 harvesters 为 null，也不掉落。
+		if (harvesters.get() == null || harvesters.get().getHeldItem() == null
+				|| !(harvesters.get().getHeldItem().getItem() instanceof ItemShears)) {
+			return 0;
+		}
+		return 1;
+	}
+
+	@Override
+	public int quantityDropped(Random random) {
+		// 无玩家破坏时默认不掉落（与 quantityDropped(meta, fortune, random) 保持一致）
+		return 0;
 	}
 
 	@Override

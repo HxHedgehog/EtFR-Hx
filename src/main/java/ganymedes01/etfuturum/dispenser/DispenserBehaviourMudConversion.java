@@ -40,13 +40,14 @@ public class DispenserBehaviourMudConversion extends BehaviorDefaultDispenseItem
 	}
 
 	/**
-	 * 官方 CONVERTABLE_TO_MUD：dirt、coarse_dirt（meta 1）、rooted_dirt。
-	 * 1.7.10 中 dirt 的 meta 0/1/2 分别对应 dirt/coarse_dirt/podzol。
+	 * 官方 CONVERTABLE_TO_MUD：dirt、coarse_dirt、rooted_dirt。
+	 * 1.7.10 中 dirt 的 meta 0/1/2 分别对应 dirt/coarse_dirt/podzol；
+	 * 本模组另用独立的 {@link ModBlocks#COARSE_DIRT} 方块表示粗泥（世界生成放置），同样可转化。
 	 */
 	private static boolean isConvertableToMud(net.minecraft.block.Block block, int meta) {
 		if (block == Blocks.dirt) {
 			return meta == 0 || meta == 1; // dirt 或 coarse_dirt
 		}
-		return block == ModBlocks.ROOTED_DIRT.get();
+		return block == ModBlocks.COARSE_DIRT.get() || block == ModBlocks.ROOTED_DIRT.get();
 	}
 }
