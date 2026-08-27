@@ -31,6 +31,7 @@ import ganymedes01.etfuturum.recipes.crafting.RecipeAddPattern;
 import ganymedes01.etfuturum.recipes.crafting.RecipeDuplicatePattern;
 import ganymedes01.etfuturum.recipes.crafting.RecipeDyedShulkerBox;
 import ganymedes01.etfuturum.recipes.crafting.RecipeFixedFireworks;
+import ganymedes01.etfuturum.recipes.crafting.RecipeOldRose;
 import ganymedes01.etfuturum.recipes.crafting.RecipeTippedArrow;
 import ganymedes01.etfuturum.recipes.crafting.ShapedEtFuturumRecipe;
 import ganymedes01.etfuturum.recipes.crafting.ShapelessEtFuturumRecipe;
@@ -87,6 +88,7 @@ public class ModRecipes {
 		}
 		RecipeSorter.register(Reference.MOD_ID + ":shaped", ShapedEtFuturumRecipe.class, RecipeSorter.Category.SHAPED, "before:minecraft:shaped");
 		RecipeSorter.register(Reference.MOD_ID + ":shapeless", ShapelessEtFuturumRecipe.class, RecipeSorter.Category.SHAPELESS, "before:minecraft:shapeless");
+		RecipeSorter.register(Reference.MOD_ID + ".RecipeOldRose", RecipeOldRose.class, Category.SHAPELESS, "after:minecraft:shapeless");
 
 		registerRecipes();
 		tweakRecipes();
@@ -765,7 +767,7 @@ public class ModRecipes {
 
 		addShapelessRecipe(new ItemStack(Items.dye, 1, 1), ModBlocks.ROSE.get());
 		addShapedRecipe(new ItemStack(Blocks.double_plant, 1, 4), "xx", "xx", "xx", 'x', ModBlocks.ROSE.newItemStack());
-		addShapedRecipe(ModBlocks.ROSE.newItemStack(12), "xx", 'x', new ItemStack(Blocks.double_plant, 1, 4));
+		GameRegistry.addRecipe(new RecipeOldRose());
 
 		if (ModItems.TIPPED_ARROW.isEnabled() && ModItems.LINGERING_POTION.isEnabled()) {
 			RecipeSorter.register(Reference.MOD_ID + ".RecipeTippedArrow", RecipeTippedArrow.class, Category.SHAPED, "after:minecraft:shaped");

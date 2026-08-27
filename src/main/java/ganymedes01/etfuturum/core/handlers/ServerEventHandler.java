@@ -9,6 +9,7 @@ import cpw.mods.fml.common.eventhandler.Event.Result;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent.ItemCraftedEvent;
 import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
@@ -63,6 +64,7 @@ import ganymedes01.etfuturum.lib.Reference;
 import ganymedes01.etfuturum.network.AttackYawMessage;
 import ganymedes01.etfuturum.network.BlackHeartParticlesMessage;
 import ganymedes01.etfuturum.recipes.ModRecipes;
+import ganymedes01.etfuturum.recipes.crafting.RecipeOldRose;
 import ganymedes01.etfuturum.spectator.SpectatorMode;
 import ganymedes01.etfuturum.storage.EtFuturumPlayer;
 import ganymedes01.etfuturum.tileentities.TileEntityGateway;
@@ -1977,6 +1979,11 @@ public class ServerEventHandler {
 				event.setCanceled(true);
 			}
 		}
+	}
+
+	@SubscribeEvent
+	public void onItemCrafted(ItemCraftedEvent event) {
+		RecipeOldRose.damageShears(event.crafting, event.craftMatrix, event.player);
 	}
 
 	@SubscribeEvent
