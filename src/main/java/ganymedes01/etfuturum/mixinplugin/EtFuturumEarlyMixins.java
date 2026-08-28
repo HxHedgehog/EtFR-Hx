@@ -237,6 +237,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("dye.MixinBaseSubtypesItemDye");
 		}
 
+		if (ConfigMixins.betterEmeraldBlockTexture && side == MixinEnvironment.Side.CLIENT) {
+			mixins.add("emeraldblock.MixinBlockEmerald");
+		}
+
 		if (ConfigMixins.arrowFallingFix) {
 			mixins.add("fallingarrowfix.MixinEntityArrow");
 		}
