@@ -26,9 +26,10 @@ public class MixinItemAppleGold {
 
 	@Inject(method = "getUnlocalizedName(Lnet/minecraft/item/ItemStack;)Ljava/lang/String;", at = @At("HEAD"), cancellable = true)
 	private void etfuturum$enchantedGoldenAppleName(ItemStack stack, CallbackInfoReturnable<String> cir) {
-		// === 附魔金苹果（golden_apple meta 1）：使用独立名称键，其余物品原样放行 ===
+		// === 附魔金苹果（golden_apple meta 1）：使用独立名称键（不带 .name 后缀，
+		//     显示路径会自动拼接），其余物品原样放行 ===
 		if ((Object) this instanceof ItemAppleGold && stack.getItemDamage() > 0) {
-			cir.setReturnValue("item.appleGold.enchanted.name");
+			cir.setReturnValue("item.appleGold.enchanted");
 		}
 	}
 }
