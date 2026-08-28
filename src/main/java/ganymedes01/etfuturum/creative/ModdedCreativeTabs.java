@@ -363,8 +363,9 @@ public class ModdedCreativeTabs {
 			path.equals("brown_dye") || path.equals("black_dye")) {
 			return domain + "dye_same";
 		}
-		// 青金石/骨粉/墨囊（1.21.4 独立物品，1.7.10 是 minecraft:dye 的 meta 4/15/0）
-		if (path.equals("lapis_lazuli") || path.equals("bone_meal") || path.equals("ink_sac")) {
+		// 青金石/骨粉/墨囊/可可豆（1.21.4 独立物品，1.7.10 是 minecraft:dye 的 meta 4/15/0/3）
+		if (path.equals("lapis_lazuli") || path.equals("bone_meal") || path.equals("ink_sac")
+			|| path.equals("cocoa_beans")) {
 			return domain + "dye";
 		}
 		// 染色变体：minecraft:white_stained_glass → minecraft:stained_glass
@@ -863,10 +864,11 @@ public class ModdedCreativeTabs {
 		if (path.equals("blue_dye")) return 1;
 		if (path.equals("brown_dye")) return 2;
 		if (path.equals("black_dye")) return 3;
-		// === 青金石/骨粉/墨囊（1.7.10 是 minecraft:dye 的 meta 4/15/0） ===
+		// === 青金石/骨粉/墨囊/可可豆（1.7.10 是 minecraft:dye 的 meta 4/15/0/3） ===
 		if (path.equals("lapis_lazuli")) return 4;
 		if (path.equals("bone_meal")) return 15;
 		if (path.equals("ink_sac")) return 0;
+		if (path.equals("cocoa_beans")) return 3;
 		// 其余 12 色染料 → 1.7.10 原版 minecraft:dye 的正确 meta
 		// （1.7.10 dye meta：0=墨囊 1=红 2=绿 3=棕 4=蓝 5=紫 6=青 7=浅灰 8=灰
 		//   9=粉 10=黄绿 11=黄 12=浅蓝 13=品红 14=橙 15=骨粉）

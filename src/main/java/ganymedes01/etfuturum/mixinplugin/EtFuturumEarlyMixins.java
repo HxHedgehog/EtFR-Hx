@@ -232,6 +232,11 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("spawn_egg.MixinItemMonsterPlacerSpawnEgg");
 		}
 
+		if (ConfigMixins.betterDyeTextures && side == MixinEnvironment.Side.CLIENT) {
+			mixins.add("dye.MixinItemDye");
+			mixins.add("dye.MixinBaseSubtypesItemDye");
+		}
+
 		if (ConfigMixins.arrowFallingFix) {
 			mixins.add("fallingarrowfix.MixinEntityArrow");
 		}

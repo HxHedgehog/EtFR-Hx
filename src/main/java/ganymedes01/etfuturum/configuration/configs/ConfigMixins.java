@@ -57,6 +57,7 @@ public class ConfigMixins extends ConfigBase {
 	public static boolean creativeEnderPearls;
 	public static boolean betterBookTextures;
 	public static boolean betterSpawnEggTextures;
+	public static boolean betterDyeTextures;
 
 
 	static final String catBackport = "backported features";
@@ -133,6 +134,7 @@ public class ConfigMixins extends ConfigBase {
 		creativeEnderPearls = getBoolean("creativeEnderPearls", catBackport, true, "Lets creative-mode players throw ender pearls without consuming them, matching modern behavior. Vanilla 1.7.10 does nothing when a creative player right-clicks an ender pearl.\nModified Class: net.minecraft.item.ItemEnderPearl");
 		betterBookTextures = getBoolean("betterBookTextures", catBackport, true, "Shows featured (Bibliophilia-style) textures for enchanted books, with one sprite per enchantment. Setting the icon is driven by our bundled enchantments.txt, so the textures of third-party mod books are preserved and applied automatically when the corresponding enchantment is registered.\nModified Class: net.minecraft.item.ItemEnchantedBook");
 		betterSpawnEggTextures = getBoolean("betterSpawnEggTextures", catBackport, true, "Shows the high-version 'Spawn Egg Faces' single full-colour egg textures for spawn eggs that have a bundled face sprite. Only the egg metadata we map is affected; spawn eggs of other mods are left untouched.\nModified Class: net.minecraft.item.ItemMonsterPlacer");
+		betterDyeTextures = getBoolean("betterDyeTextures", catBackport, true, "Swaps the vanilla 1.7.10 dye (item:dye) icons for the 12 'pure' dye colours to the high-version (1.21+) per-colour dye textures. In 1.7.10 the dye shares item ID 351 with material items by metadata, so bone meal (15), cocoa beans (3), ink sac (0) and lapis lazuli (4) keep their original icons; the modern white/blue/brown/black dyes are already covered by the separate mod item 'dye_same'.\nModified Class: net.minecraft.item.ItemDye");
 
 		stepHeightFix = getBoolean("stepHeightFix", catFixes, true, "Makes the player able to step up even if a block would be above their head at the destination.\nModified classes: net.minecraft.entity.Entity");
 		arrowFallingFix = getBoolean("arrowFallingFix", catFixes, true, "Prevents arrows from falling off of blocks too easily\nModified classes: net.minecraft.entity.EntityArrow");
