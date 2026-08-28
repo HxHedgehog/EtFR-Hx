@@ -390,6 +390,9 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		// Shears durability aligned with 26.2: always applied.
 		mixins.add("shears.MixinItemShears");
 
+		// Enchanted golden apple gets its own display name (like modern versions): always applied.
+		mixins.add("goldenapple.MixinItemAppleGold");
+
 		return mixins;
 	}
 
