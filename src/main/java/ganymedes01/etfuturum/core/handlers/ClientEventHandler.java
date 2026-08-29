@@ -16,6 +16,7 @@ import ganymedes01.etfuturum.blocks.BlockShulkerBox;
 import ganymedes01.etfuturum.client.EndFlashState;
 import ganymedes01.etfuturum.client.OpenGLHelper;
 import ganymedes01.etfuturum.client.SpawnChunkProgress;
+import ganymedes01.etfuturum.client.TotemOfUndyingAnimation;
 import ganymedes01.etfuturum.client.loading.LoadingScreenHooks;
 import ganymedes01.etfuturum.client.loading.LoadingScreenStateTracker;
 import ganymedes01.etfuturum.client.WorldIconManager;
@@ -196,6 +197,8 @@ public class ClientEventHandler {
 		if (world == null || event.phase == Phase.START || mc.isGamePaused()) {
 			return;
 		}
+
+		TotemOfUndyingAnimation.tick();
 
 		if (player.ticksExisted == 40) {
 			if (!Reference.DEV_ENVIRONMENT && !ConfigExperiments.getEnabledElements().isEmpty() && !showedDebugWarning) {
@@ -942,6 +945,10 @@ public class ClientEventHandler {
 
 	@SubscribeEvent
 	public void onRenderWorldLast(RenderWorldLastEvent event) {
+		// 26.2 renders the totem item activation animation as a screen effect after
+		// the world but before the GUI
+		TotemOfUndyingAnimation.render(mc, event.partialTicks);
+
 		if (DeferredBubbleFX.DEFERRED_BUBBLES.isEmpty()) return;
 
 		float pt = event.partialTicks;

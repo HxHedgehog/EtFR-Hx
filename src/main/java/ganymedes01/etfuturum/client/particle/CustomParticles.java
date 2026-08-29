@@ -3,6 +3,7 @@ package ganymedes01.etfuturum.client.particle;
 import ganymedes01.etfuturum.core.utils.RandomXoshiro256StarStar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.EntityFX;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
@@ -36,6 +37,17 @@ public class CustomParticles {
 	public static EntityFX spawnBlackHeartParticle(World world, double x, double y, double z) {
 		EntityFX particle = new BlackHeartFX(world, x, y, z);
 		return spawnParticle(world, particle);
+	}
+
+	public static EntityFX spawnTotemParticle(World world, double x, double y, double z, double xa, double ya, double za) {
+		EntityFX particle = new TotemFX(world, x, y, z, xa, ya, za);
+		return spawnParticle(world, particle);
+	}
+
+	public static void spawnTotemEmitter(World world, Entity entity) {
+		if (world.isRemote) {
+			Minecraft.getMinecraft().effectRenderer.addEffect(new TotemFXEmitter(world, entity));
+		}
 	}
 
 	public static EntityFX spawnEndRodParticle(World world, double x, double y, double z) {

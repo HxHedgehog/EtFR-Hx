@@ -63,6 +63,7 @@ import ganymedes01.etfuturum.items.ItemArrowTipped;
 import ganymedes01.etfuturum.lib.Reference;
 import ganymedes01.etfuturum.network.AttackYawMessage;
 import ganymedes01.etfuturum.network.BlackHeartParticlesMessage;
+import ganymedes01.etfuturum.network.TotemParticlesMessage;
 import ganymedes01.etfuturum.recipes.ModRecipes;
 import ganymedes01.etfuturum.recipes.crafting.RecipeOldRose;
 import ganymedes01.etfuturum.spectator.SpectatorMode;
@@ -145,7 +146,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityMobSpawner;
 
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.EntityDamageSource;
@@ -154,7 +154,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
@@ -1915,24 +1915,27 @@ public class ServerEventHandler {
 		}
 
 		if (entity instanceof EntityLiving || entity instanceof EntityPlayer) {
-			//this.spawnTotemParticles(player);
-			entity.worldObj.playSoundEffect(entity.posX + 0.5, entity.posY + 0.5, entity.posZ + 0.5, Reference.MCAssetVer + ":item.totem.use", 1.0f, entity.worldObj.rand.nextFloat() * 0.1f + 0.9f);
-
 			entity.clearActivePotions();
 			float healpercent = (float) ConfigFunctions.totemHealPercent / 100;
 			float sethp = entity.getMaxHealth() * healpercent;
 			entity.setHealth(Math.max(sethp, .5F));
 			event.ammount = 0;
 			entity.addPotionEffect(new PotionEffect(Potion.regeneration.id, 900, 1));
-			entity.addPotionEffect(new PotionEffect(Potion.fireResistance.id, 800, 1));
+			entity.addPotionEffect(new PotionEffect(Potion.fireResistance.id, 800, 0));
 			entity.addPotionEffect(new PotionEffect(Potion.field_76444_x.id, 100, 1)); // absorption
 			//TODO: Make it respect a stack size
+
+			// 26.2 broadcasts entity event 35: clients spawn the totem particle emitter,
+			// play the use sound at 1.0 pitch and the local player gets the screen animation
+			if (!entity.worldObj.isRemote) {
+				EtFuturum.networkWrapper.sendToAllAround(new TotemParticlesMessage(entity.getEntityId()),
+						new TargetPoint(entity.worldObj.provider.dimensionId, entity.posX, entity.posY, entity.posZ, 64));
+			}
 
 			if (entity instanceof EntityLiving) {
 				entity.setCurrentItemOrArmor(0, null);
 			}
 			if (entity instanceof EntityPlayer) {
-				((EntityPlayer) entity).addChatMessage(new ChatComponentText(StatCollector.translateToLocal("util.totemBreak")));
 				((EntityPlayer) entity).destroyCurrentEquippedItem();
 			}
 		}
