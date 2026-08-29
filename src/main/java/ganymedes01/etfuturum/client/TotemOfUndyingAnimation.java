@@ -58,7 +58,8 @@ public class TotemOfUndyingAnimation {
 	}
 
 	public static void render(Minecraft mc, float partialTicks) {
-		if (!isActive()) {
+		// 26.2 skips the item activation animation when the GUI is hidden (F1)
+		if (mc.gameSettings.hideGUI || !isActive()) {
 			return;
 		}
 
@@ -88,9 +89,9 @@ public class TotemOfUndyingAnimation {
 		mc.getTextureManager().bindTexture(TextureMap.locationItemsTexture);
 
 		float sin2 = MathHelper.abs(MathHelper.sin(ps * 2.0F));
-		float offX = TotemOfUndyingAnimation.offX * 0.3F * aspect;
-		float offY = TotemOfUndyingAnimation.offY * 0.3F;
-		GL11.glTranslatef(offX * sin2, offY * sin2, -10.0F + 9.0F * MathHelper.sin(ps));
+		float dx = TotemOfUndyingAnimation.offX * 0.3F * aspect;
+		float dy = TotemOfUndyingAnimation.offY * 0.3F;
+		GL11.glTranslatef(dx * sin2, dy * sin2, -10.0F + 9.0F * MathHelper.sin(ps));
 		GL11.glScalef(0.8F, 0.8F, 0.8F);
 		GL11.glRotatef(900.0F * MathHelper.abs(MathHelper.sin(ps)), 0.0F, 1.0F, 0.0F);
 		GL11.glRotatef(6.0F * MathHelper.cos(s * 8.0F), 1.0F, 0.0F, 0.0F);
@@ -98,11 +99,12 @@ public class TotemOfUndyingAnimation {
 		GL11.glRotatef(180.0F, 0.0F, 1.0F, 0.0F); // "fixed" display transform: rotation Y 180
 
 		// GL_ENABLE_BIT saves the enabled/disabled state of cull, fog, lighting,
-		// depth test, blend etc. so we can freely set up a flat double-sided
-		// quad render: modern item models are two-sided, and the 900-degree Y
-		// spin (which stalls and reverses mid-animation) would otherwise cull
-		// the quad away from the camera for the whole stall window.
-		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_LIGHTING_BIT | GL11.GL_FOG_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_BLEND);
+		// depth test etc., GL_COLOR_BUFFER_BIT saves the blend func state, so we
+		// can freely set up a flat double-sided quad render: modern item models
+		// are two-sided, and the 900-degree Y spin (which stalls and reverses
+		// mid-animation) would otherwise cull the quad away from the camera for
+		// the whole stall window.
+		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT | GL11.GL_FOG_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		GL11.glDisable(GL11.GL_CULL_FACE);
 		GL11.glDisable(GL11.GL_FOG);
 		GL11.glDisable(GL11.GL_LIGHTING);

@@ -4,6 +4,7 @@ import ganymedes01.etfuturum.client.OpenGLHelper;
 import ganymedes01.etfuturum.core.utils.RandomXoshiro256StarStar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.EntityFX;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
@@ -68,6 +69,19 @@ public class EtFuturumFXParticle extends EntityFX {
 
 	@Override
 	public void renderParticle(Tessellator tessellator, float partialTicks, float rx, float rxz, float rz, float ryz, float rxy) {
+		// Layer-3 particles are drawn via EffectRenderer.renderLitParticles, which
+		// computes the billboard basis from the player's own yaw/pitch WITHOUT the
+		// third-person-front flip that ActiveRenderInfo applies (see
+		// ActiveRenderInfo.updateRenderInfo, thirdPersonView == 2). In front view
+		// the quads then face away from the camera and get backface-culled.
+		// Use the camera-correct ActiveRenderInfo basis instead - the argument
+		// order matches rotationX/rotationXZ/rotationZ/rotationYZ/rotationXY exactly.
+		rx = ActiveRenderInfo.rotationX;
+		rxz = ActiveRenderInfo.rotationXZ;
+		rz = ActiveRenderInfo.rotationZ;
+		ryz = ActiveRenderInfo.rotationYZ;
+		rxy = ActiveRenderInfo.rotationXY;
+
 		int prevTex = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
 
 		Minecraft.getMinecraft().getTextureManager().bindTexture(resourceLocations[usesSheet ? 0 : currentTexture % textures]);
