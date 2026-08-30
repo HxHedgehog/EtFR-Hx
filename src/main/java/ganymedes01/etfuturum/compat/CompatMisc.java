@@ -45,8 +45,7 @@ public class CompatMisc {
 			if (t instanceof NoClassDefFoundError) {
 				Logger.trace("Failed to apply lwjgl3ify compat: " + t + ". This is not an error unless lwjgl3ify is present.");
 			} else {
-				Logger.warn("Failed to apply lwjgl3ify compat");
-				t.printStackTrace();
+				Logger.error("Failed to apply lwjgl3ify compat", t);
 			}
 		}
 	}

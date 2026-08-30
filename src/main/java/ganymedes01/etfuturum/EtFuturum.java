@@ -176,8 +176,7 @@ public class EtFuturum {
 				((HashMap<String, ChestGenHooks>) chestInfo.get(null)).put(NETHER_FORTRESS, new ChestGenHooks(NETHER_FORTRESS, (WeightedRandomChestContent[]) fortressWeightedField.get(null), 2, 5));
 			}
 		} catch (Exception e) {
-			System.out.println("Failed to get Nether fortress loot table:");
-			e.printStackTrace();
+			Logger.error("Failed to get Nether fortress loot table:", e);
 		}
 
 		for (ModBlocks block : ModBlocks.VALUES) {
@@ -349,8 +348,7 @@ public class EtFuturum {
 						fortressWeightedField.set(null, fortressChest);
 					}
 				} catch (Exception e) {
-					System.out.println("Failed to fill Nether fortress loot table:");
-					e.printStackTrace();
+					Logger.error("Failed to fill Nether fortress loot table:", e);
 				}
 			}
 		}

@@ -61,9 +61,6 @@ dependencies {
     compileOnly("com.github.GTNewHorizons:lwjgl3ify:3.0.25:api") {
         transitive = false
     }
-    compileOnly("thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev") {
-        transitive = false
-    }
     shadowImplementation('it.unimi.dsi:fastutil:8.5.12')
     shadowImplementation('com.github.makamys:MCLib:0.3.7.8') {
         exclude group: "codechicken"

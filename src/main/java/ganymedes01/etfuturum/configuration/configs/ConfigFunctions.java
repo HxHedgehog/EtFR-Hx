@@ -257,11 +257,11 @@ public class ConfigFunctions extends ConfigBase {
 					if (!ConfigFunctions.shulkerBans.contains(item)) {
 						ConfigFunctions.shulkerBans.add(item);
 					} else {
-						System.err.println("Shulker ban list entry \"" + itemName + "\" is already added!");
+						Logger.warn("Shulker ban list entry \"" + itemName + "\" is already added!");
 					}
 				}
 			} else {
-				System.err.println("Shulker ban list entry \"" + itemName + "\" is formatted incorrectly!");
+				Logger.warn("Shulker ban list entry \"" + itemName + "\" is formatted incorrectly!");
 			}
 		}
 

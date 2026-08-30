@@ -3,6 +3,7 @@ package ganymedes01.etfuturum.world.structure;
 import ganymedes01.etfuturum.EtFuturum;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
+import ganymedes01.etfuturum.core.utils.Logger;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.block.Block;
@@ -53,7 +54,7 @@ public class OceanMonument {
 
 			br.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger.error("Failed to load ocean monument map: " + e, e);
 		}
 	}
 
@@ -161,7 +162,7 @@ public class OceanMonument {
 
 			bw.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger.error("Failed to write ocean monument structure file: " + e, e);
 		}
 	}
 

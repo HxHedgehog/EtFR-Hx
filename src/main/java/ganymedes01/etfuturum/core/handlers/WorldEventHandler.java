@@ -73,8 +73,7 @@ public class WorldEventHandler {
 				willowSaplingTrees.addEntry((WorldGenerator) constructor.newInstance(true), 0.0D);
 				BEE_NEST_SAPLINGS.put(new RegistryMapping<>(GameRegistry.findBlock("Natura", "Rare Sapling"), 4), willowSaplingTrees);
 			} catch (Exception e) {
-				Logger.error("Could not add Natura saplings to the beehive grow list!");
-				e.printStackTrace();
+				Logger.error("Could not add Natura saplings to the beehive grow list!", e);
 			}
 		}
 	}

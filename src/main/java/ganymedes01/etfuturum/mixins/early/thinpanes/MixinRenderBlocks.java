@@ -76,8 +76,7 @@ public abstract class MixinRenderBlocks {
 				} catch (Exception e) {
 					skipBottom = skipTop = etfuturum$populatedFields = false;
 					etfuturum$errorCaught = true;
-					Logger.error("MCPF compat for glass panes threw an error. Pretending it's off for now (rendering may look wonky!)");
-					e.printStackTrace();
+					Logger.error("MCPF compat for glass panes threw an error. Pretending it's off for now (rendering may look wonky!)", e);
 				}
 			}
 
@@ -162,8 +161,7 @@ public abstract class MixinRenderBlocks {
 				} catch (Exception e) {
 					skipBottom = skipTop = etfuturum$populatedFields = false;
 					etfuturum$errorCaught = true;
-					Logger.error("MCPF compat for glass panes threw an error. Pretending it's off for now (rendering may look wonky!)");
-					e.printStackTrace();
+					Logger.error("MCPF compat for glass panes threw an error. Pretending it's off for now (rendering may look wonky!)", e);
 				}
 			}
 
@@ -228,8 +226,7 @@ public abstract class MixinRenderBlocks {
 			} catch (Exception e) {
 				etfuturum$populatedFields = false;
 				etfuturum$errorCaught = true;
-				Logger.error("MCPF compat failed to set up for stained glass panes. Pretending it's off for now (rendering may look wonky!)");
-				e.printStackTrace();
+				Logger.error("MCPF compat failed to set up for stained glass panes. Pretending it's off for now (rendering may look wonky!)", e);
 			}
 		}
 	}

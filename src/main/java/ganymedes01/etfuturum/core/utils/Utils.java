@@ -578,6 +578,9 @@ public class Utils {
 			minecraftContainer = new DummyModContainer(md);
 		} catch (Throwable t) {
 			activeContainerField = null;
+			Logger.error("Failed to reflect LoadController.activeContainer / Loader.modController. "
+					+ "Blocks/items that override vanilla names will register under the " + Reference.MOD_ID
+					+ ": namespace instead of minecraft:. " + t);
 		}
 	}
 
@@ -602,11 +605,14 @@ public class Utils {
 	public static void setActiveModContainer(ModContainer container) {
 		if (activeContainerField == null) return;
 		LoadController controller = getLoadController();
-		if (controller == null) return;
+		if (controller == null) {
+			Logger.warn("Could not obtain LoadController; registry namespace switching is unavailable.");
+			return;
+		}
 		try {
 			activeContainerField.set(controller, container);
 		} catch (Throwable t) {
-			// ignore
+			Logger.error("Failed to set active ModContainer for registry namespace switching: " + t);
 		}
 	}
 

@@ -41,7 +41,12 @@ public class TotemOfUndyingAnimation {
 	private static float offY;
 
 	public static void start() {
-		item = new ItemStack(ModItems.TOTEM_OF_UNDYING.get());
+		// 图腾物品被配置禁用时 get() 返回 null，new ItemStack(null) 会崩溃，直接不启动动画
+		net.minecraft.item.Item totem = ModItems.TOTEM_OF_UNDYING.get();
+		if (totem == null) {
+			return;
+		}
+		item = new ItemStack(totem);
 		ticks = LENGTH;
 		offX = RAND.nextFloat() * 2.0F - 1.0F;
 		offY = RAND.nextFloat() * 2.0F - 1.0F;

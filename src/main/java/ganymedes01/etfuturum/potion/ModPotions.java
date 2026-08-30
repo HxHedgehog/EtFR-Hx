@@ -4,6 +4,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import ganymedes01.etfuturum.configuration.configs.ConfigEnchantsPotions;
 import ganymedes01.etfuturum.configuration.configs.ConfigEntities;
+import ganymedes01.etfuturum.core.utils.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.entity.EntityLivingBase;
@@ -83,9 +84,9 @@ public class ModPotions extends Potion {
 	 */
 	@Override
 	public void performEffect(EntityLivingBase entity, int level) {
-		System.err.println("super.performEffect called its super. This shouldn't be done.");
-		System.err.println("Remove the super call from " + getClass());
-		System.err.println("If you are seeing this, this is an Et Futurum Requiem bug.");
+		Logger.error("super.performEffect called its super. This shouldn't be done.");
+		Logger.error("Remove the super call from " + getClass());
+		Logger.error("If you are seeing this, this is an Et Futurum Requiem bug.");
 	}
 
 	private boolean shouldSync(EntityLivingBase entity) {

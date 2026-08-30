@@ -12,6 +12,7 @@ import ganymedes01.etfuturum.configuration.configs.ConfigFunctions;
 import ganymedes01.etfuturum.configuration.configs.ConfigMixins;
 import ganymedes01.etfuturum.configuration.configs.ConfigTweaks;
 import ganymedes01.etfuturum.configuration.configs.ConfigWorld;
+import ganymedes01.etfuturum.core.utils.Logger;
 import ganymedes01.etfuturum.lib.Reference;
 import net.minecraft.launchwrapper.Launch;
 import org.spongepowered.asm.mixin.MixinEnvironment;
@@ -44,7 +45,7 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			try {
 				Files.copy(olderFile.toPath(), oldFile.toPath());
 			} catch (Exception e) {
-				e.printStackTrace();
+				Logger.error("Failed to copy old config file: " + e, e);
 			}
 			olderFile.delete();
 			Reference.launchConfigWarning = true;
@@ -55,10 +56,6 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		}
 
 		ConfigBase.initializeConfigs();
-
-//	  if(oldFile.exists()) {
-//		  ConfigBase.loadBaseConfig(oldFile);
-//	  }
 
 		CompatMisc.doLwjgl3ifyCompat();
 	}
@@ -309,10 +306,6 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 
 		if (ConfigMixins.riddenHorsesInWater) {
 			mixins.add("horsewater.MixinEntityHorse");
-		}
-
-		if (false) { //Does not work for some reason, investigate in 2.6.1
-			mixins.add("darkspawns.MixinEntityMob");
 		}
 
 		if (side == MixinEnvironment.Side.CLIENT) {

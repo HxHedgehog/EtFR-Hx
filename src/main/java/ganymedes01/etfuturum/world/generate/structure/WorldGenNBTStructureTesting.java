@@ -1,5 +1,6 @@
 package ganymedes01.etfuturum.world.generate.structure;
 
+import ganymedes01.etfuturum.core.utils.Logger;
 import ganymedes01.etfuturum.core.utils.helpers.BlockPos;
 import ganymedes01.etfuturum.core.utils.structurenbt.BlockStateContainer;
 import ganymedes01.etfuturum.core.utils.structurenbt.EFRBlockStateConverter;
@@ -44,7 +45,7 @@ public class WorldGenNBTStructureTesting extends WorldGenerator {
 			world.setBlock(x - pos.getX(), y + pos.getY() + 1, z + 1, Blocks.end_stone);
 			return true;
 		} catch (Exception e) { //In case we make a mistake when specifying a file name, just so the game won't crash
-			e.printStackTrace();
+			Logger.error("Failed to place test structure: " + e, e);
 			return false;
 		}
 	}

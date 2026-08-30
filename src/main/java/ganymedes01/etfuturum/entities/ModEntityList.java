@@ -1,6 +1,7 @@
 package ganymedes01.etfuturum.entities;
 
 import cpw.mods.fml.common.registry.EntityRegistry;
+import ganymedes01.etfuturum.core.utils.Logger;
 import ganymedes01.etfuturum.lib.Reference;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -77,7 +78,7 @@ public class ModEntityList {
 			if (cls != null)
 				return cls.getConstructor(World.class).newInstance(world);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.error("Failed to create entity: " + e, e);
 		}
 
 		return null;

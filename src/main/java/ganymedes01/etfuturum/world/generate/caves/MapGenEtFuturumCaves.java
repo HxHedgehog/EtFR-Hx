@@ -16,9 +16,9 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 	private double[] caveNoise;
 	private float[] biomeWeightTable;
 	private NoiseCaveGenerator noiseCaves;
-	public NoiseGeneratorOctaves noiseGen6;
-	private NoiseGeneratorOctaves field_147431_j;
-	private NoiseGeneratorOctaves field_147432_k;
+	private NoiseGeneratorOctaves depthNoiseGen;
+	private NoiseGeneratorOctaves lowerInterpolatedNoiseGen;
+	private NoiseGeneratorOctaves upperInterpolatedNoiseGen;
 	private NoiseGeneratorOctaves interpolationNoise;
 	private double[] interpolationNoises;
 	private double[] lowerInterpolatedNoises;
@@ -30,10 +30,10 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 		if (this.worldObj != world) {
 			this.caveNoise = new double[825];
 			this.biomeWeightTable = new float[25];
-			this.field_147431_j = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x998244353L), 16);
-			this.field_147432_k = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x114514191L), 16);
+			this.lowerInterpolatedNoiseGen = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x998244353L), 16);
+			this.upperInterpolatedNoiseGen = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x114514191L), 16);
 			this.interpolationNoise = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x123456789L), 8);
-			this.noiseGen6 = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x271828182L), 16);
+			this.depthNoiseGen = new NoiseGeneratorOctaves(new Random(world.getSeed() ^ 0x271828182L), 16);
 			// 现代噪声洞穴必须绑定世界种子：用独立 Random(world.getSeed()) 派生，避免同一种子跨会话得到不同洞穴
 			this.noiseCaves = new NoiseCaveGenerator(new Random(world.getSeed()));
 			for (int j = -2; j <= 2; ++j) {
@@ -127,10 +127,10 @@ public class MapGenEtFuturumCaves extends MapGenCaves {
 
 	private void generateNoiseCavesNoise(int chunkX, int chunkZ) {
 		int cx = chunkX * 4, cz = chunkZ * 4;
-		this.depthNoises = this.noiseGen6.generateNoiseOctaves(this.depthNoises, cx, cz, 5, 5, 200.0D, 200.0D, 0.5D);
+		this.depthNoises = this.depthNoiseGen.generateNoiseOctaves(this.depthNoises, cx, cz, 5, 5, 200.0D, 200.0D, 0.5D);
 		this.interpolationNoises = this.interpolationNoise.generateNoiseOctaves(this.interpolationNoises, cx, 0, cz, 5, 33, 5, 8.555150000000001D, 4.277575000000001D, 8.555150000000001D);
-		this.lowerInterpolatedNoises = this.field_147431_j.generateNoiseOctaves(this.lowerInterpolatedNoises, cx, 0, cz, 5, 33, 5, 684.412D, 684.412D, 684.412D);
-		this.upperInterpolatedNoises = this.field_147432_k.generateNoiseOctaves(this.upperInterpolatedNoises, cx, 0, cz, 5, 33, 5, 684.412D, 684.412D, 684.412D);
+		this.lowerInterpolatedNoises = this.lowerInterpolatedNoiseGen.generateNoiseOctaves(this.lowerInterpolatedNoises, cx, 0, cz, 5, 33, 5, 684.412D, 684.412D, 684.412D);
+		this.upperInterpolatedNoises = this.upperInterpolatedNoiseGen.generateNoiseOctaves(this.upperInterpolatedNoises, cx, 0, cz, 5, 33, 5, 684.412D, 684.412D, 684.412D);
 		BiomeGenBase[] biomes = null;
 		biomes = this.worldObj.getWorldChunkManager().getBiomesForGeneration(biomes, cx - 2, cz - 2, 10, 10);
 		int i = 0, j = 0;

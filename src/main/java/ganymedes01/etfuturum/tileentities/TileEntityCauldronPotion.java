@@ -1,5 +1,6 @@
 package ganymedes01.etfuturum.tileentities;
 
+import ganymedes01.etfuturum.core.utils.Logger;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemPotion;
 import net.minecraft.item.ItemStack;
@@ -25,7 +26,7 @@ public class TileEntityCauldronPotion extends TileEntityCauldronColoredWater {
 		this.potion = ItemStack.loadItemStackFromNBT(compound.getCompoundTag("Potion"));
 
 		if (potion == null || !(potion.getItem() instanceof ItemPotion)) {
-			System.err.println("Cauldron @ " + xCoord + " " + yCoord + " " + zCoord + " had an invalid potion ItemStack. Resetting to a normal cauldron.");
+			Logger.error("Cauldron @ " + xCoord + " " + yCoord + " " + zCoord + " had an invalid potion ItemStack. Resetting to a normal cauldron.");
 			resetCauldron();
 		}
 	}

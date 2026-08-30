@@ -3,6 +3,7 @@ package ganymedes01.etfuturum.network;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
+import ganymedes01.etfuturum.core.utils.Logger;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.play.server.S18PacketEntityTeleport;
 import net.minecraft.server.MinecraftServer;
@@ -28,7 +29,7 @@ public class BoatMoveHandler implements IMessageHandler<BoatMoveMessage, IMessag
 			double actualDelta = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;
 			MinecraftServer server = MinecraftServer.getServer();
 			if (Math.abs(expectedDelta - actualDelta) > 100.0D && !server.isSinglePlayer()) {
-				System.err.println("Vehicle moved wrongly");
+				Logger.error("Vehicle moved wrongly");
 				vehicle.setPositionAndRotation(vehicle.posX - 1, vehicle.posY, vehicle.posZ - 1, vehicle.rotationYaw, vehicle.rotationPitch);
 				ctx.getServerHandler().sendPacket(new S18PacketEntityTeleport(vehicle));
 				return null;

@@ -3,6 +3,7 @@ package ganymedes01.etfuturum.client.skins;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import ganymedes01.etfuturum.core.utils.Logger;
 
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
@@ -43,8 +44,7 @@ public class ThreadCheckAlex extends Thread {
 			return;
 		} catch (Exception e) {
 			if (!connectFailedWarning) {
-				System.out.println("Failed to connect to the Mojang API while checking if a skin was alex! Are you connected to the internet? Is something blocking the connection to it?");
-				e.printStackTrace();
+				Logger.error("Failed to connect to the Mojang API while checking if a skin was alex! Are you connected to the internet? Is something blocking the connection to it?", e);
 				connectFailedWarning = true;
 			}
 		}

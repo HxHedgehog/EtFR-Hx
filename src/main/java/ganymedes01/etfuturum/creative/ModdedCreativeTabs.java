@@ -221,7 +221,7 @@ public class ModdedCreativeTabs {
 			field.set(null, newArray);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.error("Failed to replace creative tab array: " + e, e);
 		}
 	}
 
@@ -1456,7 +1456,7 @@ public class ModdedCreativeTabs {
 			pw.close();
 			Logger.info("Creative tab diff written to: " + file.getAbsolutePath());
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.error("Failed to write creative tab diff report: " + e, e);
 			if (pw != null) pw.close();
 		}
 	}
@@ -1616,7 +1616,7 @@ public class ModdedCreativeTabs {
 			pw.close();
 			Logger.info("Missing items written to: " + file.getAbsolutePath());
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.error("Failed to write missing items report: " + e, e);
 			if (pw != null) pw.close();
 		}
 	}

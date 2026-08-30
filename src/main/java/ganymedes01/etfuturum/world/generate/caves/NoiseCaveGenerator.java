@@ -24,6 +24,12 @@ public final class NoiseCaveGenerator {
 	private final DoublePerlinNoiseSampler caveDensityNoise;
 	// 低频洞底噪声：让洞穴底部平坦并带小丘
 	private final DoublePerlinNoiseSampler floorNoise;
+	// 洞底高度的列级缓存：getFloorY 只依赖 (x,z)，同列 33 个 y 采样共享同一结果。
+	// 采样循环为 x→z→y 顺序，单条目缓存即可命中 800/825；结果位级一致（sample 为无状态纯函数）
+	private boolean hasFloorYCache;
+	private int cachedFloorX;
+	private int cachedFloorZ;
+	private double cachedFloorY;
 
 	// 石柱生成阈值
 	private static final double PILLAR_THRESHOLD = 0.03D;
@@ -99,8 +105,14 @@ public final class NoiseCaveGenerator {
 	}
 
 	private double getFloorY(int x, int z) {
-		double variation = this.floorNoise.sample(x * 0.2D, 0.0D, z * 0.2D);
-		return ConfigWorld.caveFloorY + variation * ConfigWorld.caveFloorVariation;
+		if (!this.hasFloorYCache || x != this.cachedFloorX || z != this.cachedFloorZ) {
+			double variation = this.floorNoise.sample(x * 0.2D, 0.0D, z * 0.2D);
+			this.cachedFloorY = ConfigWorld.caveFloorY + variation * ConfigWorld.caveFloorVariation;
+			this.cachedFloorX = x;
+			this.cachedFloorZ = z;
+			this.hasFloorYCache = true;
+		}
+		return this.cachedFloorY;
 	}
 
 	private double getPillarNoise(int x, int y, int z) {

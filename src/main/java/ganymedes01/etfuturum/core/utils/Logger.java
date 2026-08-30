@@ -12,6 +12,10 @@ public class Logger {
 		FMLLog.log(Reference.MOD_NAME, logLevel, String.valueOf(object));
 	}
 
+	public static void log(Level logLevel, Object object, Throwable t) {
+		FMLLog.log(Reference.MOD_NAME, logLevel, t, String.valueOf(object));
+	}
+
 	public static void all(Object object) {
 		log(Level.ALL, object);
 	}
@@ -24,6 +28,10 @@ public class Logger {
 
 	public static void error(Object object) {
 		log(Level.ERROR, object);
+	}
+
+	public static void error(Object object, Throwable t) {
+		log(Level.ERROR, object, t);
 	}
 
 	public static void fatal(Object object) {

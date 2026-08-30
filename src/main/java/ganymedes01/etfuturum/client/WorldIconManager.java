@@ -2,6 +2,7 @@ package ganymedes01.etfuturum.client;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import ganymedes01.etfuturum.core.utils.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -214,7 +215,7 @@ public class WorldIconManager {
                 if (parent != null) parent.mkdirs();
                 ImageIO.write(icon, "png", targetFile);
             } catch (Exception e) {
-                e.printStackTrace();
+                Logger.error("Failed to save world icon: " + e, e);
             }
         }, "EFR-WorldIcon-Save");
         saveThread.setDaemon(true);

@@ -1,6 +1,7 @@
 package ganymedes01.etfuturum.creative;
 
 import ganymedes01.etfuturum.blocks.BaseSlab;
+import ganymedes01.etfuturum.core.utils.Logger;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -186,7 +187,7 @@ public class ItemCategoryHelper {
 			}
 		}
 
-		System.out.println("[EtFuturum Creative] Reassigned " + redirected + " items to modern creative tabs.");
+		Logger.info("[EtFuturum Creative] Reassigned " + redirected + " items to modern creative tabs.");
 
 		// 3. 本 mod 独有物品（不在官方 1.21.4 创造栏数据中）→ 分类之外
 		// 这些物品是 mod 实现了但官方 1.21.4 中没有的（如自定义唱片、升级组件等），
@@ -249,7 +250,7 @@ public class ItemCategoryHelper {
 			}
 		}
 		if (temporary > 0 || classified > 0) {
-			System.out.println("[EtFuturum Creative] Moved " + temporary + " mod-only items to TEMPORARY tab, " + classified + " to official tabs.");
+			Logger.info("[EtFuturum Creative] Moved " + temporary + " mod-only items to TEMPORARY tab, " + classified + " to official tabs.");
 		}
 	}
 

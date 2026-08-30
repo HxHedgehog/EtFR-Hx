@@ -4,6 +4,7 @@ import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.ReflectionHelper;
+import ganymedes01.etfuturum.core.utils.Logger;
 import ganymedes01.etfuturum.tileentities.TileEntitySculkCatalyst;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -79,7 +80,7 @@ public class SculkEventHandler {
 			try {
 				experience = (int) getXpMethod.invoke(event.entityLiving, player);
 			} catch (ReflectiveOperationException e) {
-				e.printStackTrace();
+				Logger.error("Failed to get experience points for sculk catalyst: " + e, e);
 				return;
 			}
 			// Make the catalyst bloom

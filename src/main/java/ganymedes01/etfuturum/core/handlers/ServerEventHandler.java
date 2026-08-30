@@ -38,6 +38,7 @@ import ganymedes01.etfuturum.configuration.configs.ConfigTweaks;
 import ganymedes01.etfuturum.configuration.configs.ConfigWorld;
 import ganymedes01.etfuturum.core.utils.ItemStackMap;
 import ganymedes01.etfuturum.core.utils.ItemStackSet;
+import ganymedes01.etfuturum.core.utils.Logger;
 import ganymedes01.etfuturum.core.utils.Utils;
 import ganymedes01.etfuturum.elytra.IElytraEntityTrackerEntry;
 import ganymedes01.etfuturum.elytra.IElytraPlayer;
@@ -677,7 +678,7 @@ public class ServerEventHandler {
 					speedModifier = this.speedModifier(event.entityPlayer, event.block, event.metadata, toolSpeed);
 					flag = true;
 				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
+					Logger.error("Failed to apply hoe mining speed: " + e, e);
 				}
 			}
 
@@ -706,7 +707,7 @@ public class ServerEventHandler {
 				returnValue = theToolMaterial.getEfficiencyOnProperMaterial();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.error("Failed to get hoe speed: " + e, e);
 		}
 		return returnValue;
 	}
