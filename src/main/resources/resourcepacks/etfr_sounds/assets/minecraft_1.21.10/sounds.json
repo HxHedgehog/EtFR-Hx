@@ -4719,6 +4719,44 @@
     "category": "player",
     "subtitle": "subtitles.enchant.thorns.hit"
   },
+  "entity.armor_stand.break": {
+    "sounds": [
+      "minecraft:dig/wood1",
+      "minecraft:dig/wood2",
+      "minecraft:dig/wood3",
+      "minecraft:dig/wood4"
+    ],
+    "category": "neutral"
+  },
+  "entity.armor_stand.fall": {
+    "sounds": [
+      "minecraft:step/wood1",
+      "minecraft:step/wood2",
+      "minecraft:step/wood3",
+      "minecraft:step/wood4",
+      "minecraft:step/wood5",
+      "minecraft:step/wood6"
+    ],
+    "category": "neutral"
+  },
+  "entity.armor_stand.hit": {
+    "sounds": [
+      "minecraft:dig/wood1",
+      "minecraft:dig/wood2",
+      "minecraft:dig/wood3",
+      "minecraft:dig/wood4"
+    ],
+    "category": "neutral"
+  },
+  "entity.armor_stand.place": {
+    "sounds": [
+      "minecraft:dig/wood1",
+      "minecraft:dig/wood2",
+      "minecraft:dig/wood3",
+      "minecraft:dig/wood4"
+    ],
+    "category": "neutral"
+  },
   "entity.bee.death": {
     "sounds": [
       "mob/bee/death1",

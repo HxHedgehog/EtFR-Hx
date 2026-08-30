@@ -2,6 +2,7 @@ package ganymedes01.etfuturum.items;
 
 import ganymedes01.etfuturum.entities.EntityArmourStand;
 import ganymedes01.etfuturum.entities.Rotations;
+import ganymedes01.etfuturum.lib.Reference;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -68,6 +69,8 @@ public class ItemArmorStand extends BaseItem {
 			}
 
 			world.spawnEntityInWorld(stand);
+			// vanilla 26.2 plays the place sound at 0.75 volume / 0.8 pitch
+			world.playSoundAtEntity(stand, Reference.MCAssetVer + ":entity.armor_stand.place", 0.75F, 0.8F);
 		}
 
 		stack.stackSize--;
