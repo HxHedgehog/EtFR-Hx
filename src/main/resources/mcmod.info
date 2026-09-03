@@ -5,12 +5,12 @@
   "description": "Brings the future to now, for real this time.",
   "version": "${modVersion}",
   "mcversion": "${minecraftVersion}",
-  "url": "https://www.curseforge.com/minecraft/mc-mods/et-futurum-requiem",
+  "url": "https://github.com/GTNewHorizons/Et-Futurum-Requiem",
   "updateUrl": "",
   "authorList": [
-    "ganymedes01", "Roadhog360", "embeddedt", "jss2a98aj", "makamys", "KryptonCaptain"
+    "BugJump", "GTNH Dev Team", "HxHedgehog"
   ],
-  "credits": "DelirusCrux, AstroTibs",
+  "credits": "Blue Fat Fish",
   "logoFile": "assets/etfuturum/logo.png",
   "screenshots": [],
   "dependencies": []

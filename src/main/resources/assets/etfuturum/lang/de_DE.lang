@@ -1588,7 +1588,7 @@ efr.decoration.only=Nur Dekoration
 
 efr.warn.prerelease.version=§c§l[Debug]: §rDu benutzt eine Pre-Release-Version von §bEt §bFuturum §bRequiem§r. Diese Version könnte instabil sein, klicke hier, um auf GitHub Fehler zu melden.
 efr.log.prerelease.version=WARNUNG: Eine Pre-Release-Version von Et Futurum Requiem wird benutzt! Diese Instanz könnte instabil sein, erwarte mehr Fehler als üblich.
-efr.warn.prerelease.version.bugs=Bitte melde Fehler auf https://github.com/Roadhog360/Et-Futurum-Requiem/issues [Fehlermeldungen nur auf Englisch!]
+efr.warn.prerelease.version.bugs=Bitte melde Fehler auf https://github.com/GTNewHorizons/Et-Futurum-Requiem/issues [Fehlermeldungen nur auf Englisch!]
 efr.critical.badbetterfpsalgorithm1=§4§l[KRITISCH]: §bBetterFPS §r ist mit einem schlechten Mathematik-Algorithmus ausgestattet.
 efr.critical.badbetterfpsalgorithm2= "rivens-half" oder "taylors" sollten nicht benutzt werden, um Schäden an deiner Welt zu vermeiden. Es wird empfohlen, in den Konfigurationseinstellungen "algorithm" durch eine andere Option zu ersetzen, am besten "vanilla".
 efr.critical.badbetterfpsalgorithm3= Diese Meldung wird dir gezeigt, weil die erwähnten Mathematik-Algorithmen Fehler enthalten und inkorrekte Werte generieren, welche den Speicherstand zerstören können.

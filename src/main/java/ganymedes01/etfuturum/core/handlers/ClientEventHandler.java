@@ -207,7 +207,7 @@ public class ClientEventHandler {
 					player.addChatComponentMessage(text);
 					text = new ChatComponentText(I18n.format("efr.warn.experimental.bugs"));
 					text.getChatStyle().setColor(EnumChatFormatting.AQUA);
-					text.getChatStyle().setChatClickEvent(new ClickEvent(Action.OPEN_URL, "https://github.com/Roadhog360/Et-Futurum-Requiem/issues"));
+					text.getChatStyle().setChatClickEvent(new ClickEvent(Action.OPEN_URL, "https://github.com/GTNewHorizons/Et-Futurum-Requiem/issues"));
 					player.addChatComponentMessage(text);
 				} else {
 					Logger.warn(I18n.format("efr.log.experimental", ConfigExperiments.buildLoadedExperimentsList(false)));
