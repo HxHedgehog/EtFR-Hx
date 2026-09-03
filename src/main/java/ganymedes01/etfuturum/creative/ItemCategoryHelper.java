@@ -1,5 +1,6 @@
 package ganymedes01.etfuturum.creative;
 
+import ganymedes01.etfuturum.blocks.BaseCaveVines;
 import ganymedes01.etfuturum.blocks.BaseSlab;
 import ganymedes01.etfuturum.core.utils.Logger;
 import net.minecraft.block.Block;
@@ -65,9 +66,6 @@ public class ItemCategoryHelper {
 		}
 		if ("minecraft:suspicious_stew".equals(registryName)) {
 			return ModdedCreativeTabs.FOOD_AND_DRINKS;
-		}
-		if ("minecraft:cave_vines".equals(registryName) || "minecraft:cave_vine_plant".equals(registryName)) {
-			return ModdedCreativeTabs.NATURAL_BLOCKS;
 		}
 		if ("minecraft:dye_same".equals(registryName)) {
 			return ModdedCreativeTabs.INGREDIENTS;
@@ -214,6 +212,11 @@ public class ItemCategoryHelper {
 					if (block instanceof BaseSlab && ((BaseSlab) block).getDoubleSlab() == block) {
 						continue;
 					}
+				}
+
+				// 洞穴藤蔓技术方块（官方创造栏不显示，发光浆果才是对应物品）→ 跳过
+				if (item instanceof ItemBlock && ((ItemBlock) item).field_150939_a instanceof BaseCaveVines) {
+					continue;
 				}
 
 				// 已在官方数据中 → 由 SortedCreativeTab 处理

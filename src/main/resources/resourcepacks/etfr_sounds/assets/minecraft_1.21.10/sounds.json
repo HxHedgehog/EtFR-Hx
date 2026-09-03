@@ -4333,6 +4333,47 @@
     "category": "block",
     "subtitle": "subtitles.block.generic.break"
   },
+  "block.cave_vines.pick_berries": {
+    "sounds": [
+      "item/sweet_berries/pick_from_bush1",
+      "item/sweet_berries/pick_from_bush2"
+    ],
+    "category": "block",
+    "subtitle": "subtitles.block.cave_vines.pick_berries"
+  },
+  "block.cave_vines.break": {
+    "sounds": [
+      "block/cave_vines/break1",
+      "block/cave_vines/break2",
+      "block/cave_vines/break3",
+      "block/cave_vines/break4",
+      "block/cave_vines/break5"
+    ],
+    "category": "block",
+    "subtitle": "subtitles.block.generic.break"
+  },
+  "block.cave_vines.step": {
+    "sounds": [
+      "block/vine/climb1",
+      "block/vine/climb2",
+      "block/vine/climb3",
+      "block/vine/climb4",
+      "block/vine/climb5"
+    ],
+    "category": "block",
+    "subtitle": "subtitles.block.generic.footsteps"
+  },
+  "block.cave_vines.place": {
+    "sounds": [
+      "block/cave_vines/break1",
+      "block/cave_vines/break2",
+      "block/cave_vines/break3",
+      "block/cave_vines/break4",
+      "block/cave_vines/break5"
+    ],
+    "category": "block",
+    "subtitle": "subtitles.block.generic.place"
+  },
   "block.sweet_berry_bush.pick_berries": {
     "sounds": [
       "item/sweet_berries/pick_from_bush1",

@@ -20,6 +20,7 @@ import ganymedes01.etfuturum.world.generate.feature.WorldGenFossil;
 import ganymedes01.etfuturum.world.generate.feature.WorldGenGeode;
 import ganymedes01.etfuturum.world.structure.OceanMonument;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
@@ -301,47 +302,51 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 				}
 			}
 
-			if (lushCaveGen != null && world.provider.dimensionId == 0) {
-				x = (chunkX << 4) + rand.nextInt(16) + 8;
-				z = (chunkZ << 4) + rand.nextInt(16) + 8;
-				int y = world.getHeightValue(x, z);
-				if (y > 0 && rand.nextInt(ConfigWorld.lushCaveRarity) == 0) {
-					lushCaveGen.generate(world, rand, x, y, z);
-				}
-			}
+		if (lushCaveGen != null && world.provider.dimensionId == 0) {
+			// 锚点必须取区块中心（不能随机偏移）：装饰写入按区块内不越界设计，
+			// 随机偏移会把锚点甩进邻区块导致补丁越界写入未装饰区块
+			x = (chunkX << 4) + 8;
+			z = (chunkZ << 4) + 8;
+			// 空间分布由繁茂选择噪声决定（WorldGenLushCave 内部判定），每区块 1 个装饰点
+			lushCaveGen.generate(world, rand, x, world.getHeightValue(x, z), z);
+		}
 
-			if (mudGen != null) {
-				x = (chunkX << 4) + rand.nextInt(16) + 8;
-				z = (chunkZ << 4) + rand.nextInt(16) + 8;
-				int y = world.getHeightValue(x, z);
-				if (y > 0 && mudBiomes.contains(world.getBiomeGenForCoords(x, z))) {
-					mudGen.generate(world, rand, x, world.getTopSolidOrLiquidBlock(x, z), z);
-				}
-			}
+		if (ConfigWorld.enableModernCaves && world.provider.dimensionId == 0) {
+			updateExposedLavaFaces(world, chunkX, chunkZ, rand);
+		}
 
-			if (fossilGen != null && rand.nextInt(64) == 0 && ArrayUtils.contains(ConfigWorld.fossilDimensionBlacklist, world.provider.dimensionId) == ConfigWorld.fossilDimensionBlacklistAsWhitelist) {
-				x = (chunkX << 4) + rand.nextInt(16) + 8;
-				z = (chunkZ << 4) + rand.nextInt(16) + 8;
-				if (fossilBiomes.contains(world.getBiomeGenForCoords(x, z))) {
-					fossilGen.generate(world, rand, x, MathHelper.getRandomIntegerInRange(rand, 40, 49), z);
-				}
-			}
-
-			if (ConfigWorld.enableOceanMonuments && ModBlocks.PRISMARINE_BLOCK.isEnabled() && ModBlocks.SEA_LANTERN.isEnabled()
-					&& !(world.provider instanceof WorldProviderEnd) && !(world.provider instanceof WorldProviderHell)) {
-				if (OceanMonument.canSpawnAt(world, chunkX, chunkZ)) {
-					x = (chunkX << 4) + rand.nextInt(16) + 8;
-					z = (chunkZ << 4) + rand.nextInt(16) + 8;
-					int y;
-					for (y = world.getActualHeight(); y > 0; y--)
-						if (!world.isAirBlock(x, y, z))
-							break;
-					int monumentCeiling = y - (1 + rand.nextInt(3));
-					OceanMonument.buildTemple(world, x, monumentCeiling - 22, z);
-					return;
-				}
+		if (mudGen != null) {
+			x = (chunkX << 4) + rand.nextInt(16) + 8;
+			z = (chunkZ << 4) + rand.nextInt(16) + 8;
+			int y = world.getHeightValue(x, z);
+			if (y > 0 && mudBiomes.contains(world.getBiomeGenForCoords(x, z))) {
+				mudGen.generate(world, rand, x, world.getTopSolidOrLiquidBlock(x, z), z);
 			}
 		}
+
+		if (fossilGen != null && rand.nextInt(64) == 0 && ArrayUtils.contains(ConfigWorld.fossilDimensionBlacklist, world.provider.dimensionId) == ConfigWorld.fossilDimensionBlacklistAsWhitelist) {
+			x = (chunkX << 4) + rand.nextInt(16) + 8;
+			z = (chunkZ << 4) + rand.nextInt(16) + 8;
+			if (fossilBiomes.contains(world.getBiomeGenForCoords(x, z))) {
+				fossilGen.generate(world, rand, x, MathHelper.getRandomIntegerInRange(rand, 40, 49), z);
+			}
+		}
+
+		if (ConfigWorld.enableOceanMonuments && ModBlocks.PRISMARINE_BLOCK.isEnabled() && ModBlocks.SEA_LANTERN.isEnabled()
+				&& !(world.provider instanceof WorldProviderEnd) && !(world.provider instanceof WorldProviderHell)) {
+			if (OceanMonument.canSpawnAt(world, chunkX, chunkZ)) {
+				x = (chunkX << 4) + rand.nextInt(16) + 8;
+				z = (chunkZ << 4) + rand.nextInt(16) + 8;
+				int y;
+				for (y = world.getActualHeight(); y > 0; y--)
+					if (!world.isAirBlock(x, y, z))
+						break;
+				int monumentCeiling = y - (1 + rand.nextInt(3));
+				OceanMonument.buildTemple(world, x, monumentCeiling - 22, z);
+				return;
+			}
+		}
+	}
 
 		if (world.provider instanceof WorldProviderHell) {
 			if (ModBlocks.MAGMA.isEnabled()) {
@@ -374,6 +379,61 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 				}
 			}
 		}
+	}
+
+	/**
+	 * 激活被现代洞穴掏出的岩浆暴露面。
+	 *
+	 * 背景：原版岩浆湖（WorldGenLakes）以 flag=2 静态放置；1.7.10 中静态岩浆的 updateTick
+	 * 只做随机点火检查、从不流淌 —— 流淌的唯一入口是 onNeighborBlockChange 触发的
+	 * setNotStationary：把静态方块换成 flowing 岩浆（保留 meta）再对 flowing 方块排程。
+	 * 所以这里对每个暴露的静态岩浆复刻该路径；flowing 方块被 tick 后开始蔓延（flag=3 通知），
+	 * 邻接的静态岩浆收到通知会自行转换 —— 湖面一格激活即级联整片暴露面，
+	 * 含跨区块边界与尚未生成的 -x/-z 邻块方向的漏扫格子。
+	 *
+	 * 行为对齐原版"玩家靠近才流淌"：排程的更新只在区块开始 tick（玩家在附近）时执行；
+	 * 转换本身用 flag=2，装饰阶段不触发任何液体模拟。装饰阶段（populate 末尾）是能排程的
+	 * 最早时机 —— 雕刻阶段写的是裸 Block[] 数组，无 tick 基础设施。
+	 */
+	private void updateExposedLavaFaces(World world, int chunkX, int chunkZ, Random rand) {
+		int baseX = chunkX << 4;
+		int baseZ = chunkZ << 4;
+		// 现代洞穴只在 y≈56 以下成腔，岩浆湖（地下）y<63；扫描上限 62 已覆盖全部可能的掏空暴露
+		for (int x = 0; x < 16; x++) {
+			for (int z = 0; z < 16; z++) {
+				for (int y = 1; y < 62; y++) {
+					Block block = world.getBlock(baseX + x, y, baseZ + z);
+					if (block.getMaterial() != Material.lava) {
+						continue;
+					}
+					if (!hasExposedAirNeighbor(world, baseX + x, y, baseZ + z)) {
+						continue;
+					}
+					if (block == Blocks.lava) {
+						// 原版 setNotStationary 同款：静态 → flowing（ID-1），保留 meta，flag=2 不通知
+						int meta = world.getBlockMetadata(baseX + x, y, baseZ + z);
+						world.setBlock(baseX + x, y, baseZ + z, Blocks.flowing_lava, meta, 2);
+						block = Blocks.flowing_lava;
+					}
+					world.scheduleBlockUpdate(baseX + x, y, baseZ + z, block, rand.nextInt(10));
+				}
+			}
+		}
+	}
+
+	private boolean hasExposedAirNeighbor(World world, int x, int y, int z) {
+		// 跨区块读取用 blockExists 守卫：-x/-z 邻区块可能尚未生成，直接 getBlock 会级联
+		// 生成地形（与世界生成流程冲突）；该侧的暴露由连通岩浆面的级联通知兜底
+		return isAirExisting(world, x - 1, y, z) || isAirExisting(world, x + 1, y, z)
+				|| isAirExisting(world, x, y - 1, z) || isAirExisting(world, x, y + 1, z)
+				|| isAirExisting(world, x, y, z - 1) || isAirExisting(world, x, y, z + 1);
+	}
+
+	private boolean isAirExisting(World world, int x, int y, int z) {
+		if (!world.blockExists(x, y, z)) {
+			return false;
+		}
+		return world.getBlock(x, y, z).getMaterial() == Material.air;
 	}
 
 	public void generateSingleOre(Block block, int meta, World world, Random random, int chunkX, int chunkZ, float chance, int minY, int maxY, Block generateIn) {

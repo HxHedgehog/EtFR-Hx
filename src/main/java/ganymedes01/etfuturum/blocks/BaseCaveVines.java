@@ -4,6 +4,8 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.ModItems;
+import ganymedes01.etfuturum.client.sound.ModSounds;
+import ganymedes01.etfuturum.lib.Reference;
 import ganymedes01.etfuturum.core.utils.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
@@ -32,7 +34,7 @@ public class BaseCaveVines extends Block implements IGrowable
     public BaseCaveVines(String[] iconNames)
     {
         super(Material.vine);
-        this.setStepSound(soundTypeGrass)
+        this.setStepSound(ModSounds.soundCaveVines)
                 .setHardness(0.2F)
                 .setBlockName(Utils.getUnlocalisedName("cave_vines"))
                 .setBlockTextureName("cave_vines")
@@ -100,6 +102,9 @@ public class BaseCaveVines extends Block implements IGrowable
             if (!world.isRemote)
             {
                 world.spawnEntityInWorld(new EntityItem(world, x, y, z, ModItems.GLOW_BERRIES.newItemStack(1)));
+                // 官方 26.2 CaveVines.use：播放 pick_berries 音效，pitch 在 0.8~1.2 之间随机
+                world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D,
+                        Reference.MCAssetVer + ":block.cave_vines.pick_berries", 1.0F, 0.8F + world.rand.nextFloat() * 0.4F);
             }
             return true;
         }

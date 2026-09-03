@@ -72,6 +72,7 @@ public class ModSounds {
 	public static final SoundType soundSculk = new CustomSound("sculk").setDisabledSound(soundSlime);
 	public static final SoundType soundSculkCatalyst = new CustomSound("sculk_catalyst");
 	public static final SoundType soundVines = new CustomSound("vine").setDisabledSound(Block.soundTypeGrass);
+	public static final SoundType soundCaveVines = new CustomSound("cave_vines", true).setDisabledSound(Block.soundTypeGrass);
 	public static final SoundType soundCalcite = new CustomSound("calcite", true);
 	public static final SoundType soundAmethystBlock = new CustomSound("amethyst_block", true);
 	public static final SoundType soundAmethystBudSmall = new CustomSound("small_amethyst_bud", true) {

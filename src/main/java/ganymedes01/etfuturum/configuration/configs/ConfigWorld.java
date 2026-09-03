@@ -63,7 +63,6 @@ public class ConfigWorld extends ConfigBase {
 	public static int cherryTreeRarity;
 	public static boolean bambooWorldgen;
 	public static boolean enableLushCaves;
-	public static int lushCaveRarity;
 	public static boolean enableModernCaves;
 	public static boolean cavePillars;
 	public static float caveCavityWeight;
@@ -198,7 +197,8 @@ public class ConfigWorld extends ConfigBase {
 		cherryTreeRarity = getInt("cherryTreeRarity", catGeneration, 72, 0, Byte.MAX_VALUE, "How rare should cherry trees be? 1/x chance per chunk, 1 means a tree attempts to appear every chunk. 0 = no cherry trees. They will spawn in mountain-type biomes.");
 		bambooWorldgen = getBoolean("bambooWorldgen", catGeneration, true, "Whether bamboo should naturally spawn in the overworld. Turning this off allows you to use bamboo based blocks without bamboo world gen for mod compatability.");
 		enableLushCaves = getBoolean("enableLushCaves", catGeneration, true, "Whether lush cave vegetation (moss patches, rooted azalea trees with rooted dirt columns and hanging roots) should naturally generate in birch forest and plains biomes.");
-		lushCaveRarity = getInt("lushCaveRarity", catGeneration, 4, 1, Byte.MAX_VALUE, "How rare should lush cave attempts be? 1/x chance per chunk. 1 means an attempt appears every chunk. Only has an effect when enableLushCaves is true.");
+		// lushCaveRarity 已随密集撒点机制移除：繁茂区域现在由腔室尺度的选择噪声圈定（WorldGenLushCave），
+		// 桦木森林下约一半区域繁茂，平原用更高噪声阈值保持稀有
 		enableModernCaves = getBoolean("enableModernCaves", catGeneration, true, "Replaces the vanilla cave generator with modern noise-based caves (large open chambers, tunnels, ledges and stone pillars). Vanilla worm caves are still generated and may connect to the noise caves. Disabling this restores vanilla cave generation entirely.");
 		cavePillars = getBoolean("cavePillars", catGeneration, true, "Generate the tall stone pillars that connect the floor and ceiling of large caves. Only has an effect when enableModernCaves is true.");
 		caveCavityWeight = getFloat("caveCavityWeight", catGeneration, 1.0F, 0.0F, 4.0F, "Weight of the main cave chambers (the hollow areas). Higher = bigger/more caverns. Only has an effect when enableModernCaves is true.");
