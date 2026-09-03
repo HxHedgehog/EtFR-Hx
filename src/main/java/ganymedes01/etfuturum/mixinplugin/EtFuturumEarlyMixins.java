@@ -309,6 +309,9 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		}
 
 		if (side == MixinEnvironment.Side.CLIENT) {
+			// Creative tab layout derives from array position instead of the (final)
+			// tabIndex field, so UNCLASSIFIED can be fixed as the first tab of page 2.
+			mixins.add("creativetabs.MixinCreativeTabs");
 			// Creative tab row count fix: always applied.
 			mixins.add("creative.MixinGuiContainerCreative");
 			mixins.add("creative.MixinGuiContainerCreative$ContainerCreative");

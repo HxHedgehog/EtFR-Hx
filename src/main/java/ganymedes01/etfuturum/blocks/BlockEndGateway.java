@@ -34,7 +34,7 @@ public class BlockEndGateway extends BlockContainer {
 		this.setResistance(3600000);
 		this.setBlockUnbreakable();
 		this.setBlockName(Utils.getUnlocalisedName("end_gateway"));
-		this.setCreativeTab(ModdedCreativeTabs.TEMPORARY);
+		this.setCreativeTab(ModdedCreativeTabs.UNCLASSIFIED);
 
 		Blocks.end_portal.setBlockName(Utils.getUnlocalisedName("end_portal"));
 	}

@@ -19,8 +19,10 @@ import java.util.Set;
  *   <li>EtFuturum 物品：由 CreativeTabData 提供官方排序（见 {@link ModdedCreativeTabs.SortedCreativeTab}）</li>
  *   <li>其他 mod 物品：从对应原版 CreativeTab 接管，追加到新分类末尾</li>
  *   <li>刷怪蛋：统一归入 {@link ModdedCreativeTabs#SPAWN_EGGS}</li>
- *   <li>无法归类的（不在官方数据中、也不在原版标签页的）→ 放入"原材料"</li>
- *   <li>本 mod 独有物品（不在官方 1.21.4 数据中）→ {@link ModdedCreativeTabs#TEMPORARY}</li>
+ *   <li>其他 mod 挂到原版标签页的物品（非 minecraft: 命名空间；原版标签页已被替换，
+ *       不重定向会看不到）→ {@link ModdedCreativeTabs#UNCLASSIFIED}。
+ *       原版命名空间物品由 CreativeTabData 展示，不会进未分类。</li>
+ *   <li>本 mod 独有物品（不在官方 1.21.4 数据中）→ {@link ModdedCreativeTabs#UNCLASSIFIED}</li>
  * </ol>
  * <p>
  * 本类不再使用 Item 子类或 Block 材质判断策略，避免误伤其他 mod 的物品。
@@ -177,9 +179,12 @@ public class ItemCategoryHelper {
 				setCreativeTab(item, target);
 				redirected++;
 			}
-			// 未匹配到官方分类但指向原版标签页 → 回退到原材料
-			else if (target == null && isVanillaTab(currentTab)) {
-				setCreativeTab(item, ModdedCreativeTabs.INGREDIENTS);
+			// 未匹配到官方分类、指向原版标签页且属于其他 mod 命名空间的物品
+			// （其他 mod 挂到原版创造栏的物品）→ 归入未分类，否则原版标签页被替换后用户看不到它们。
+			// 原版命名空间（minecraft:）物品不进来：它们由 CreativeTabData 的
+			// displayAllReleventItems 机制展示（如刷怪蛋、唱片），与 getCreativeTab() 无关。
+			else if (target == null && isVanillaTab(currentTab) && !isVanillaItem(item)) {
+				setCreativeTab(item, ModdedCreativeTabs.UNCLASSIFIED);
 				redirected++;
 				}
 			}
@@ -187,10 +192,10 @@ public class ItemCategoryHelper {
 
 		Logger.info("[EtFuturum Creative] Reassigned " + redirected + " items to modern creative tabs.");
 
-		// 3. 本 mod 独有物品（不在官方 1.21.4 创造栏数据中）→ 分类之外
+		// 3. 本 mod 独有物品（不在官方 1.21.4 创造栏数据中）→ 未分类
 		// 这些物品是 mod 实现了但官方 1.21.4 中没有的（如自定义唱片、升级组件等），
 		// 以及 mod 联动物品（BOP/Witchery 的船、栅栏等，条件满足时才注册）。
-		// 已显式设到"分类之外"的物品（如屏障、光源方块）不会被重复设置。
+		// 已显式设到"未分类"的物品（如屏障、光源方块）不会被重复设置。
 		// 注意：需要排除被 CreativeTabData 映射系统用作 base item 的物品
 		// （如 concrete_powder、planks 等），它们会被 SortedCreativeTab 通过
 		// baseName 映射找到并正确显示在对应标签页中。
@@ -245,15 +250,15 @@ public class ItemCategoryHelper {
 					continue;
 				}
 
-				// 已显式设到"分类之外"的物品不重复设置
-				if (currentTab == ModdedCreativeTabs.TEMPORARY) continue;
+				// 已显式设到"未分类"的物品不重复设置
+				if (currentTab == ModdedCreativeTabs.UNCLASSIFIED) continue;
 
-				setCreativeTab(item, ModdedCreativeTabs.TEMPORARY);
+				setCreativeTab(item, ModdedCreativeTabs.UNCLASSIFIED);
 				temporary++;
 			}
 		}
 		if (temporary > 0 || classified > 0) {
-			Logger.info("[EtFuturum Creative] Moved " + temporary + " mod-only items to TEMPORARY tab, " + classified + " to official tabs.");
+			Logger.info("[EtFuturum Creative] Moved " + temporary + " mod-only items to UNCLASSIFIED tab, " + classified + " to official tabs.");
 		}
 	}
 
@@ -284,5 +289,11 @@ public class ItemCategoryHelper {
 				tab == CreativeTabs.tabBrewing ||
 				tab == CreativeTabs.tabMaterials ||
 				tab == CreativeTabs.tabInventory;
+	}
+
+	/** 判断物品是否属于原版命名空间（minecraft:）。原版物品由 CreativeTabData 展示，不进未分类。 */
+	private static boolean isVanillaItem(Item item) {
+		String regName = Item.itemRegistry.getNameForObject(item);
+		return regName != null && regName.startsWith("minecraft:");
 	}
 }

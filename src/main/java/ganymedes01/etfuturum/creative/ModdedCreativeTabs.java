@@ -142,8 +142,23 @@ public class ModdedCreativeTabs {
 		}
 	};
 
-	/** 11. 分类之外 - 本 mod 添加的高版本也不存在的物品（如下界合金楼梯），不参与排序面板 */
-	public static final CreativeTabs TEMPORARY = new CreativeTabs(12, LANG_PREFIX + "unclassified") {
+	/**
+	 * 11. 未分类 - 收纳无法归入现代分类的物品，固定为第二页第一个标签页。
+	 * <p>
+	 * 包含两类物品：本 mod 添加的高版本也不存在的物品（如旧版玫瑰），
+	 * 以及其他 Mod 直接挂到原版创造栏（vanilla tab）的物品——原版标签页已被
+	 * 本系统替换，不重定向的话用户将完全看不到它们。
+	 * <p>
+	 * 必须用 {@link CreativeTabs#getNextID()}（追加到当前数组末尾）而不是固定索引 12 构造：
+	 * 原版 12 个标签页占用索引 0-11，其他 Mod 注册的第一个标签页正好落在索引 12。
+	 * 若在这里用固定索引 12，构造时会把该 Mod 标签页从 creativeTabArray 中覆盖掉，
+	 * 且 replaceCreativeTabArray() 是从同一个被覆盖的数组重建，导致它永远丢失，
+	 * 第二页（其他 Mod 的分类页）就看不到该分类。
+	 * 重建数组时把它固定在位置 12（见 replaceCreativeTabArray）；其 tabIndex 字段
+	 * 可能是 getNextID 返回的任意值，由 early mixin {@code MixinCreativeTabs} 保证
+	 * 布局/选中按数组位置解析，因此不依赖该字段。
+	 */
+	public static final CreativeTabs UNCLASSIFIED = new CreativeTabs(CreativeTabs.getNextID(), LANG_PREFIX + "unclassified") {
 		@Override
 		public Item getTabIconItem() {
 			return Item.getItemFromBlock(ModBlocks.OBSERVER.get());
@@ -154,7 +169,7 @@ public class ModdedCreativeTabs {
 		ALL_TABS = new CreativeTabs[]{
 				BUILDING_BLOCKS, COLORED_BLOCKS, NATURAL_BLOCKS, FUNCTIONAL_BLOCKS,
 				REDSTONE_BLOCKS, TOOLS_AND_UTILITIES, COMBAT, FOOD_AND_DRINKS,
-				INGREDIENTS, SPAWN_EGGS, TEMPORARY
+				INGREDIENTS, SPAWN_EGGS, UNCLASSIFIED
 		};
 	}
 
@@ -170,12 +185,26 @@ public class ModdedCreativeTabs {
 	}
 
 	/**
-	 * 构建新数组，按 tabIndex 顺序排列：
+	 * 构建新数组，按数组位置顺序排列：
 	 * [建筑(0), 染色(1), 自然(2), 功能(3), 红石(4), 搜索(5),
-	 *  工具(6), 战斗(7), 食物(8), 原材料(9), 刷怪蛋(10), 生存栏(11), 其他Mod...]
+	 *  工具(6), 战斗(7), 食物(8), 原材料(9), 刷怪蛋(10), 生存栏(11),
+	 *  未分类(12), 其他Mod...]
 	 * <p>
 	 * 索引 5 保留给 tabAllSearch（搜索标签），不创建自定义标签页占用此索引。
 	 * 这样 hasSearchBar()（判断 tabIndex == tabAllSearch.tabIndex）只对搜索标签生效。
+	 * <p>
+	 * 1.7.10 创造栏渲染/命中检测依赖不变量 creativeTabArray[位置] == 该标签的 tabIndex：
+	 * GUI 把 selectedTabIndex（= getTabIndex()）直接当作数组下标取当前标签。
+	 * "未分类"必须处于数组位置 12（第二页第一个），但它的 tabIndex 用 getNextID()
+	 * 构造，若其他 Mod 先注册标签页，其 tabIndex 会大于 12。
+	 * <p>
+	 * 布局位置的修复由 early mixin {@code MixinCreativeTabs} 完成：它把
+	 * getTabIndex()/getTabPage()/getTabColumn()/isTabInFirstRow() 改为读取
+	 * 标签页在 creativeTabArray 中的位置，而不是 final 字段 tabIndex。
+	 * 因此只要数组位置正确，无论 tabIndex 字段是多少，渲染、命中检测、选中
+	 * 都保持自洽。下面的反射仅作为兜底，尽力把字段同步成数组位置，使
+	 * hasSearchBar() 等直读字段的比较（tabIndex == tabAllSearch.tabIndex）
+	 * 不会因字段与位置不一致而误命中；它失效只影响这一处直读，不影响布局。
 	 */
 	private static void replaceCreativeTabArray() {
 		try {
@@ -203,33 +232,78 @@ public class ModdedCreativeTabs {
 			// 4. 生存物品栏标签页（索引 11）
 			newTabs.add(CreativeTabs.tabInventory);
 
-			// 5. 分类之外标签页（本 mod 独有的、高版本也不存在的物品）
-			newTabs.add(TEMPORARY);
+			// 5. 未分类标签页固定在索引 12（第二页第一个）
+			newTabs.add(UNCLASSIFIED);
 
-			// 6. 添加其他 Mod 的自定义标签页（非原版、非我们自己的、非搜索/生存栏、非本 mod 的）
-			for (CreativeTabs tab : oldArray) {
+			// 6. 追加索引 12 及之后的其他 Mod 自定义标签页，按原数组顺序原样保留。
+			//    跳过 UNCLASSIFIED（已在第 5 步加入）、搜索、生存栏和原版标签页。
+			//    UNCLASSIFIED 用 getNextID() 构造（不抢占 Mod 标签的索引），
+			//    重建时它可能出现在数组末尾，这里跳过即可。
+			for (int i = 12; i < oldArray.length; i++) {
+				CreativeTabs tab = oldArray[i];
 				if (tab == null) continue;
-				if (isOurTab(tab)) continue;
+				if (tab == UNCLASSIFIED) continue;
 				if (tab == CreativeTabs.tabAllSearch || tab == CreativeTabs.tabInventory) continue;
 				if (isVanillaTab(tab)) continue;
-			newTabs.add(tab);
-		}
+				newTabs.add(tab);
+			}
 
 			CreativeTabs[] newArray = newTabs.toArray(new CreativeTabs[0]);
-			Field field = CreativeTabs.class.getDeclaredField("creativeTabArray");
-			field.setAccessible(true);
-			field.set(null, newArray);
+
+			// 7. 替换数组（主机制）。mixin 使布局基于数组位置，此处必须先执行，
+			//    不能因为下面可选的反射兜底失败而中断整次重建（曾因此数组从未被替换）。
+			Field arrayField = findField(CreativeTabs.class, "creativeTabArray", "field_78032_a");
+			if (arrayField == null) {
+				Logger.error("EtFR creative: CreativeTabs.creativeTabArray field not found; creative tab rebuild skipped.");
+				return;
+			}
+			arrayField.setAccessible(true);
+			arrayField.set(null, newArray);
+
+			// 8. 兜底（尽力而为，失败只警告不影响布局）：同步 tabIndex 字段，使
+			//    creativeTabArray[位置] == 字段值。字段在开发环境叫 tabIndex，
+			//    在反混淆(正式)运行环境叫 field_78033_n，需双名查找。
+			//    mixin 已让布局不依赖该字段；此同步仅避免 hasSearchBar() 的
+			//    字段直读比较（tabIndex == tabAllSearch.tabIndex）误命中。
+			syncTabIndexFields(newArray);
 
 		} catch (Exception e) {
 			Logger.error("Failed to replace creative tab array: " + e, e);
 		}
 	}
 
-	private static boolean isOurTab(CreativeTabs tab) {
-		for (CreativeTabs t : ALL_TABS) {
-			if (t == tab) return true;
+	/**
+	 * 尽力同步 tabIndex 字段（可选兜底）。双名查找以兼容开发(tabIndex)与
+	 * 反混淆运行环境(field_78033_n)，任何失败只警告并返回，绝不抛出，
+	 * 不影响数组替换主流程。
+	 */
+	private static void syncTabIndexFields(CreativeTabs[] newArray) {
+		try {
+			Field tabIndexField = findField(CreativeTabs.class, "tabIndex", "field_78033_n");
+			if (tabIndexField == null) {
+				Logger.warn("EtFR creative: CreativeTabs.tabIndex field not found for fallback sync; mixin-based layout unaffected.");
+				return;
+			}
+			tabIndexField.setAccessible(true);
+			for (int i = 12; i < newArray.length; i++) {
+				tabIndexField.setInt(newArray[i], i);
+			}
+		} catch (Exception e) {
+			Logger.warn("EtFR creative: tabIndex fallback sync failed: " + e);
 		}
-		return false;
+	}
+
+	/**
+	 * 按候选名依次查找字段，兼容开发(MCP 名)与反混淆运行环境(SRG 名)。
+	 */
+	private static Field findField(Class<?> clazz, String... names) {
+		for (String name : names) {
+			try {
+				return clazz.getDeclaredField(name);
+			} catch (NoSuchFieldException ignored) {
+			}
+		}
+		return null;
 	}
 
 	private static boolean isVanillaTab(CreativeTabs tab) {
@@ -1420,18 +1494,18 @@ public class ModdedCreativeTabs {
 				}
 			}
 
-			// ==================== 分类之外（TEMPORARY）内容 ====================
-			CreativeTabs tempTab = ModdedCreativeTabs.TEMPORARY;
-			if (tempTab != null) {
+			// ==================== 未分类（UNCLASSIFIED）内容 ====================
+			CreativeTabs unclassifiedTab = ModdedCreativeTabs.UNCLASSIFIED;
+			if (unclassifiedTab != null) {
 				pw.println("========================================================");
-				pw.println("Tab #" + tempTab.getTabIndex() + ": " + tempTab.getTabLabel() + " (分类之外)");
+				pw.println("Tab #" + unclassifiedTab.getTabIndex() + ": " + unclassifiedTab.getTabLabel() + " (分类之外)");
 				pw.println("========================================================");
 				List<ItemStack> tempItems = new ArrayList<>();
 				for (Object obj : Item.itemRegistry) {
 					if (obj instanceof Item) {
 						Item item = (Item) obj;
-						if (item.getCreativeTab() == tempTab) {
-							item.getSubItems(item, tempTab, tempItems);
+						if (item.getCreativeTab() == unclassifiedTab) {
+							item.getSubItems(item, unclassifiedTab, tempItems);
 						}
 					}
 				}
@@ -1891,8 +1965,8 @@ public class ModdedCreativeTabs {
 
 			if (obj instanceof Item) {
 			Item item = (Item) obj;
-			// 跳过已直接设到"分类之外"标签页的创意专用物品（如下界合金楼梯）
-			if (item.getCreativeTab() == TEMPORARY) continue;
+			// 跳过已直接设到"未分类"标签页的创意专用物品（如下界合金楼梯）
+			if (item.getCreativeTab() == UNCLASSIFIED) continue;
 			// 特殊处理：shulker_box 的颜色变体通过 NBT tag "Color" 区分（不是 meta）。
 			// Part 1 按 official 列表逐条添加，每条用 NBT Color 创建 ItemStack。
 			// official 列表：shulker_box (无色 color=0), white_shulker_box (color=1), ..., black_shulker_box (color=16)

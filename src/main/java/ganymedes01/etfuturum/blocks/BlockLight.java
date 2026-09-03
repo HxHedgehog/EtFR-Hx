@@ -25,7 +25,7 @@ public class BlockLight extends BlockBarrier implements ISubBlocksBlock {
 		super();
 		setNames("light");
 		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-		this.setCreativeTab(ModdedCreativeTabs.TEMPORARY);
+		this.setCreativeTab(ModdedCreativeTabs.UNCLASSIFIED);
 		for (int i = 0; i < 16; i++) {
 			types[i] = "light_" + String.format("%02d", i);
 		}

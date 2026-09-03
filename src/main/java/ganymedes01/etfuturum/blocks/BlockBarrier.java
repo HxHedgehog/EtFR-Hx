@@ -37,7 +37,7 @@ public class BlockBarrier extends BaseBlock implements IFloatingParticleBlock {
 		setNames("barrier");
 		useNeighborBrightness = true;
 		canBlockGrass = false;
-		this.setCreativeTab(ModdedCreativeTabs.TEMPORARY);
+		this.setCreativeTab(ModdedCreativeTabs.UNCLASSIFIED);
 	}
 
 	@Override
