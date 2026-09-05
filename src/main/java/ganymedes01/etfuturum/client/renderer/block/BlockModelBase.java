@@ -26,6 +26,9 @@ public abstract class BlockModelBase implements ISimpleBlockRenderingHandler {
 		if (block.getRenderBlockPass() == 1) {
 			OpenGLHelper.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 			OpenGLHelper.enableBlend();
+			// 手持/掉落 pass-1 物品必须写深度：半透明世界 pass（如粘液块/蜂蜜块）在实体之后渲染，
+			// 若不写深度会从物品背后深度测试通过并混合覆盖，导致物品透明/消失
+			OpenGLHelper.depthMask(true);
 		}
 		OpenGLHelper.translate(-0.5F, -0.5F, -0.5F);
 
