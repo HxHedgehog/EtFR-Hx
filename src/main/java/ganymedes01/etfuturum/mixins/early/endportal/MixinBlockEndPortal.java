@@ -4,10 +4,12 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import ganymedes01.etfuturum.core.utils.helpers.SandDupingHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEndPortal;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.util.IIcon;
@@ -29,6 +31,13 @@ public class MixinBlockEndPortal extends Block {
 	@Inject(method = "onBlockAdded", at = @At(value = "HEAD"), cancellable = true)
 	public void ignoreOnBlockAdded(World worldIn, int x, int y, int z, CallbackInfo ci) {
 		ci.cancel();
+	}
+
+	@Inject(method = "onEntityCollidedWithBlock", at = @At(value = "HEAD"), cancellable = true)
+	public void duplicateFallingBlock(World worldIn, int x, int y, int z, Entity entityIn, CallbackInfo ci) {
+		if (SandDupingHelper.tryDuplicateFallingBlock(worldIn, x, y, z, entityIn)) {
+			ci.cancel();
+		}
 	}
 
 	@WrapOperation(method = "setBlockBoundsBasedOnState", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockEndPortal;setBlockBounds(FFFFFF)V"))

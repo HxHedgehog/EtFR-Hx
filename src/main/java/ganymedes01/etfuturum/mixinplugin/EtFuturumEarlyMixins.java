@@ -72,8 +72,12 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 
 		List<String> mixins = new ArrayList<>();
 
-		if (ConfigMixins.endPortalFix) {
+		if (ConfigMixins.endPortalFix || ConfigMixins.enableSandDuping) {
 			mixins.add("endportal.MixinBlockEndPortal");
+		}
+
+		if (ConfigMixins.enableSandDuping) {
+			mixins.add("endportal.MixinTeleporter");
 		}
 
 		if (ConfigBlocksItems.enableNewBoats) {
