@@ -8,7 +8,7 @@ import java.io.File;
 
 public class ConfigMixins extends ConfigBase {
 
-	public static boolean endPortalFix;
+	public static boolean endPortalSandDuping;
 	public static boolean mushroomGrowBreaksEndPortalFrame;
 	public static boolean fenceWallConnectFix;
 	public static boolean furnaceCrackle;
@@ -60,7 +60,8 @@ public class ConfigMixins extends ConfigBase {
 	public static boolean betterDyeTextures;
 	public static boolean betterVanillaTextures;
 	public static boolean secretTotem;
-	public static boolean enableSandDuping;
+	/** TEMPORARY debug flag for the sand dump machine (SandDupingHelper). Remove along with the TRACKED/trackTick
+	 * debug tracing once the machine layouts are finalised over the next few releases. */
 	public static boolean sandDupingDebug;
 
 
@@ -94,7 +95,7 @@ public class ConfigMixins extends ConfigBase {
 			modernLoadingScreen = getBoolean("modernLoadingScreen", catBackport, true, "Modern loading screen with progress bar and chunk grid when entering a world, like 1.14+.\nModified Client Classes: net.minecraft.client.gui.GuiDownloadTerrain");
 		}
 
-		endPortalFix = getBoolean("endPortalFix", catBackport, true, "Makes the End Portal block (the actual portal, not the frame) have an item icon, proper hitbox and will not instantly destroy itself in other dimensions.\nModified classes: net.minecraft.block.BlockEndPortal");
+		endPortalSandDuping = getBoolean("endPortalSandDuping", catBackport, true, "Makes the End Portal block (the actual portal, not the frame) behave like modern versions: a proper thin (0.375-height) hitbox and item icon, no self-destruction in other dimensions, and it enables the modern (1.21+) sand duplication machines - falling blocks that touch an end portal duplicate into the End instead of teleporting cleanly. Also makes the End spawn platform refresh (which runs for every entity entering the End) destroy mismatched blocks above the platform and pop them as item drops, like modern versions, instead of silently overwriting them. The platform is at (100, ~, 0), so blocks are normally only destroyed if they were placed there by a sand duper.\nModified Classes: net.minecraft.block.BlockEndPortal net.minecraft.world.Teleporter");
 		mushroomGrowBreaksEndPortalFrame = getBoolean("mushroomGrowBreaksEndPortalFrame", catBackport, true, "Allows red/brown mushroom trees to replace end portal frames when grown with bonemeal, restoring the modern sand duplicator. The space check is left to vanilla (which already lets the mushroom grow in some spots); only replacing the frame is guaranteed. The end portal itself can never be replaced.\nModified classes: net.minecraft.world.gen.feature.WorldGenBigMushroom");
 		fenceWallConnectFix = getBoolean("fenceWallConnectFix", catBackport, true, "Makes vanilla fences connect to modded ones of the same material. Might have connection issue with mods that don't reference BlockFence super code.\nModified classes: net.minecraft.block.BlockFence net.minecraft.block.BlockWall");
 		avoidDroppingItemsWhenClosing = getBoolean("avoidDroppingItemsWhenClosing", catBackport, true, "Avoid dropping items when closing an inventory, like in modern versions. Items that fit in the player's inventory are returned there; only leftovers drop on the ground.\nModified Classes: net.minecraft.entity.player.EntityPlayerMP");
@@ -141,8 +142,7 @@ public class ConfigMixins extends ConfigBase {
 		betterDyeTextures = getBoolean("betterDyeTextures", catBackport, true, "Swaps the vanilla 1.7.10 dye (item:dye) icons for the 12 'pure' dye colours to the high-version (1.21+) per-colour dye textures. In 1.7.10 the dye shares item ID 351 with material items by metadata, so bone meal (15), cocoa beans (3), ink sac (0) and lapis lazuli (4) keep their original icons; the modern white/blue/brown/black dyes are already covered by the separate mod item 'dye_same'.\nModified Class: net.minecraft.item.ItemDye");
 		betterVanillaTextures = getBoolean("betterVanillaTextures", catBackport, true, "Swaps a handful of vanilla 1.7.10 textures for the high-version (1.21+) ones: the emerald block, the lily pad (world + item), the 6 minecart item icons, the fire charge (item + fireball entity) and the cauldron item. Icons are remapped by texture name only, so everything else sharing the same registration paths is untouched; the minecart entities' model texture keeps the vanilla look.\nModified Classes: net.minecraft.block.Block, net.minecraft.item.Item");
 		secretTotem = getBoolean("secretTotem", catBackport, false, "Replaces the totem of undying item texture with the custom ankh sprite. The 26.2-style activation animation and particles are NOT tied to this option - they are always active.\nModified Class: net.minecraft.item.Item");
-		enableSandDuping = getBoolean("enableSandDuping", catBackport, true, "Replicates the modern (1.21+) sand duplication machines: falling blocks that touch an end portal duplicate into the End instead of teleporting cleanly.\nAlso makes the End spawn platform refresh (which runs for every entity entering the End) destroy mismatched blocks above the platform and pop them as item drops, like modern versions, instead of silently overwriting them. The platform is at (100, ~, 0), so blocks are normally only destroyed if they were placed there by a sand duper.\nModified Classes: net.minecraft.world.Teleporter net.minecraft.block.BlockEndPortal");
-		sandDupingDebug = getBoolean("sandDupingDebug", catMisc, false, "Logs every end portal touch evaluation made by the sand duping logic (entity, position, motion and the decision taken). Use it to check whether your machine's sand actually overlaps the portal block and which branch it takes.");
+			sandDupingDebug = getBoolean("sandDupingDebug", catMisc, false, "TEMPORARY: logs every end portal touch evaluation made by the sand duping logic (entity, position, motion and the decision taken). Use it to check whether your machine's sand actually overlaps the portal block and which branch it takes.");
 
 		stepHeightFix = getBoolean("stepHeightFix", catFixes, true, "Makes the player able to step up even if a block would be above their head at the destination.\nModified classes: net.minecraft.entity.Entity");
 		arrowFallingFix = getBoolean("arrowFallingFix", catFixes, true, "Prevents arrows from falling off of blocks too easily\nModified classes: net.minecraft.entity.EntityArrow");

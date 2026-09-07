@@ -28,7 +28,7 @@ public class MixinTeleporter {
 
 	@Inject(method = "placeInPortal", at = @At("HEAD"), cancellable = true)
 	public void createEndPlatform(Entity entityIn, double oldX, double oldY, double oldZ, float oldYaw, CallbackInfo ci) {
-		if (!ConfigMixins.enableSandDuping || worldServerInstance.provider.dimensionId != 1) {
+		if (!ConfigMixins.endPortalSandDuping || worldServerInstance.provider.dimensionId != 1) {
 			return;
 		}
 

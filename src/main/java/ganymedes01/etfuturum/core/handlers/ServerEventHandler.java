@@ -211,6 +211,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -2113,11 +2114,18 @@ public class ServerEventHandler {
 		if (ConfigMixins.enableDoWeatherCycle && e.phase == TickEvent.Phase.END && e.side == Side.SERVER) {
 			DoWeatherCycle.INSTANCE.isWorldTickInProgress = false;
 		}
+
+		if (e.phase == TickEvent.Phase.END && !e.world.isRemote) {
+			ganymedes01.etfuturum.core.utils.helpers.SandDupingHelper.trackTick(e.world);
+		}
 	}
 
 	private void doConcreteTracking() {
-		for (Iterator<EntityFallingBlock> iterator = fallingConcreteBlocks.iterator(); iterator.hasNext(); ) {
-			EntityFallingBlock block = iterator.next();
+		// Iterate over a snapshot: converting water to concrete (setBlock) can trigger block updates that
+		// make another unsupported concrete powder block start falling and join the world mid-iteration
+		// (EntityJoinWorldEvent -> fallingConcreteBlocks.add), which would throw a ConcurrentModificationException
+		// when iterating the live set. Removals are still applied to the live set.
+		for (EntityFallingBlock block : new ArrayList<>(fallingConcreteBlocks)) {
 			if (!block.isDead) {
 				int i = MathHelper.floor_double(block.posX);
 				int j = MathHelper.floor_double(block.posY);
@@ -2127,11 +2135,11 @@ public class ServerEventHandler {
 					if (block.worldObj.getBlock(i, j - jOff, k).getMaterial() == Material.water) {
 						block.worldObj.setBlock(i, j - jOff, k, ModBlocks.CONCRETE.get(), block.field_145814_a, 3); // metadata
 						block.setDead();
-						iterator.remove();
+						fallingConcreteBlocks.remove(block);
 					}
 				}
 			} else {
-				iterator.remove();
+				fallingConcreteBlocks.remove(block);
 			}
 		}
 	}

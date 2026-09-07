@@ -1,11 +1,14 @@
 package ganymedes01.etfuturum.core.utils.helpers;
 
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
 import ganymedes01.etfuturum.configuration.configs.ConfigMixins;
 import ganymedes01.etfuturum.core.utils.Logger;
+import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.item.EntityFallingBlock;
@@ -41,13 +44,18 @@ public class SandDupingHelper {
 
 	private static final Set<Entity> DUPLICATED = Collections.newSetFromMap(new WeakHashMap<Entity, Boolean>());
 
+	// Debug: falling blocks actively being traced per tick (weak keys, value = ticks remaining).
+	// TEMPORARY - here only for sandDupingDebug; remove startTracking/trackTick/TRACKED along with that flag
+	// (ConfigMixins.sandDupingDebug, catMisc) once the machine layouts are finalised over the next few releases.
+	private static final Map<Entity, Integer> TRACKED = new WeakHashMap<Entity, Integer>();
+
 	/**
 	 * Attempts to duplicate a falling block touching an end portal.
 	 *
 	 * @return true if the duplication was handled and the vanilla teleport should be suppressed
 	 */
 	public static boolean tryDuplicateFallingBlock(World world, int x, int y, int z, Entity entity) {
-		if (!ConfigMixins.enableSandDuping || world.isRemote) {
+		if (!ConfigMixins.endPortalSandDuping || world.isRemote) {
 			return false;
 		}
 		boolean debug = ConfigMixins.sandDupingDebug;
@@ -88,20 +96,22 @@ public class SandDupingHelper {
 		copy.copyDataFrom(entity, true); // NBT copy keeps the block, metadata and motion
 		copy.setPosition(END_SPAWN_X + 0.5D, END_SPAWN_Y, END_SPAWN_Z + 0.5D);
 		endWorld.spawnEntityInWorld(copy);
+		startTracking(copy);
 		if (debug) {
 			Logger.info("[SandDuping] duplicating: End copy spawned at (" + END_SPAWN_X + ".5, " + END_SPAWN_Y + ", " + END_SPAWN_Z + ".5)"
 					+ " with motion (" + fmt(copy.motionX) + ", " + fmt(copy.motionY) + ", " + fmt(copy.motionZ) + "), platform refreshed");
 		}
 
 		// Overworld side: park the original on the side of the portal it came from.
+		startTracking(entity);
 		parkBesidePortal((EntityFallingBlock) entity, x, y, z);
 		return true;
 	}
 
 	/**
 	 * Parks the original beside the portal on the side it came from: a sand flying in from the north (motion
-	 * towards +Z) appears north of the portal, one block above portal level. No support check is done; whether
-	 * the parked block then falls is the machine's business.
+	 * towards +Z) appears north of the portal, keeping the height it had when it grazed the portal. No support
+	 * check is done; whether the parked block then falls is the machine's business.
 	 */
 	private static void parkBesidePortal(EntityFallingBlock entity, int portalX, int portalY, int portalZ) {
 		// Opposite of the dominant motion axis: the side the sand arrived from.
@@ -121,17 +131,70 @@ public class SandDupingHelper {
 			return;
 		}
 		int parkX = portalX + dx;
-		int parkY = portalY + 1;
 		int parkZ = portalZ + dz;
-		entity.setLocationAndAngles(parkX + 0.5D, parkY, parkZ + 0.5D, entity.rotationYaw, 0.0F);
+		// Keep the same height the sand had when it grazed the portal, otherwise the parked block
+		// starts a full block higher and reaches the machine's catching layer earlier than expected.
+		entity.setLocationAndAngles(parkX + 0.5D, entity.posY, parkZ + 0.5D, entity.rotationYaw, 0.0F);
 		entity.motionX = entity.motionY = entity.motionZ = 0.0D;
-		debug("parked the original at (" + parkX + ", " + parkY + ", " + parkZ + ") with zeroed motion");
+		debug("parked the original at (" + parkX + ", " + fmt(entity.posY) + ", " + parkZ + ") with zeroed motion");
 	}
 
 	private static void debug(String message) {
 		if (ConfigMixins.sandDupingDebug) {
 			Logger.info("[SandDuping] " + message);
 		}
+	}
+
+	private static void startTracking(Entity e) {
+		if (ConfigMixins.sandDupingDebug) {
+			synchronized (TRACKED) {
+				TRACKED.put(e, 120);
+			}
+		}
+	}
+
+	/**
+	 * Per-tick debug dump, called from the server world tick END. Logs every traced falling block's
+	 * position, motion, ground flag and the blocks underneath it, so a machine's piston/slime-arm
+	 * timing can be verified from real data instead of guessed.
+	 */
+	public static void trackTick(World world) {
+		if (!ConfigMixins.sandDupingDebug || world.isRemote) {
+			return;
+		}
+		synchronized (TRACKED) {
+			Iterator<Map.Entry<Entity, Integer>> it = TRACKED.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry<Entity, Integer> en = it.next();
+				Entity e = en.getKey();
+				int left = en.getValue() - 1;
+				if (e == null || e.isDead || left <= 0) {
+					it.remove();
+					continue;
+				}
+				en.setValue(left);
+				// Match against the entity's actual world, not its dimension field: End copies get their NBT
+				// (including the Dimension tag, 0) copied from the overworld original, so e.dimension lies.
+				if (e.worldObj != world) {
+					continue;
+				}
+				EntityFallingBlock fb = (EntityFallingBlock) e;
+				int bx = MathHelper.floor_double(fb.posX);
+				int by = MathHelper.floor_double(fb.posY);
+				int bz = MathHelper.floor_double(fb.posZ);
+				Logger.info("[SandDuping.tick] id " + fb.getEntityId() + " dim " + fb.dimension
+						+ " pos(" + fmt(fb.posX) + "," + fmt(fb.posY) + "," + fmt(fb.posZ) + ")"
+						+ " mot(" + fmt(fb.motionX) + "," + fmt(fb.motionY) + "," + fmt(fb.motionZ) + ")"
+						+ " onGround " + fb.onGround
+						+ " under=" + blockName(world, bx, by - 1, bz)
+						+ " below=" + blockName(world, bx, by - 2, bz));
+			}
+		}
+	}
+
+	private static String blockName(World world, int x, int y, int z) {
+		Block b = world.getBlock(x, y, z);
+		return b == null ? "null" : Block.blockRegistry.getNameForObject(b);
 	}
 
 	private static String fmt(double value) {
