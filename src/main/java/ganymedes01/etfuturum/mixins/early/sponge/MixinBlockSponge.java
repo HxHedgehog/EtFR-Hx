@@ -69,13 +69,32 @@ public abstract class MixinBlockSponge extends Block {
 			for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
 				WorldCoord blockpos2 = blockpos1.add(dir);
 
-				if (world.getBlock(blockpos2.x, blockpos2.y, blockpos2.z).getMaterial() == Material.water) {
-					world.setBlockToAir(blockpos2.x, blockpos2.y, blockpos2.z);
+				Block neighborBlock = world.getBlock(blockpos2.x, blockpos2.y, blockpos2.z);
+				if (neighborBlock.getMaterial() != Material.water) {
+					continue;
+				}
+				// 1.8 sponge on a waterlogged block: BucketPickup removes just the
+				// water - the wet pickle dries out in place with its count intact
+				// and counts as absorbed water, so the sponge still gets wet. The
+				// BFS does not spread through the now-dry (coral) cell.
+				if (neighborBlock == ModBlocks.SEA_PICKLE.get()) {
+					world.setBlock(blockpos2.x, blockpos2.y, blockpos2.z, ModBlocks.DEAD_SEA_PICKLE.get(),
+							world.getBlockMetadata(blockpos2.x, blockpos2.y, blockpos2.z), 3);
 					arraylist.add(blockpos2);
 					i++;
-					if (j < 6)
-						linkedlist.add(new Tuple(blockpos2, j + 1));
+					continue;
 				}
+				// Kelp drops itself when destroyed (dropResources behaviour);
+				// seagrass just gets destroyed without drops like in modern versions.
+				if (neighborBlock == ModBlocks.KELP.get() || neighborBlock == ModBlocks.KELP_PLANT.get()) {
+					neighborBlock.dropBlockAsItem(world, blockpos2.x, blockpos2.y, blockpos2.z,
+							world.getBlockMetadata(blockpos2.x, blockpos2.y, blockpos2.z), 0);
+				}
+				world.setBlockToAir(blockpos2.x, blockpos2.y, blockpos2.z);
+				arraylist.add(blockpos2);
+				i++;
+				if (j < 6)
+					linkedlist.add(new Tuple(blockpos2, j + 1));
 			}
 
 			if (i > 64)

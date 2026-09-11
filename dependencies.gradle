@@ -55,7 +55,9 @@ dependencies {
     compileOnly("com.github.GTNewHorizons:TinkersConstruct:1.14.93-GTNH:dev") {
         transitive = false
     }
-    compileOnly("com.github.GTNewHorizons:Angelica:2.1.49:api") {
+    // :dev (not :api) so the mixin AP can resolve internals like HandRenderer
+    // for MixinHandRenderer; runtime stays a soft dependency (see EtFuturumEarlyMixins).
+    compileOnly("com.github.GTNewHorizons:Angelica:2.1.49:dev") {
         transitive = false
     }
     compileOnly("com.github.GTNewHorizons:lwjgl3ify:3.0.25:api") {

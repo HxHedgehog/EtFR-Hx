@@ -75,6 +75,8 @@ import ganymedes01.etfuturum.blocks.BlockHangingRoots;
 import ganymedes01.etfuturum.blocks.BlockHoney;
 import ganymedes01.etfuturum.blocks.BlockInvertedDaylightDetector;
 import ganymedes01.etfuturum.blocks.BlockIronTrapdoor;
+import ganymedes01.etfuturum.blocks.BlockKelp;
+import ganymedes01.etfuturum.blocks.BlockKelpPlant;
 import ganymedes01.etfuturum.blocks.BlockLantern;
 import ganymedes01.etfuturum.blocks.BlockLavaCauldron;
 import ganymedes01.etfuturum.blocks.BlockLight;
@@ -123,6 +125,8 @@ import ganymedes01.etfuturum.blocks.BlockRootedDirt;
 import ganymedes01.etfuturum.blocks.BlockSculk;
 import ganymedes01.etfuturum.blocks.BlockSculkCatalyst;
 import ganymedes01.etfuturum.blocks.BlockSeaLantern;
+import ganymedes01.etfuturum.blocks.BlockSeaPickle;
+import ganymedes01.etfuturum.blocks.BlockSeagrass;
 import ganymedes01.etfuturum.blocks.BlockShroomlight;
 import ganymedes01.etfuturum.blocks.BlockShulkerBox;
 
@@ -170,6 +174,7 @@ import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockLantern;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockGlowLichen;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockNewDoor;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockRedSandstone;
+import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockSeaPickle;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockShulkerBox;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockSign;
 import ganymedes01.etfuturum.blocks.ores.BlockCopperOre;
@@ -535,6 +540,15 @@ public enum ModBlocks {
 	LAVA_CAULDRON(ConfigBlocksItems.enableLavaCauldrons, new BlockLavaCauldron(), null),
 	POTION_CAULDRON(ConfigBlocksItems.enablePotionCauldron, new BlockPotionCauldron(), null),
 	BUBBLE_COLUMN(ConfigBlocksItems.enableBubbleColumns, new BlockBubbleColumn(new Block[]{Blocks.soul_sand}, new Block[]{MAGMA.get()}), null),
+
+	// Update Aquatic underwater plants
+	SEAGRASS(ConfigBlocksItems.enableOceanPlants, new BlockSeagrass()),
+	KELP(ConfigBlocksItems.enableOceanPlants, new BlockKelp()),
+	KELP_PLANT(ConfigBlocksItems.enableOceanPlants, new BlockKelpPlant(), null),
+	SEA_PICKLE(ConfigBlocksItems.enableOceanPlants, new BlockSeaPickle(true), ItemBlockSeaPickle.class),
+	// No inventory item: Waila resolves the name via CompatWaila's stack provider, and
+	// pick block yields the unified sea pickle item (BlockSeaPickle#getPickBlock).
+	DEAD_SEA_PICKLE(ConfigBlocksItems.enableOceanPlants, new BlockSeaPickle(false), null),
 
 	// barrels + iron barrels
 	BARREL(ConfigBlocksItems.enableBarrel, new BlockBarrel(TileEntityBarrel.BarrelType.VANILLA), ItemBlockBarrel.class),
@@ -921,7 +935,9 @@ public enum ModBlocks {
 	DEEPSLATE_DQ_ORE(Utils.enableModdedDeepslateOres(ModsList.DRAGON_QUEST), new BlockDeepslateDragonQuestOre()),
 	GLOW_LICHEN(ConfigBlocksItems.enableGlowLichen, new BlockGlowLichen(), ItemBlockGlowLichen.class),
 	CAVE_VINE_PLANT(ConfigBlocksItems.enableGlowBerries, new BlockCaveVinesPlant()),
-	CAVE_VINE(ConfigBlocksItems.enableGlowBerries, new BlockCaveVines())
+	// Has a plain ItemBlock so the Waila stack provider (CaveVinesDataProvider) can build a real
+	// ItemStack ("Cave Vines"); never added to creative tabs.
+	CAVE_VINE(ConfigBlocksItems.enableGlowBerries, new BlockCaveVines(), ItemBlock.class)
 	;
 
 	public static final ModBlocks[] DOORS = new ModBlocks[]{SPRUCE_DOOR, BIRCH_DOOR, JUNGLE_DOOR, ACACIA_DOOR, DARK_OAK_DOOR, CRIMSON_DOOR, WARPED_DOOR, MANGROVE_DOOR, CHERRY_DOOR, BAMBOO_DOOR};

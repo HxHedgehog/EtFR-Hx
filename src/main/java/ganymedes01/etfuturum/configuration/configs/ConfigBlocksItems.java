@@ -125,6 +125,8 @@ public class ConfigBlocksItems extends ConfigBase {
 
 	public static boolean enableBubbleColumns;
 
+	public static boolean enableOceanPlants;
+
 	public static boolean enableChain;
 	public static boolean enableBlackstone;
 	public static boolean enableBasalt;
@@ -197,6 +199,7 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableNetherwartBlock = getBoolean("enableNetherwartBlock", catBlockNatural, true, "");
 		enableNetherite = getBoolean("enableNetherite", catBlockNatural, true, "");
 		enableMagmaBlock = getBoolean("enableMagmaBlock", catBlockNatural, true, "");
+		enableOceanPlants = getBoolean("enableOceanPlants", catBlockNatural, true, "Enables seagrass, kelp and sea pickles, including their ocean world generation.");
 		enableBoneBlock = getBoolean("enableBoneBlock", catBlockNatural, true, "");
 		enableBlueIce = getBoolean("enableBlueIce", catBlockNatural, true, "");
 		enableLilyOfTheValley = getBoolean("enableLilyOfTheValley", catBlockNatural, true, "");

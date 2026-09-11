@@ -35,4 +35,6 @@ public class RenderIDs {
 	public static final int GLOW_LICHEN = RenderingRegistry.getNextAvailableRenderId();
 	public static final int EXTENDED_CROSSED_SQUARES = RenderingRegistry.getNextAvailableRenderId();
 	public static final int FENCE = RenderingRegistry.getNextAvailableRenderId();
+	public static final int OCEAN_CROSS = RenderingRegistry.getNextAvailableRenderId();
+	public static final int SEA_PICKLE = RenderingRegistry.getNextAvailableRenderId();
 }

@@ -14,8 +14,10 @@ import ganymedes01.etfuturum.world.generate.decorate.WorldGenBamboo;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenCaveVines;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenCherryTrees;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenGlowLichen;
+import ganymedes01.etfuturum.world.generate.decorate.WorldGenKelp;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenLushCave;
 import ganymedes01.etfuturum.world.generate.decorate.WorldGenPinkPetals;
+import ganymedes01.etfuturum.world.generate.decorate.WorldGenSeagrass;
 import ganymedes01.etfuturum.world.generate.feature.WorldGenFossil;
 import ganymedes01.etfuturum.world.generate.feature.WorldGenGeode;
 import ganymedes01.etfuturum.world.structure.OceanMonument;
@@ -74,6 +76,8 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 	protected WorldGenerator caveVineGen;
 	protected WorldGenerator mudGen;
 	protected WorldGenerator lushCaveGen;
+	protected WorldGenerator kelpGen;
+	protected WorldGenerator seagrassGen;
 
 	private List<BiomeGenBase> fossilBiomes;
 	private List<BiomeGenBase> berryBushBiomes;
@@ -191,6 +195,11 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 			}
 
 			mudBiomes = Lists.newArrayList(BiomeDictionary.getBiomesForType(Type.SWAMP));
+		}
+
+		if (ModBlocks.SEAGRASS.isEnabled()) {
+			kelpGen = new WorldGenKelp();
+			seagrassGen = new WorldGenSeagrass();
 		}
 	}
 
@@ -321,6 +330,28 @@ public class EtFuturumWorldGenerator implements IWorldGenerator {
 			int y = world.getHeightValue(x, z);
 			if (y > 0 && mudBiomes.contains(world.getBiomeGenForCoords(x, z))) {
 				mudGen.generate(world, rand, x, world.getTopSolidOrLiquidBlock(x, z), z);
+			}
+		}
+
+		if (kelpGen != null && world.provider.dimensionId == 0) {
+			x = (chunkX << 4) + rand.nextInt(16) + 8;
+			z = (chunkZ << 4) + rand.nextInt(16) + 8;
+			BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+			Type[] biomeTypes = BiomeDictionary.getTypesForBiome(biome);
+			boolean isOcean = ArrayUtils.contains(biomeTypes, Type.OCEAN);
+			boolean isRiver = ArrayUtils.contains(biomeTypes, Type.RIVER);
+			// Kelp forests only in oceans; seagrass covers ocean and river beds
+			if (isOcean && rand.nextInt(3) == 0) {
+				int kelpCount = 8 + rand.nextInt(10);
+				for (int i = 0; i < kelpCount; i++) {
+					kelpGen.generate(world, rand, x + rand.nextInt(10) - rand.nextInt(10), 63, z + rand.nextInt(10) - rand.nextInt(10));
+				}
+			}
+			if ((isOcean || isRiver) && rand.nextInt(2) == 0) {
+				int grassCount = 12 + rand.nextInt(16);
+				for (int i = 0; i < grassCount; i++) {
+					seagrassGen.generate(world, rand, x + rand.nextInt(10) - rand.nextInt(10), 63, z + rand.nextInt(10) - rand.nextInt(10));
+				}
 			}
 		}
 

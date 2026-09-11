@@ -33,8 +33,10 @@ import ganymedes01.etfuturum.client.renderer.block.BlockLoomRenderer;
 import ganymedes01.etfuturum.client.renderer.block.BlockMangroveRootsRenderer;
 import ganymedes01.etfuturum.client.renderer.block.BlockNewFenceRenderer;
 import ganymedes01.etfuturum.client.renderer.block.BlockObserverRenderer;
+import ganymedes01.etfuturum.client.renderer.block.BlockOceanPlantRenderer;
 import ganymedes01.etfuturum.client.renderer.block.BlockPinkPetalsRenderer;
 import ganymedes01.etfuturum.client.renderer.block.BlockPointedDripstoneRenderer;
+import ganymedes01.etfuturum.client.renderer.block.BlockSeaPickleRenderer;
 import ganymedes01.etfuturum.client.renderer.block.BlockStonecutterRenderer;
 import ganymedes01.etfuturum.client.renderer.block.BlockTrapDoorRenderer;
 import ganymedes01.etfuturum.client.renderer.entity.ArmourStandRenderer;
@@ -207,6 +209,8 @@ public class ClientProxy extends CommonProxy {
 		RenderingRegistry.registerBlockHandler(new BlockBubbleColumnRenderer(RenderIDs.BUBBLE_COLUMN));
 		RenderingRegistry.registerBlockHandler(new BlockGlowLichenRenderer(RenderIDs.GLOW_LICHEN));
 		RenderingRegistry.registerBlockHandler(new BlockEmissiveLayerRenderer(RenderIDs.EMISSIVE_DOUBLE_LAYER));
+		RenderingRegistry.registerBlockHandler(new BlockOceanPlantRenderer(RenderIDs.OCEAN_CROSS));
+		RenderingRegistry.registerBlockHandler(new BlockSeaPickleRenderer(RenderIDs.SEA_PICKLE));
 	}
 
 	private void registerEntityRenderers() {

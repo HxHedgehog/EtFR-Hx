@@ -379,6 +379,26 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("sponge.MixinBlockSponge");
 		}
 
+		if (ConfigBlocksItems.enableOceanPlants) {
+			mixins.add("oceanplants.MixinBlockLiquid");
+			mixins.add("oceanplants.MixinBlockDynamicLiquid");
+			mixins.add("oceanplants.MixinBlockDynamicLiquidBackfill");
+			mixins.add("oceanplants.MixinItemBucket");
+			mixins.add("oceanplants.MixinBlockFalling");
+			mixins.add("oceanplants.MixinItemDye");
+			mixins.add("oceanplants.MixinWorld");
+			if (side == MixinEnvironment.Side.CLIENT) {
+				mixins.add("oceanplants.client.MixinRenderBlocks");
+				mixins.add("oceanplants.client.MixinItemRenderer");
+				// Angelica's shader hand pipeline routes pass-1 blocks to the translucent
+				// hand pass; flat-icon items must be exempted. Only registered when
+				// Angelica's loading plugin is present (its HandRenderer is targeted).
+				if (loadedCoreMods.stream().anyMatch(name -> name.contains("angelica"))) {
+					mixins.add("oceanplants.client.MixinHandRenderer");
+				}
+			}
+		}
+
 		if (ConfigFunctions.enableSilkTouchingMushrooms) {
 			mixins.add("mushroom.MixinBlockHugeMushroom");
 		}

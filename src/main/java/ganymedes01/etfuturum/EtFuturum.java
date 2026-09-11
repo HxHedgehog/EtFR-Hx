@@ -1,5 +1,6 @@
 package ganymedes01.etfuturum;
 
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
@@ -34,6 +35,7 @@ import ganymedes01.etfuturum.api.StrippedLogRegistry;
 import ganymedes01.etfuturum.api.mappings.BasicMultiBlockSound;
 import ganymedes01.etfuturum.blocks.BlockSculk;
 import ganymedes01.etfuturum.blocks.BlockSculkCatalyst;
+import ganymedes01.etfuturum.compat.AngelicaCompat;
 import net.minecraft.block.BlockSponge;
 import ganymedes01.etfuturum.client.BuiltInResourcePack;
 import ganymedes01.etfuturum.client.DynamicSoundsResourcePack;
@@ -195,6 +197,10 @@ public class EtFuturum {
 		ModEnchantments.init();
 		ModPotions.init();
 		SpectatorMode.init();
+
+		if (Loader.isModLoaded("angelica")) {
+			AngelicaCompat.registerShaderTags();
+		}
 
 		if (event.getSide() == Side.CLIENT) {
 
