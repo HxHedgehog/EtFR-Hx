@@ -72,6 +72,13 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 
 		List<String> mixins = new ArrayList<>();
 
+		// Angelica is shipped as a launch tweaker, not an FML coremod, so its name
+		// never shows up in loadedCoreMods; probe the classloader for its tweaker
+		// class instead (its jar is on the launch classpath by mixin evaluation time).
+		final boolean angelicaLoaded = loadedCoreMods.stream().anyMatch(name -> name.contains("angelica"))
+				|| isClassPresent("com.gtnewhorizons.angelica.loading.AngelicaClientTweaker")
+				|| Launch.classLoader.getResource("mixins.angelica.early.json") != null;
+
 		if (ConfigMixins.endPortalSandDuping) {
 			mixins.add("endportal.MixinBlockEndPortal");
 			mixins.add("endportal.MixinTeleporter");
@@ -393,9 +400,38 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 				// Angelica's shader hand pipeline routes pass-1 blocks to the translucent
 				// hand pass; flat-icon items must be exempted. Only registered when
 				// Angelica's loading plugin is present (its HandRenderer is targeted).
-				if (loadedCoreMods.stream().anyMatch(name -> name.contains("angelica"))) {
+				if (angelicaLoaded) {
 					mixins.add("oceanplants.client.MixinHandRenderer");
 				}
+			}
+		}
+
+		if (ConfigMixins.stairWaterlogging) {
+			// Stateless waterlogged stairs: the look re-derives on section rebuilds,
+			// which are triggered by client-side water changes next to stairs.
+			mixins.add("waterlog.MixinWorld");
+			if (side == MixinEnvironment.Side.CLIENT) {
+				// Water shell suppression applies to both pipelines.
+				mixins.add("waterlog.client.MixinRenderBlocksShell");
+				if (angelicaLoaded) {
+					// Celeritas owns chunk building when Angelica is loaded: reroute the
+					// qualifying stairs' single render call into the translucent pass and
+					// paint the complement water before the buffer capture (Angelica's own
+					// HEAD gate skips func_147805_b for vanilla render types, so the
+					// RenderBlocks TAIL never fires for stairs there).
+					mixins.add("waterlog.client.MixinAngelicaChunkBuilderMeshingTask");
+				} else {
+									// Vanilla chunk builder: the stair keeps
+									// rendering normally in pass 0; its water
+									// complement is a translucent volume, so the
+									// pass gates make qualifying stairs report
+									// pass 1, where the stair's pass-1 slot
+									// paints the complement water instead of a
+									// geometry copy (MixinWorldRenderer +
+									// MixinRenderBlocks).
+									mixins.add("waterlog.client.MixinWorldRenderer");
+									mixins.add("waterlog.client.MixinRenderBlocks");
+								}
 			}
 		}
 
@@ -418,6 +454,15 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		mixins.add("goldenapple.MixinItemAppleGold");
 
 		return mixins;
+	}
+
+	private static boolean isClassPresent(String className) {
+		try {
+			Launch.classLoader.loadClass(className);
+			return true;
+		} catch (Throwable t) {
+			return false;
+		}
 	}
 
 	@Override

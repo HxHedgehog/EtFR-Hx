@@ -1,9 +1,10 @@
 package ganymedes01.etfuturum.client.renderer.block;
 
 import com.gtnewhorizons.angelica.api.ThreadSafeISBRH;
-import ganymedes01.etfuturum.blocks.BlockAquaticPlant;
+import ganymedes01.etfuturum.waterlog.StairWaterlog;
+import ganymedes01.etfuturum.waterlog.client.StairWaterRenderer;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.BlockStairs;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -55,8 +56,9 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 	 * texture and uneven heights around plants. This replicates the vanilla
 	 * liquid geometry instead but always as a still cell: still texture on the
 	 * top/bottom faces, flow texture on the sides (like vanilla static water),
-	 * biome tint and per-face shading, with faces against water or opaque
-	 * neighbours culled like BlockLiquid#shouldSideBeRendered. The surface
+	 * biome tint and per-face shading, with faces against water, opaque
+	 * neighbours or visually waterlogged stairs culled (the last on the same
+	 * rule the stair-water shell mixin applies to real water). The surface
 	 * height uses the vanilla corner averaging (RenderBlocks#getLiquidHeight,
 	 * L4343-4381) so the top face sits flush with surrounding pool water.
 	 * The icons stay the vanilla water references so Angelica's sprite-based
@@ -76,13 +78,15 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 		// Corner heights, vanilla renderBlockLiquid L4164-4167. Like vanilla, the
 		// eps offset is subtracted in place when the top face renders, so side
 		// faces share the slightly lowered top edge (L4184-4187); when the top is
-		// covered the sides keep the raw full height.
-		double d2 = getLiquidHeight(world, x, y, z);
-		double d3 = getLiquidHeight(world, x, y, z + 1);
-		double d4 = getLiquidHeight(world, x + 1, y, z + 1);
-		double d5 = getLiquidHeight(world, x + 1, y, z);
+		// covered the sides keep the raw full height. The height resolution is
+		// the shared stair-water one, so plant water and stair complement water
+		// agree on every shared corner.
+		double d2 = StairWaterRenderer.getLiquidHeight(world, x, y, z);
+		double d3 = StairWaterRenderer.getLiquidHeight(world, x, y, z + 1);
+		double d4 = StairWaterRenderer.getLiquidHeight(world, x + 1, y, z + 1);
+		double d5 = StairWaterRenderer.getLiquidHeight(world, x + 1, y, z);
 
-		if (!isFaceCulled(world.getBlock(x, y + 1, z))) {
+		if (!isFaceCulled(world, x, y + 1, z)) {
 			d2 -= eps;
 			d3 -= eps;
 			d4 -= eps;
@@ -97,7 +101,7 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 		}
 
 		// Vanilla shades the bottom face grey without biome tint
-		if (!isFaceCulled(world.getBlock(x, y - 1, z))) {
+		if (!isFaceCulled(world, x, y - 1, z)) {
 			tessellator.setBrightness(Blocks.water.getMixedBrightnessForBlock(world, x, y - 1, z));
 			tessellator.setColorOpaque_F(0.5F, 0.5F, 0.5F);
 			quad(tessellator, still,
@@ -110,7 +114,7 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 		int[] dx = {0, 0, -1, 1};
 		int[] dz = {-1, 1, 0, 0};
 		for (int dir = 0; dir < 4; dir++) {
-			if (isFaceCulled(world.getBlock(x + dx[dir], y, z + dz[dir]))) {
+			if (isFaceCulled(world, x + dx[dir], y, z + dz[dir])) {
 				continue;
 			}
 			tessellator.setBrightness(Blocks.water.getMixedBrightnessForBlock(world, x + dx[dir], y, z + dz[dir]));
@@ -152,50 +156,18 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 	}
 
 	/**
-	 * Port of RenderBlocks#getLiquidHeight (1.7.10 L4343-4381): averages the
-	 * liquid air-fraction over the 4 cells around corner (x,z) - including the
-	 * sample's above cell for full-height columns. Ocean plant samples force
-	 * meta 0 since their metadata stores count/age, not a flow decay.
+	 * Liquid faces are hidden against water, opaque neighbours or a visually
+	 * waterlogged stair - the last is the same rule the shell mixin enforces
+	 * for real water in renderBlockLiquid (all six faces), so the plants' own
+	 * water volume does not wrap a waterlogged stair in a flowing-texture
+	 * shell either; the stair's complement water owns that interface.
 	 */
-	private static double getLiquidHeight(IBlockAccess world, int x, int y, int z) {
-		int l = 0;
-		float f = 0.0F;
-
-		for (int i1 = 0; i1 < 4; ++i1) {
-			int j1 = x - (i1 & 1);
-			int k1 = z - (i1 >> 1 & 1);
-
-			if (world.getBlock(j1, y + 1, k1).getMaterial() == Material.water) {
-				return 1.0D;
-			}
-
-			Block block = world.getBlock(j1, y, k1);
-			Material material = block.getMaterial();
-
-			if (material == Material.water) {
-				int meta = world.getBlockMetadata(j1, y, k1);
-				if (BlockAquaticPlant.isOceanPlant(block)) {
-					meta = 0;
-				}
-				if (meta >= 8 || meta == 0) {
-					f += BlockLiquid.getLiquidHeightPercent(meta) * 10.0F;
-					l += 10;
-				}
-
-				f += BlockLiquid.getLiquidHeightPercent(meta);
-				++l;
-			} else if (!material.isSolid()) {
-				++f;
-				++l;
-			}
+	private static boolean isFaceCulled(IBlockAccess world, int nx, int ny, int nz) {
+		Block neighbour = world.getBlock(nx, ny, nz);
+		if (neighbour.getMaterial() == Material.water || neighbour.isOpaqueCube()) {
+			return true;
 		}
-
-		return 1.0D - (double) (f / (float) l);
-	}
-
-	/** Liquid faces are hidden against same-liquid (water) or opaque neighbours, like BlockLiquid#shouldSideBeRendered. */
-	private static boolean isFaceCulled(Block neighbour) {
-		return neighbour.getMaterial() == Material.water || neighbour.isOpaqueCube();
+		return neighbour instanceof BlockStairs && StairWaterlog.shouldRenderWater(world, nx, ny, nz);
 	}
 
 	/** Emits one double-sided quad (both windings, like the vanilla liquid renderer). */

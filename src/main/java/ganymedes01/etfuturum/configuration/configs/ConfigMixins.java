@@ -60,6 +60,7 @@ public class ConfigMixins extends ConfigBase {
 	public static boolean betterDyeTextures;
 	public static boolean betterVanillaTextures;
 	public static boolean secretTotem;
+	public static boolean stairWaterlogging;
 	/** TEMPORARY debug flag for the sand dump machine (SandDupingHelper). Remove along with the TRACKED/trackTick
 	 * debug tracing once the machine layouts are finalised over the next few releases. */
 	public static boolean sandDupingDebug;
@@ -143,6 +144,7 @@ public class ConfigMixins extends ConfigBase {
 		betterVanillaTextures = getBoolean("betterVanillaTextures", catBackport, true, "Swaps a handful of vanilla 1.7.10 textures for the high-version (1.21+) ones: the emerald block, the lily pad (world + item), the 6 minecart item icons, the fire charge (item + fireball entity) and the cauldron item. Icons are remapped by texture name only, so everything else sharing the same registration paths is untouched; the minecart entities' model texture keeps the vanilla look.\nModified Classes: net.minecraft.block.Block, net.minecraft.item.Item");
 		secretTotem = getBoolean("secretTotem", catBackport, false, "Replaces the totem of undying item texture with the custom ankh sprite. The 26.2-style activation animation and particles are NOT tied to this option - they are always active.\nModified Class: net.minecraft.item.Item");
 			sandDupingDebug = getBoolean("sandDupingDebug", catMisc, false, "TEMPORARY: logs every end portal touch evaluation made by the sand duping logic (entity, position, motion and the decision taken). Use it to check whether your machine's sand actually overlaps the portal block and which branch it takes.");
+		stairWaterlogging = getBoolean("stairWaterlogging", catBackport, true, "26.2-style waterlogging for vanilla stairs, purely visual and stateless: a stair's open space renders as a still water volume when water reaches the cell - either any water sits directly above the stair, or the stair's opening faces a still water cell while its three other exposed sides are sealed by still water, solid full cubes or further stairs. Nothing is stored - the look re-derives on section rebuilds, which are triggered by client-side water changes near stairs. Buckets and sponges keep vanilla behaviour since the water is not real.\nModified Classes: net.minecraft.world.World\nModified Client Classes: net.minecraft.client.renderer.WorldRenderer net.minecraft.client.renderer.RenderBlocks com.gtnewhorizons.angelica.rendering.celeritas.AngelicaChunkBuilderMeshingTask (only when Angelica is loaded)");
 
 		stepHeightFix = getBoolean("stepHeightFix", catFixes, true, "Makes the player able to step up even if a block would be above their head at the destination.\nModified classes: net.minecraft.entity.Entity");
 		arrowFallingFix = getBoolean("arrowFallingFix", catFixes, true, "Prevents arrows from falling off of blocks too easily\nModified classes: net.minecraft.entity.EntityArrow");
