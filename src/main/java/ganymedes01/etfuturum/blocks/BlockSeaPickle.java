@@ -21,6 +21,8 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import net.minecraftforge.common.util.ForgeDirection;
+
 import java.util.Random;
 
 /**
@@ -160,20 +162,26 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 	}
 
 	/**
-	 * 26.2 {@code SeaPickleBlock#mayPlaceOn}: the cell below needs a collision shape
-	 * whose UP face is not empty (a sturdy top face implies the same). A plain 1.7.10
-	 * AABB always has a non-empty UP face, so having any collision box is the exact
-	 * equivalent - unlike the vanilla {@code isSideSolid} fallback this does not
-	 * require opacity, letting pickles sit on leaves and glass like in modern
-	 * versions. Air must be rejected explicitly (its 1.7.10 default full AABB is a
-	 * false positive); liquids and the plants themselves return null boxes.
+	 * 26.2 {@code SeaPickleBlock#mayPlaceOn}: the cell below needs a collision
+	 * shape whose UP face (the section touching the top of the cell) is not
+	 * empty, or an otherwise UP-sturdy face. A collision box that merely
+	 * exists but stops below the cell top does not qualify - the pickle's own
+	 * 6px column is the counterexample: treating "any box" as support let one
+	 * pickle stack vertically on another (and would accept bottom slabs),
+	 * which the modern rule rejects. Full cubes, glass and leaves keep working
+	 * through their full-height boxes, no opacity required - the deliberate
+	 * relaxation of the vanilla isSideSolid fallback. Air is rejected
+	 * explicitly (its 1.7.10 default full AABB is a false positive); liquids
+	 * and the plants themselves return null boxes.
 	 */
 	public static boolean mayPlaceOn(World world, int x, int y, int z) {
 		Block below = world.getBlock(x, y, z);
 		if (below.getMaterial() == Material.air) {
 			return false;
 		}
-		return below.getCollisionBoundingBoxFromPool(world, x, y, z) != null;
+		AxisAlignedBB box = below.getCollisionBoundingBoxFromPool(world, x, y, z);
+		boolean upCollisionFace = box != null && box.maxY >= y + 1.0D - 1e-7D;
+		return upCollisionFace || below.isSideSolid(world, x, y, z, ForgeDirection.UP);
 	}
 
 	/**
