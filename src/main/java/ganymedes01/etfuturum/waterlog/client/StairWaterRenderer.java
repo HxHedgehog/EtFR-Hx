@@ -242,7 +242,7 @@ public class StairWaterRenderer {
 		// y 0.5; lower-half ones follow the corner heights, eps-lowered when
 		// the top is painted and clamped to the slab top so a shore dip cannot
 		// invert a face.
-		final boolean topVisible = !shape.upper && !isTopFaceCulled(world, x, y + 1, z);
+		final boolean topVisible = !shape.upper && !isFaceCulled(world, x, y + 1, z);
 		final double a00 = h00 - EPS, a01 = h01 - EPS, a11 = h11 - EPS, a10 = h10 - EPS;
 
 		// Top surface quads over the water footprint.
@@ -268,7 +268,7 @@ public class StairWaterRenderer {
 		for (int dir = 0; dir < 4; dir++) {
 			int nx = x + (dir == 0 ? -1 : dir == 1 ? 1 : 0);
 			int nz = z + (dir == 2 ? -1 : dir == 3 ? 1 : 0);
-			if (isSideFaceCulled(world, nx, y, nz)) {
+			if (isFaceCulled(world, nx, y, nz)) {
 				continue;
 			}
 			List<double[]> intervals = borderIntervals(rects, dir);
@@ -439,27 +439,17 @@ public class StairWaterRenderer {
 	}
 
 	/**
-	 * Top faces are hidden against same-liquid, opaque or waterlogged-looking
-	 * stair neighbours - the neighbour's slab (lower-half) or its water
-	 * (upper-half complement) forms the shared plane either way; painting
-	 * here would only add an interior shell visible through the water.
+	 * Shared face-cull rule for the stair complement water and the ocean
+	 * plants' own water volumes (all six faces): hidden against opaque blocks,
+	 * liquid cells and visually waterlogged stair neighbours. Against real
+	 * water the shell mixin suppresses that water's matching face as well, so
+	 * neither side of a continuous water body paints the shared plane -
+	 * vanilla's own rule for two adjacent water cells; against another
+	 * qualified stair the neighbour's slab or its complement water forms the
+	 * shared plane either way, and painting here would only add an interior
+	 * shell visible through the water.
 	 */
-	private static boolean isTopFaceCulled(IBlockAccess world, int x, int y, int z) {
-		Block neighbour = world.getBlock(x, y, z);
-		if (neighbour.getMaterial() == Material.water || neighbour.isOpaqueCube()) {
-			return true;
-		}
-		return neighbour instanceof BlockStairs && StairWaterlog.shouldRenderWater(world, x, y, z);
-	}
-
-	/**
-	 * Side faces are hidden against opaque blocks, liquid cells and
-	 * waterlogged-looking stair neighbours. Against real water the shell mixin
-	 * suppresses that water's matching face as well, so neither side of a
-	 * continuous water body paints the shared plane - vanilla's own rule for
-	 * two adjacent water cells.
-	 */
-	private static boolean isSideFaceCulled(IBlockAccess world, int x, int y, int z) {
+	public static boolean isFaceCulled(IBlockAccess world, int x, int y, int z) {
 		Block neighbour = world.getBlock(x, y, z);
 		if (neighbour.isOpaqueCube() || neighbour.getMaterial() == Material.water) {
 			return true;

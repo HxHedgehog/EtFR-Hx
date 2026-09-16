@@ -1,11 +1,8 @@
 package ganymedes01.etfuturum.client.renderer.block;
 
 import com.gtnewhorizons.angelica.api.ThreadSafeISBRH;
-import ganymedes01.etfuturum.waterlog.StairWaterlog;
 import ganymedes01.etfuturum.waterlog.client.StairWaterRenderer;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockStairs;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.init.Blocks;
@@ -86,7 +83,7 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 		double d4 = StairWaterRenderer.getLiquidHeight(world, x + 1, y, z + 1);
 		double d5 = StairWaterRenderer.getLiquidHeight(world, x + 1, y, z);
 
-		if (!isFaceCulled(world, x, y + 1, z)) {
+		if (!StairWaterRenderer.isFaceCulled(world, x, y + 1, z)) {
 			d2 -= eps;
 			d3 -= eps;
 			d4 -= eps;
@@ -101,7 +98,7 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 		}
 
 		// Vanilla shades the bottom face grey without biome tint
-		if (!isFaceCulled(world, x, y - 1, z)) {
+		if (!StairWaterRenderer.isFaceCulled(world, x, y - 1, z)) {
 			tessellator.setBrightness(Blocks.water.getMixedBrightnessForBlock(world, x, y - 1, z));
 			tessellator.setColorOpaque_F(0.5F, 0.5F, 0.5F);
 			quad(tessellator, still,
@@ -114,7 +111,7 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 		int[] dx = {0, 0, -1, 1};
 		int[] dz = {-1, 1, 0, 0};
 		for (int dir = 0; dir < 4; dir++) {
-			if (isFaceCulled(world, x + dx[dir], y, z + dz[dir])) {
+			if (StairWaterRenderer.isFaceCulled(world, x + dx[dir], y, z + dz[dir])) {
 				continue;
 			}
 			tessellator.setBrightness(Blocks.water.getMixedBrightnessForBlock(world, x + dx[dir], y, z + dz[dir]));
@@ -153,21 +150,6 @@ public class BlockOceanPlantRenderer extends BlockModelBase {
 				break;
 			}
 		}
-	}
-
-	/**
-	 * Liquid faces are hidden against water, opaque neighbours or a visually
-	 * waterlogged stair - the last is the same rule the shell mixin enforces
-	 * for real water in renderBlockLiquid (all six faces), so the plants' own
-	 * water volume does not wrap a waterlogged stair in a flowing-texture
-	 * shell either; the stair's complement water owns that interface.
-	 */
-	private static boolean isFaceCulled(IBlockAccess world, int nx, int ny, int nz) {
-		Block neighbour = world.getBlock(nx, ny, nz);
-		if (neighbour.getMaterial() == Material.water || neighbour.isOpaqueCube()) {
-			return true;
-		}
-		return neighbour instanceof BlockStairs && StairWaterlog.shouldRenderWater(world, nx, ny, nz);
 	}
 
 	/** Emits one double-sided quad (both windings, like the vanilla liquid renderer). */
