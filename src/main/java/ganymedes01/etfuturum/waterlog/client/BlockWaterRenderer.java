@@ -1,10 +1,9 @@
 package ganymedes01.etfuturum.waterlog.client;
 
 import ganymedes01.etfuturum.blocks.BlockAquaticPlant;
-import ganymedes01.etfuturum.waterlog.StairWaterlog;
+import ganymedes01.etfuturum.waterlog.VisualWaterlog;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
-import net.minecraft.block.BlockStairs;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.init.Blocks;
@@ -250,14 +249,14 @@ public class BlockWaterRenderer {
 
 	/**
 	 * Port of {@code RenderBlocks#getLiquidHeight} (vanilla corner averaging).
-	 * Samples force meta 0 when they are one of our ocean plants, wet sea
-	 * pickles or waterlogged slabs. A visually waterlogged stair counts as a
-	 * full still water cell in the average - the corner heights then match the
+	 * Samples force meta 0 when they are one of our ocean plants or wet sea
+	 * pickles. Any visually waterlogged member cell counts as a full still
+	 * water cell in the average - the corner heights then match the
 	 * surrounding real water exactly (the air above the shore pulls the
 	 * surface down the same way on both sides of the seam), which is what
-	 * keeps the painted plane flush with the pool. Dry stairs take the solid
-	 * path instead - the judgment is purely local, so this stays an O(1)
-	 * check.
+	 * keeps the painted plane flush with the pool. Non-qualifying members
+	 * take the solid or non-solid path instead - the judgment is purely
+	 * local, so this stays an O(1) check.
 	 */
 	public static double getLiquidHeight(IBlockAccess world, int x, int y, int z) {
 		int l = 0;
@@ -286,9 +285,9 @@ public class BlockWaterRenderer {
 
 				f += BlockLiquid.getLiquidHeightPercent(meta);
 				++l;
-			} else if (block instanceof BlockStairs && StairWaterlog.shouldRenderWater(world, j1, y, k1)) {
-				// visually waterlogged stair: weight the sample exactly like a
-				// full still water cell
+			} else if (VisualWaterlog.isWaterlogged(world, j1, y, k1)) {
+				// visually waterlogged member cell: weight the sample exactly
+				// like a full still water cell
 				f += BlockLiquid.getLiquidHeightPercent(0) * 10.0F;
 				l += 10;
 				f += BlockLiquid.getLiquidHeightPercent(0);
@@ -304,20 +303,20 @@ public class BlockWaterRenderer {
 
 	/**
 	 * Shared face-cull rule for painted water volumes (all six faces): hidden
-	 * against opaque blocks, liquid cells and visually waterlogged stair
+	 * against opaque blocks, liquid cells and visually waterlogged member
 	 * neighbours. Against real water the shell mixin suppresses that water's
 	 * matching face as well, so neither side of a continuous water body paints
 	 * the shared plane - vanilla's own rule for two adjacent water cells;
-	 * against another qualified stair the neighbour's slab or its complement
-	 * water forms the shared plane either way, and painting here would only
-	 * add an interior shell visible through the water.
+	 * against another qualified member the neighbour's own geometry or its
+	 * painted water forms the shared plane either way, and painting here
+	 * would only add an interior shell visible through the water.
 	 */
 	public static boolean isFaceCulled(IBlockAccess world, int x, int y, int z) {
 		Block neighbour = world.getBlock(x, y, z);
 		if (neighbour.isOpaqueCube() || neighbour.getMaterial() == Material.water) {
 			return true;
 		}
-		return neighbour instanceof BlockStairs && StairWaterlog.shouldRenderWater(world, x, y, z);
+		return VisualWaterlog.isWaterlogged(world, x, y, z);
 	}
 
 	/** Emits one double-sided quad (both windings, like the vanilla liquid renderer). */

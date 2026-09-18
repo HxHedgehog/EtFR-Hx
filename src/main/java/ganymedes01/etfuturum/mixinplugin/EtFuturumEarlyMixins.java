@@ -407,8 +407,11 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		}
 
 		if (ConfigMixins.stairWaterlogging) {
-			// Stateless waterlogged stairs: the look re-derives on section rebuilds,
-			// which are triggered by client-side water changes next to stairs.
+			// Stateless visual waterlogging (stairs today): the look re-derives on
+			// section rebuilds, which are triggered by client-side water changes
+			// next to member blocks. The hooks are family-generic and dispatch
+			// through the VisualWaterlog registry; a second family extends this
+			// gate with its own flag.
 			mixins.add("waterlog.MixinWorld");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				// Water shell suppression applies to both pipelines.

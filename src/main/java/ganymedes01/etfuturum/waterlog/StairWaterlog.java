@@ -1,13 +1,10 @@
 package ganymedes01.etfuturum.waterlog;
 
-import ganymedes01.etfuturum.ModBlocks;
-import ganymedes01.etfuturum.blocks.BlockAquaticPlant;
 import ganymedes01.etfuturum.configuration.configs.ConfigMixins;
 import ganymedes01.etfuturum.waterlog.client.StairWaterRenderer;
 import ganymedes01.etfuturum.waterlog.client.StairWaterRenderer.Shape;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStairs;
-import net.minecraft.block.material.Material;
 import net.minecraft.world.IBlockAccess;
 
 /**
@@ -16,33 +13,21 @@ import net.minecraft.world.IBlockAccess;
  * direct neighbours, re-derived at render time (see
  * {@link #shouldRenderWater}). Section rebuilds are the invalidation
  * mechanism; {@code MixinWorld} keeps adjacent stair sections dirty across
- * client-side water changes so the look follows the water both ways. Half
- * slabs are intentionally out of scope this round and slot in here later -
- * their 16 metadata values are all taken, which is exactly why no state is
- * stored.
+ * client-side water changes so the look follows the water both ways. The
+ * stair family of the visual-waterlogging registry; the shared water
+ * predicates and the dispatch live in {@link VisualWaterlog}.
  */
 public class StairWaterlog {
 
 	/** The opening's outward face per stair orientation (meta &amp; 3). */
 	private static final int[] OPEN_DIRS = {4, 5, 2, 3};
 
+	public static boolean isEnabled() {
+		return ConfigMixins.stairWaterlogging;
+	}
+
 	private static boolean isStair(Block block) {
 		return block instanceof BlockStairs;
-	}
-
-	/** Any water-material cell, at any flow level (static water, flowing water, ocean plants). */
-	public static boolean isWaterBlock(Block block) {
-		return block != null && block.getMaterial() == Material.water;
-	}
-
-	/** Cells that render as a full still water volume: sources, ocean plants and wet sea pickles. */
-	private static boolean isStillWaterBlock(Block block, int meta) {
-		if (!isWaterBlock(block)) {
-			return false;
-		}
-		// Ocean plants and pickles carry their own metadata (age/count), but their
-		// renderers paint a full still water cell, so they count as still water
-		return meta == 0 || BlockAquaticPlant.isOceanPlant(block) || block == ModBlocks.SEA_PICKLE.get();
 	}
 
 	/**
@@ -95,7 +80,7 @@ public class StairWaterlog {
 		}
 		// A stream pouring in from above (any water, including falling) wets the
 		// stair on its own
-		if (isWaterBlock(world.getBlock(x, y + 1, z))) {
+		if (VisualWaterlog.isWaterBlock(world.getBlock(x, y + 1, z))) {
 			return true;
 		}
 
@@ -108,7 +93,7 @@ public class StairWaterlog {
 			for (int[] offset : waterCells) {
 				int wx = x + offset[0];
 				int wz = z + offset[1];
-				if (isStillWaterBlock(world.getBlock(wx, y, wz), world.getBlockMetadata(wx, y, wz))) {
+				if (VisualWaterlog.isStillWaterBlock(world.getBlock(wx, y, wz), world.getBlockMetadata(wx, y, wz))) {
 					return true;
 				}
 			}
@@ -122,18 +107,18 @@ public class StairWaterlog {
 			if (isInnerFace(box, dir)) {
 				continue; // face behind the step: sealed by the stair's own full-height half
 			}
-			int nx = x + offsetX(dir);
-			int nz = z + offsetZ(dir);
+			int nx = x + VisualWaterlog.offsetX(dir);
+			int nz = z + VisualWaterlog.offsetZ(dir);
 			Block neighbour = world.getBlock(nx, y, nz);
 			int nmeta = world.getBlockMetadata(nx, y, nz);
 			if (dir == OPEN_DIRS[meta & 3]) {
 				// the opening: must hold real still water - it is this cell's water source
-				if (!isStillWaterBlock(neighbour, nmeta)) {
+				if (!VisualWaterlog.isStillWaterBlock(neighbour, nmeta)) {
 					return false;
 				}
 			} else {
 				// half side: sealed by still water, a solid full cube or another stair
-				if (!isStillWaterBlock(neighbour, nmeta) && !neighbour.isOpaqueCube()
+				if (!VisualWaterlog.isStillWaterBlock(neighbour, nmeta) && !neighbour.isOpaqueCube()
 						&& !(neighbour instanceof BlockStairs)) {
 					return false;
 				}
@@ -216,17 +201,5 @@ public class StairWaterlog {
 		int ox = qx == 1 ? 1 : -1;
 		int oz = qz == 1 ? 1 : -1;
 		return new int[][] {{ox, 0}, {0, oz}, {ox, oz}};
-	}
-
-	public static int offsetX(int dir) {
-		return dir == 4 ? -1 : dir == 5 ? 1 : 0;
-	}
-
-	public static int offsetY(int dir) {
-		return dir == 0 ? -1 : dir == 1 ? 1 : 0;
-	}
-
-	public static int offsetZ(int dir) {
-		return dir == 2 ? -1 : dir == 3 ? 1 : 0;
 	}
 }

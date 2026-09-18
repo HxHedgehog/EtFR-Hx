@@ -37,15 +37,6 @@ public class StairWaterRenderer {
 	private static final double EPS = 0.001D;
 
 	/**
-	 * Set by the vanilla pass gate (MixinWorldRenderer) for the single
-	 * renderBlockByRenderType call that follows: a qualifying stair's pass-1
-	 * slot paints the water volume instead of a second stair geometry copy.
-	 * Vanilla chunk building runs on the render thread, so no synchronization
-	 * is needed; the gate clears the flag on every other canRenderInPass call.
-	 */
-	public static boolean paintWaterNextCall;
-
-	/**
 	 * Paints the water complement and reports whether any face was actually
 	 * emitted - the volume can be empty when every face is culled (e.g. the
 	 * stair is fully surrounded by water with water above). Callers must use
