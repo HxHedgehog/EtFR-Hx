@@ -1,11 +1,8 @@
 package ganymedes01.etfuturum.waterlog.client;
 
-import ganymedes01.etfuturum.blocks.BlockAquaticPlant;
 import ganymedes01.etfuturum.waterlog.StairWaterlog;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.BlockStairs;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.IIcon;
@@ -71,10 +68,10 @@ public class StairWaterRenderer {
 		float b = (colour & 255) / 255.0F;
 
 		// Liquid surface heights at the four cell corners (vanilla corner averaging)
-		double h00 = getLiquidHeight(world, x, y, z);         // corner (x0, z0)
-		double h01 = getLiquidHeight(world, x, y, z + 1);     // corner (x0, z1)
-		double h11 = getLiquidHeight(world, x + 1, y, z + 1); // corner (x1, z1)
-		double h10 = getLiquidHeight(world, x + 1, y, z);     // corner (x1, z0)
+		double h00 = BlockWaterRenderer.getLiquidHeight(world, x, y, z);         // corner (x0, z0)
+		double h01 = BlockWaterRenderer.getLiquidHeight(world, x, y, z + 1);     // corner (x0, z1)
+		double h11 = BlockWaterRenderer.getLiquidHeight(world, x + 1, y, z + 1); // corner (x1, z1)
+		double h10 = BlockWaterRenderer.getLiquidHeight(world, x + 1, y, z);     // corner (x1, z0)
 
 		List<CQ> faces = buildComplementFaces(world, x, y, z, h00, h01, h11, h10);
 		for (CQ face : faces) {
@@ -242,7 +239,7 @@ public class StairWaterRenderer {
 		// y 0.5; lower-half ones follow the corner heights, eps-lowered when
 		// the top is painted and clamped to the slab top so a shore dip cannot
 		// invert a face.
-		final boolean topVisible = !shape.upper && !isFaceCulled(world, x, y + 1, z);
+		final boolean topVisible = !shape.upper && !BlockWaterRenderer.isFaceCulled(world, x, y + 1, z);
 		final double a00 = h00 - EPS, a01 = h01 - EPS, a11 = h11 - EPS, a10 = h10 - EPS;
 
 		// Top surface quads over the water footprint.
@@ -268,7 +265,7 @@ public class StairWaterRenderer {
 		for (int dir = 0; dir < 4; dir++) {
 			int nx = x + (dir == 0 ? -1 : dir == 1 ? 1 : 0);
 			int nz = z + (dir == 2 ? -1 : dir == 3 ? 1 : 0);
-			if (isFaceCulled(world, nx, y, nz)) {
+			if (BlockWaterRenderer.isFaceCulled(world, nx, y, nz)) {
 				continue;
 			}
 			List<double[]> intervals = borderIntervals(rects, dir);
@@ -372,7 +369,7 @@ public class StairWaterRenderer {
 	}
 
 	private static void emit(Tessellator tessellator, IIcon icon, CQ face) {
-		quad(tessellator, icon,
+		BlockWaterRenderer.quad(tessellator, icon,
 				face.p[0][0], face.p[0][1], face.p[0][2], face.uv[0][0], face.uv[0][1],
 				face.p[1][0], face.p[1][1], face.p[1][2], face.uv[1][0], face.uv[1][1],
 				face.p[2][0], face.p[2][1], face.p[2][2], face.uv[2][0], face.uv[2][1],
@@ -382,94 +379,5 @@ public class StairWaterRenderer {
 	/** Vanilla liquid side-face V mapping: v = (1 - height) * 8. */
 	private static double v(double height) {
 		return (1.0D - height) * 8.0D;
-	}
-
-	/**
-	 * Port of {@code RenderBlocks#getLiquidHeight} (vanilla corner averaging),
-	 * shared with the ocean plant water volumes. Ocean-plant flavour: samples
-	 * force meta 0 when they are one of our ocean plants. A visually
-	 * waterlogged stair counts as a full still water cell in the average -
-	 * the corner heights then match the surrounding real water exactly (the
-	 * air above the shore pulls the surface down the same way on both sides
-	 * of the seam), which is what keeps the painted plane flush with the
-	 * pool. Dry stairs take the solid path instead - the judgment is purely
-	 * local, so this stays an O(1) check.
-	 */
-	public static double getLiquidHeight(IBlockAccess world, int x, int y, int z) {
-		int l = 0;
-		float f = 0.0F;
-
-		for (int i1 = 0; i1 < 4; ++i1) {
-			int j1 = x - (i1 & 1);
-			int k1 = z - (i1 >> 1 & 1);
-
-			if (world.getBlock(j1, y + 1, k1).getMaterial() == Material.water) {
-				return 1.0D; // the water body continues above: full height
-			}
-
-			Block block = world.getBlock(j1, y, k1);
-			Material material = block.getMaterial();
-
-			if (material == Material.water) {
-				int meta = world.getBlockMetadata(j1, y, k1);
-				if (BlockAquaticPlant.isOceanPlant(block)) {
-					meta = 0;
-				}
-				if (meta >= 8 || meta == 0) {
-					f += BlockLiquid.getLiquidHeightPercent(meta) * 10.0F;
-					l += 10;
-				}
-
-				f += BlockLiquid.getLiquidHeightPercent(meta);
-				++l;
-			} else if (block instanceof BlockStairs && StairWaterlog.shouldRenderWater(world, j1, y, k1)) {
-				// visually waterlogged stair: weight the sample exactly like a
-				// full still water cell
-				f += BlockLiquid.getLiquidHeightPercent(0) * 10.0F;
-				l += 10;
-				f += BlockLiquid.getLiquidHeightPercent(0);
-				++l;
-			} else if (!material.isSolid()) {
-				f += 1;
-				++l;
-			}
-		}
-
-		return 1.0D - (double) (f / (float) l);
-	}
-
-	/**
-	 * Shared face-cull rule for the stair complement water and the ocean
-	 * plants' own water volumes (all six faces): hidden against opaque blocks,
-	 * liquid cells and visually waterlogged stair neighbours. Against real
-	 * water the shell mixin suppresses that water's matching face as well, so
-	 * neither side of a continuous water body paints the shared plane -
-	 * vanilla's own rule for two adjacent water cells; against another
-	 * qualified stair the neighbour's slab or its complement water forms the
-	 * shared plane either way, and painting here would only add an interior
-	 * shell visible through the water.
-	 */
-	public static boolean isFaceCulled(IBlockAccess world, int x, int y, int z) {
-		Block neighbour = world.getBlock(x, y, z);
-		if (neighbour.isOpaqueCube() || neighbour.getMaterial() == Material.water) {
-			return true;
-		}
-		return neighbour instanceof BlockStairs && StairWaterlog.shouldRenderWater(world, x, y, z);
-	}
-
-	/** Emits one double-sided quad (both windings, like the vanilla liquid renderer). */
-	private static void quad(Tessellator tessellator, IIcon icon,
-			double x1, double y1, double z1, double u1, double v1,
-			double x2, double y2, double z2, double u2, double v2,
-			double x3, double y3, double z3, double u3, double v3,
-			double x4, double y4, double z4, double u4, double v4) {
-		tessellator.addVertexWithUV(x1, y1, z1, icon.getInterpolatedU(u1), icon.getInterpolatedV(v1));
-		tessellator.addVertexWithUV(x2, y2, z2, icon.getInterpolatedU(u2), icon.getInterpolatedV(v2));
-		tessellator.addVertexWithUV(x3, y3, z3, icon.getInterpolatedU(u3), icon.getInterpolatedV(v3));
-		tessellator.addVertexWithUV(x4, y4, z4, icon.getInterpolatedU(u4), icon.getInterpolatedV(v4));
-		tessellator.addVertexWithUV(x1, y1, z1, icon.getInterpolatedU(u1), icon.getInterpolatedV(v1));
-		tessellator.addVertexWithUV(x4, y4, z4, icon.getInterpolatedU(u4), icon.getInterpolatedV(v4));
-		tessellator.addVertexWithUV(x3, y3, z3, icon.getInterpolatedU(u3), icon.getInterpolatedV(v3));
-		tessellator.addVertexWithUV(x2, y2, z2, icon.getInterpolatedU(u2), icon.getInterpolatedV(v2));
 	}
 }

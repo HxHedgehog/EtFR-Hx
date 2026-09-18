@@ -2,6 +2,7 @@ package ganymedes01.etfuturum.client.renderer.block;
 
 import com.gtnewhorizons.angelica.api.ThreadSafeISBRH;
 import ganymedes01.etfuturum.blocks.BlockSeaPickle;
+import ganymedes01.etfuturum.waterlog.client.BlockWaterRenderer;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -68,7 +69,7 @@ public class BlockSeaPickleRenderer extends BlockModelBase {
 			if (!wet) {
 				return false;
 			}
-			BlockOceanPlantRenderer.renderStillWaterVolume(world, x, y, z);
+			BlockWaterRenderer.renderStillWaterVolume(world, x, y, z);
 		}
 
 		int meta = world.getBlockMetadata(x, y, z);
