@@ -32,7 +32,19 @@ public class BlockWaterRenderer {
 	 *         a submerged slab whose every face meets water or an opaque block)
 	 */
 	public static boolean renderStillWaterVolume(IBlockAccess world, int x, int y, int z) {
-		return renderWaterVolume(world, x, y, z, 0.0D, false);
+		return renderStillWaterVolume(world, x, y, z, null);
+	}
+
+	/**
+	 * @param tessellatorIn the tessellator to paint into; null resolves the
+	 *                      static instance. Celeritas hands each meshing worker
+	 *                      its own LocalTessellator, so callers on the Angelica
+	 *                      path must pass theirs explicitly - only the vanilla
+	 *                      pipeline (and the ISBRH dispatch, which Angelica
+	 *                      wraps) may rely on the static instance.
+	 */
+	public static boolean renderStillWaterVolume(IBlockAccess world, int x, int y, int z, Tessellator tessellatorIn) {
+		return renderWaterVolume(world, x, y, z, 0.0D, false, tessellatorIn);
 	}
 
 	/**
@@ -60,7 +72,11 @@ public class BlockWaterRenderer {
 	 * @return whether any quad was emitted
 	 */
 	public static boolean renderWaterVolume(IBlockAccess world, int x, int y, int z, double bottomY, boolean surfacePinned) {
-		Tessellator tessellator = Tessellator.instance;
+		return renderWaterVolume(world, x, y, z, bottomY, surfacePinned, null);
+	}
+
+	public static boolean renderWaterVolume(IBlockAccess world, int x, int y, int z, double bottomY, boolean surfacePinned, Tessellator tessellatorIn) {
+		Tessellator tessellator = tessellatorIn != null ? tessellatorIn : Tessellator.instance;
 		IIcon still = Blocks.water.getIcon(0, 0);
 		IIcon flow = Blocks.water.getIcon(2, 0);
 		boolean emitted = false;

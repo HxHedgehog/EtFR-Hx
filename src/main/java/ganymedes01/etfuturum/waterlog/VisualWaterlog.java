@@ -28,6 +28,7 @@ public class VisualWaterlog {
 
 	static {
 		register(StairWaterFamily.INSTANCE);
+		register(ThinBlockWaterFamily.INSTANCE);
 	}
 
 	public static void register(WaterlogFamily family) {

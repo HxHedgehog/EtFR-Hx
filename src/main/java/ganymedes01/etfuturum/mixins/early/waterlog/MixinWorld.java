@@ -14,14 +14,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * Invalidation for the stateless visual waterlogging: there is no stored state,
  * so the look must be re-derived whenever a nearby cell changes. Vanilla only
- * re-renders the section of the changed block itself, which misses family
- * members in neighbouring sections; this marks their sections dirty on every
- * client-side setBlock - unconditionally when water appeared or disappeared
- * (the look toggles exactly then), and otherwise only when the neighbour
- * currently qualifies (so face culling follows newly placed solids).
- * Server-side changes propagate as client block updates, so the client-only
- * gate loses nothing; the isRemote check short-circuits before any registry
- * class loads on a dedicated server.
+ * re-renders the section of the changed block itself, which misses cells in
+ * neighbouring sections; this marks them dirty on every client-side setBlock -
+ * family members unconditionally when water appeared or disappeared (the look
+ * toggles exactly then) or when they currently qualify (so face culling follows
+ * newly placed solids), and real water cells when a family member appeared or
+ * vanished beside them (their faces are suppressed by the shell mixin, which
+ * vanilla knows nothing about). Server-side changes propagate as client block
+ * updates, so the client-only gate loses nothing; the isRemote check
+ * short-circuits before any registry class loads on a dedicated server.
  */
 @Mixin(World.class)
 public abstract class MixinWorld {
@@ -51,6 +52,11 @@ public abstract class MixinWorld {
 			return;
 		}
 		boolean waterInvolved = VisualWaterlog.isWaterBlock(this.etfuturum$replacedBlock) || VisualWaterlog.isWaterBlock(newBlock);
+		// A member appearing or vanishing re-evaluates the adjacent real water's
+		// suppressed faces (the shell mixin); vanilla only re-renders the changed
+		// cell's own section, which misses water sitting in a neighbouring one
+		boolean memberChanged = VisualWaterlog.familyOf(this.etfuturum$replacedBlock) != null
+				|| VisualWaterlog.familyOf(newBlock) != null;
 		IBlockAccess access = (IBlockAccess) (Object) this;
 		for (int dir = 0; dir < 6; dir++) {
 			int nx = x + VisualWaterlog.offsetX(dir);
@@ -59,6 +65,8 @@ public abstract class MixinWorld {
 			Block neighbour = this.getBlock(nx, ny, nz);
 			if (VisualWaterlog.familyOf(neighbour) != null
 					&& (waterInvolved || VisualWaterlog.isWaterlogged(access, nx, ny, nz))) {
+				this.markBlockForUpdate(nx, ny, nz);
+			} else if (memberChanged && VisualWaterlog.isWaterBlock(neighbour)) {
 				this.markBlockForUpdate(nx, ny, nz);
 			}
 		}
