@@ -33,7 +33,9 @@ public class StairWaterlog {
 	/**
 	 * Stateless waterlog test evaluated at render time, purely local: a stair
 	 * renders its complement water when either water reaches the cell from
-	 * above (any form, incl. falling water and ocean plants), or its opening
+	 * above (any form, incl. falling water and ocean plants - a lower stair
+	 * only: an upper stair's top is a full solid plane and water sitting on it
+	 * cannot reach the complement below), or its opening
 	 * faces a still water cell while the three remaining exposed sides are
 	 * sealed by still water, solid full cubes or further stairs. For an
 	 * inside corner (two full backs, two half openings) up to three cells
@@ -79,9 +81,32 @@ public class StairWaterlog {
 			return false;
 		}
 		// A stream pouring in from above (any water, including falling) wets the
-		// stair on its own
-		if (VisualWaterlog.isWaterBlock(world.getBlock(x, y + 1, z))) {
+		// stair on its own - a LOWER stair only: an upper stair's top is a full
+		// solid plane, water sitting on it cannot reach the complement below.
+		// Upper stairs feed from their sides or, inside a platform, from below.
+		if ((world.getBlockMetadata(x, y, z) & 4) == 0
+				&& VisualWaterlog.isWaterBlock(world.getBlock(x, y + 1, z))) {
 			return true;
+		}
+		// Same platform rule as the slab family: a stair buried inside a large
+		// platform (all four horizontal sides are further waterlogged members)
+		// with a full block on top reads as still flooded when water sits
+		// directly below - the platform was flooded before the block went on,
+		// and 26.2's waterlogged state never drains sideways. Upper half only:
+		// a lower stair's open half sits above its own solid half, water below
+		// cannot reach it anyway.
+		Block above = world.getBlock(x, y + 1, z);
+		if ((world.getBlockMetadata(x, y, z) & 4) != 0
+				&& above.isOpaqueCube()
+				&& VisualWaterlog.isWaterBlock(world.getBlock(x, y - 1, z))) {
+			boolean surrounded = true;
+			for (int dir = 2; dir <= 5 && surrounded; dir++) {
+				surrounded = VisualWaterlog.familyOf(world.getBlock(
+						x + VisualWaterlog.offsetX(dir), y, z + VisualWaterlog.offsetZ(dir))) != null;
+			}
+			if (surrounded) {
+				return true;
+			}
 		}
 
 		// Inside corner (two full backs, two half openings): up to three

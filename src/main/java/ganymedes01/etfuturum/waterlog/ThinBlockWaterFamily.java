@@ -84,14 +84,28 @@ public class ThinBlockWaterFamily implements WaterlogFamily {
 		if (VisualWaterlog.isWaterBlock(world.getBlock(x, y + 1, z))) {
 			return true;
 		}
+		// The cell qualifies when at least two of the four horizontal sides
+		// touch water. A single side is not enough: a thin block sitting in a
+		// one-deep shore line would otherwise read as fully submerged, which
+		// looks wrong for a block that only touches water on one face.
+		// Same-family members never count as a water side - two adjacent
+		// fences in a row must still need water in front of/behind them (or
+		// above), not just next to each other. "Same family" is resolved
+		// through the registry, so a fence next to a slab still does not
+		// count either side as water.
+		int waterSides = 0;
 		for (int dir = 2; dir <= 5; dir++) {
 			int nx = x + VisualWaterlog.offsetX(dir);
 			int nz = z + VisualWaterlog.offsetZ(dir);
-			if (VisualWaterlog.isWaterBlock(world.getBlock(nx, y, nz))) {
-				return true;
+			Block neighbour = world.getBlock(nx, y, nz);
+			if (VisualWaterlog.isWaterBlock(neighbour)) {
+				waterSides++;
+			} else if (VisualWaterlog.familyOf(neighbour) != null) {
+				// Same-family member on this side: not a water side.
+				continue;
 			}
 		}
-		return false;
+		return waterSides >= 2;
 	}
 
 	@Override
