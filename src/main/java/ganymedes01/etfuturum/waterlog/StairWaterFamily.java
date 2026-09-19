@@ -37,4 +37,9 @@ public class StairWaterFamily implements WaterlogFamily {
 	public boolean paint(IBlockAccess world, int x, int y, int z, Tessellator tessellator) {
 		return StairWaterRenderer.renderWaterVolume(world, x, y, z, tessellator);
 	}
+
+	@Override
+	public boolean isEyeSubmerged(IBlockAccess world, int x, int y, int z, double eyeX, double eyeY, double eyeZ) {
+		return StairWaterlog.isEyeSubmerged(world, x, y, z, eyeX, eyeY, eyeZ);
+	}
 }

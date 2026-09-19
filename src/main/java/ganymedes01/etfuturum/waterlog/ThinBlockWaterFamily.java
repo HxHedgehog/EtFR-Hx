@@ -101,4 +101,11 @@ public class ThinBlockWaterFamily implements WaterlogFamily {
 		}
 		return BlockWaterRenderer.renderStillWaterVolume(world, x, y, z, tessellator);
 	}
+
+	@Override
+	public boolean isEyeSubmerged(IBlockAccess world, int x, int y, int z, double eyeX, double eyeY, double eyeZ) {
+		// Full-cell water: the entire column is painted, so any eye point in
+		// the cell is submerged
+		return shouldRenderWater(world, x, y, z);
+	}
 }

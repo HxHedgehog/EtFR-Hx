@@ -42,4 +42,16 @@ public interface WaterlogFamily {
 	 * empty tessellator and crash.
 	 */
 	boolean paint(IBlockAccess world, int x, int y, int z, Tessellator tessellator);
+
+	/**
+	 * Whether the eye point (eyeX, eyeY, eyeZ), which the caller has floored
+	 * into cell (x, y, z), sits inside this cell's painted water volume. The
+	 * point is inside the cell, so a full-cell family always returns its
+	 * qualification; a half-cell family (stairs and, later, slabs) checks the
+	 * exact sub-volume. Drives the underwater overlay and fog for visually
+	 * waterlogged cells (see {@code VisualWaterlog.isEyeInVisualWater}); it is
+	 * deliberately visual-only, so no breathing, movement or air-bar coupling
+	 * hangs off it.
+	 */
+	boolean isEyeSubmerged(IBlockAccess world, int x, int y, int z, double eyeX, double eyeY, double eyeZ);
 }

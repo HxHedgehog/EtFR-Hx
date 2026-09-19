@@ -128,6 +128,26 @@ public class StairWaterlog {
 	}
 
 	/**
+	 * Whether the eye point inside a qualifying stair's cell sits in the
+	 * painted complement water: qualification plus the point falling inside
+	 * the water box resolved from orientation and half. The box is the
+	 * straight-stair approximation also used by the qualification test, so
+	 * corner stairs are judged by their raw quarter shape rather than the
+	 * exact L-volume - good enough for a screen overlay, and it can never
+	 * report water where a dry stair stands.
+	 */
+	public static boolean isEyeSubmerged(IBlockAccess world, int x, int y, int z, double eyeX, double eyeY, double eyeZ) {
+		if (!shouldRenderWater(world, x, y, z)) {
+			return false;
+		}
+		double[] box = getWaterBox(world.getBlockMetadata(x, y, z));
+		double lx = eyeX - x;
+		double ly = eyeY - y;
+		double lz = eyeZ - z;
+		return lx >= box[0] && lx < box[3] && ly >= box[1] && ly < box[4] && lz >= box[2] && lz < box[5];
+	}
+
+	/**
 	 * Straight-stair complement approximation used by the qualification test:
 	 * the open half-cell on the facing side, flipped to the lower half for
 	 * upper-half stairs. BlockStairs orient 0-3 put the step half at

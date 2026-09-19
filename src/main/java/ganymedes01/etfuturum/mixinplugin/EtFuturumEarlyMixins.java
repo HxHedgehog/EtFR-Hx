@@ -416,6 +416,14 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			if (side == MixinEnvironment.Side.CLIENT) {
 				// Water shell suppression applies to both pipelines.
 				mixins.add("waterlog.client.MixinRenderBlocksShell");
+				// Underwater overlay + fog for visually waterlogged cells: route
+				// them through the vanilla overlay path (dimmed to 1.26.2's
+				// alpha-0.1) and tint the fog like real water.
+				mixins.add("waterlog.client.MixinItemRenderer");
+				mixins.add("waterlog.client.MixinEntityRenderer");
+				// Underwater sunrise/sunset: keep the sky band's fog on when the eye
+				// is in water (real or visual) so it blends onto the foreground fog.
+				mixins.add("waterlog.client.MixinRenderGlobal");
 				if (angelicaLoaded) {
 					// Celeritas owns chunk building when Angelica is loaded: reroute the
 					// qualifying stairs' single render call into the translucent pass and

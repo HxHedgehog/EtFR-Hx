@@ -5,6 +5,8 @@ import ganymedes01.etfuturum.blocks.BlockAquaticPlant;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 
 import java.util.ArrayList;
@@ -119,6 +121,44 @@ public class VisualWaterlog {
 			}
 		}
 		return bestMeta;
+	}
+
+	/**
+	 * Whether the eye point is inside a visually waterlogged cell's painted
+	 * water volume: floor the point to its cell, resolve the family, and let
+	 * the family decide against its exact sub-volume. Used by the underwater
+	 * overlay so the screen dims only when the camera actually sits inside the
+	 * painted water, mirroring how real water's {@code isInsideOfMaterial}
+	 * works without any gameplay coupling.
+	 */
+	public static boolean isEyeSubmerged(IBlockAccess world, double eyeX, double eyeY, double eyeZ) {
+		int x = MathHelper.floor_double(eyeX);
+		int y = MathHelper.floor_double(eyeY);
+		int z = MathHelper.floor_double(eyeZ);
+		WaterlogFamily family = familyOf(world.getBlock(x, y, z));
+		return family != null && family.isEyeSubmerged(world, x, y, z, eyeX, eyeY, eyeZ);
+	}
+
+	/**
+	 * Sampled over the entity's eye, matching how real water uses the body
+	 * width: eight points spread across the eye height and the horizontal
+	 * body extent catch cells the camera straddles at a boundary, where a
+	 * single floored point could land just outside the painted volume.
+	 */
+	public static boolean isEyeInVisualWater(EntityLivingBase entity) {
+		if (entity == null || entity.worldObj == null) {
+			return false;
+		}
+		double eyeY = entity.posY + entity.getEyeHeight();
+		for (int i = 0; i < 8; i++) {
+			float offX = ((float) ((i & 1) * 2 - 1)) * entity.width * 0.4F;
+			float offY = ((float) (((i >> 1) & 1) * 2 - 1)) * 0.05F;
+			float offZ = ((float) (((i >> 2) & 1) * 2 - 1)) * entity.width * 0.4F;
+			if (isEyeSubmerged(entity.worldObj, entity.posX + offX, eyeY + offY, entity.posZ + offZ)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
