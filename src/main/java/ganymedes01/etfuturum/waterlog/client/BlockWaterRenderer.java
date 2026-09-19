@@ -12,7 +12,7 @@ import net.minecraft.world.IBlockAccess;
 
 /**
  * Shared still-water painting for the pseudo-waterlogged blocks: ocean plants,
- * wet sea pickles, the stair complement and (future) waterlogged slabs. Owns
+ * wet sea pickles, the stair complement and waterlogged slabs. Owns
  * the liquid surface height sampling, the face cull rule and the quad
  * emission, so every painted water volume agrees on shared corners and
  * neighbours - the same corner must render at the same height no matter which
@@ -193,7 +193,17 @@ public class BlockWaterRenderer {
 	 * @return whether any quad was emitted
 	 */
 	public static boolean renderUnderHalfWaterVolume(IBlockAccess world, int x, int y, int z) {
-		Tessellator tessellator = Tessellator.instance;
+		return renderUnderHalfWaterVolume(world, x, y, z, null);
+	}
+
+	/**
+	 * @param tessellatorIn the tessellator to paint into; null resolves the
+	 *                      static instance. Celeritas hands each meshing worker
+	 *                      its own LocalTessellator, so callers on the Angelica
+	 *                      path must pass theirs explicitly.
+	 */
+	public static boolean renderUnderHalfWaterVolume(IBlockAccess world, int x, int y, int z, Tessellator tessellatorIn) {
+		Tessellator tessellator = tessellatorIn != null ? tessellatorIn : Tessellator.instance;
 		IIcon still = Blocks.water.getIcon(0, 0);
 		IIcon flow = Blocks.water.getIcon(2, 0);
 		boolean emitted = false;

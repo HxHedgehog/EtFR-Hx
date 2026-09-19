@@ -32,6 +32,7 @@ public class VisualWaterlog {
 	static {
 		register(StairWaterFamily.INSTANCE);
 		register(ThinBlockWaterFamily.INSTANCE);
+		register(SlabWaterFamily.INSTANCE);
 	}
 
 	public static void register(WaterlogFamily family) {
