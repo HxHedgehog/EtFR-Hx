@@ -264,15 +264,21 @@ public class BlockWaterRenderer {
 	}
 
 	/**
-	 * Port of {@code RenderBlocks#getLiquidHeight} (vanilla corner averaging).
-	 * Samples force meta 0 when they are one of our ocean plants or wet sea
-	 * pickles. Any visually waterlogged member cell counts as a full still
-	 * water cell in the average - the corner heights then match the
-	 * surrounding real water exactly (the air above the shore pulls the
-	 * surface down the same way on both sides of the seam), which is what
-	 * keeps the painted plane flush with the pool. Non-qualifying members
-	 * take the solid or non-solid path instead - the judgment is purely
-	 * local, so this stays an O(1) check.
+	 * Port of {@code RenderBlocks#getLiquidHeight} (vanilla corner averaging),
+	 * and through the shell mixin's redirect the one real water renders with
+	 * too - both sides of a seam must run the same sampler or the surfaces
+	 * drift apart at the shared corners. Samples force meta 0 when they are
+	 * one of our ocean plants or wet sea pickles. A qualifying member samples
+	 * as a water cell at its feed level, with the vanilla weights: a source
+	 * feed anchors like a source (x10), a flowing feed like a shallow cell.
+	 * That anchors the member's own painted surface - sampling members per
+	 * their material instead (solid skipped, MaterialLogic as air) turned each
+	 * member into a free interpolation across heterogeneous neighbours, which
+	 * read as steep diagonal ramps wherever flow has to route around the
+	 * block - and it is exactly what the adjacent real water now samples too,
+	 * so every shared corner is computed identically on both sides. One
+	 * further extension: a qualifying member with water directly above a
+	 * sample continues the body and pins the corner to full height.
 	 */
 	public static double getLiquidHeight(IBlockAccess world, int x, int y, int z) {
 		int l = 0;
@@ -282,7 +288,8 @@ public class BlockWaterRenderer {
 			int j1 = x - (i1 & 1);
 			int k1 = z - (i1 >> 1 & 1);
 
-			if (world.getBlock(j1, y + 1, k1).getMaterial() == Material.water) {
+			if (world.getBlock(j1, y + 1, k1).getMaterial() == Material.water
+					|| VisualWaterlog.isWaterlogged(world, j1, y + 1, k1)) {
 				return 1.0D; // the water body continues above: full height
 			}
 
@@ -302,11 +309,14 @@ public class BlockWaterRenderer {
 				f += BlockLiquid.getLiquidHeightPercent(meta);
 				++l;
 			} else if (VisualWaterlog.isWaterlogged(world, j1, y, k1)) {
-				// visually waterlogged member cell: weight the sample exactly
-				// like a full still water cell
-				f += BlockLiquid.getLiquidHeightPercent(0) * 10.0F;
-				l += 10;
-				f += BlockLiquid.getLiquidHeightPercent(0);
+				// qualifying member cell (stair openings hold still water, so
+				// stairs always sample as sources and keep their shipped look)
+				int sampleMeta = VisualWaterlog.sourceLiquidMeta(world, j1, y, k1);
+				if (sampleMeta >= 8 || sampleMeta == 0) {
+					f += BlockLiquid.getLiquidHeightPercent(sampleMeta) * 10.0F;
+					l += 10;
+				}
+				f += BlockLiquid.getLiquidHeightPercent(sampleMeta);
 				++l;
 			} else if (!material.isSolid()) {
 				f += 1;

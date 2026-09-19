@@ -20,7 +20,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * toggles exactly then) or when they currently qualify (so face culling follows
  * newly placed solids), and real water cells when a family member appeared or
  * vanished beside them (their faces are suppressed by the shell mixin, which
- * vanilla knows nothing about). Server-side changes propagate as client block
+ * vanilla knows nothing about). Real water adjacent to a member is also marked
+ * when water elsewhere around that member changes: the shell mixin redirects
+ * the liquid corner averager, so that water's surface geometry depends on the
+ * member's qualification and feed level, and vanilla would leave it stale
+ * across section boundaries. Server-side changes propagate as client block
  * updates, so the client-only gate loses nothing; the isRemote check
  * short-circuits before any registry class loads on a dedicated server.
  */
@@ -66,6 +70,19 @@ public abstract class MixinWorld {
 			if (VisualWaterlog.familyOf(neighbour) != null
 					&& (waterInvolved || VisualWaterlog.isWaterlogged(access, nx, ny, nz))) {
 				this.markBlockForUpdate(nx, ny, nz);
+				if (waterInvolved) {
+					// this water change may flip the member's qualification or
+					// move its feed level, and real water beside the member
+					// samples the member through the redirected corner averager
+					for (int dir2 = 0; dir2 < 6; dir2++) {
+						int wx = nx + VisualWaterlog.offsetX(dir2);
+						int wy = ny + VisualWaterlog.offsetY(dir2);
+						int wz = nz + VisualWaterlog.offsetZ(dir2);
+						if (VisualWaterlog.isWaterBlock(this.getBlock(wx, wy, wz))) {
+							this.markBlockForUpdate(wx, wy, wz);
+						}
+					}
+				}
 			} else if (memberChanged && VisualWaterlog.isWaterBlock(neighbour)) {
 				this.markBlockForUpdate(nx, ny, nz);
 			}
