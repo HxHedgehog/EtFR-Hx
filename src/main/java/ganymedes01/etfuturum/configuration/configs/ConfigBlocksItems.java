@@ -142,6 +142,9 @@ public class ConfigBlocksItems extends ConfigBase {
 	public static boolean enableCherryBlocks;
 	public static boolean enableBambooBlocks;
 
+	// 1.14
+	public static boolean enableScaffolding;
+
 	public static boolean enableShulkerBoxes;
 	public static boolean enableDyedShulkerBoxes = true;
 	public static boolean enablePotionCauldron;
@@ -265,6 +268,7 @@ public class ConfigBlocksItems extends ConfigBase {
 		enableVanillaSigns = getBoolean("enableVanillaSigns", catBlockFunc, true, "Enables variant signs for materials available natively in Minecraft 1.7");
 		enableNewSigns = getBoolean("enableNewSigns", catBlockFunc, true, "Enables wood variant signs for materials available in Minecraft after 1.7");
 		enableLavaCauldrons = getBoolean("enableLavaCauldrons", catBlockFunc, true, "Allow lava buckets to fill cauldrons");
+		enableScaffolding = getBoolean("enableScaffolding", catBlockFunc, true, "Enables scaffolding, a climbable block whose stability distance updates propagate one block per game tick (1gt delay lines when detected with observers).");
 		enableShulkerBoxes = getBoolean("enableShulkerBoxes", catBlockFunc, true, "If Shulkers are disabled, a custom recipe will be required to obtain Shulker shells.");
 		enablePotionCauldron = getBoolean("enablePotionCauldron", catBlockFunc, true, "A port of potion cauldrons from Bedrock Edition. Used to make tipped arrows and store potions.");
 		//Note the above option has an extra check in preInit to ensure Iron Chests is loaded. We can't do this here because Loader doesn't even exist yet since we initialize these configs while Mixins and ASM are being applied.

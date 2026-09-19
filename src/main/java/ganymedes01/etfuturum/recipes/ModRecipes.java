@@ -629,6 +629,11 @@ public class ModRecipes {
 		addShapedRecipe(ModBlocks.BAMBOO_BLOCK.newItemStack(), "bbb", "bbb", "bbb", 'b', ModItems.BAMBOO.newItemStack());
 		addShapedRecipe(new ItemStack(Items.stick), "b", "b", 'b', ModItems.BAMBOO.newItemStack());
 
+		if (ConfigBlocksItems.enableScaffolding) {
+			// 26.2: "bxb"/"b b"/"b b", b=bamboo x=string -> 6 scaffolding
+			addShapedRecipe(ModBlocks.SCAFFOLDING.newItemStack(6), "bxb", "b b", "b b", 'b', ModItems.BAMBOO.newItemStack(), 'x', Items.string);
+		}
+
 		// Bamboo Mosaic
 		addShapedRecipe(ModBlocks.BAMBOO_MOSAIC.newItemStack(1, 0), "x", "x", 'x', ModBlocks.WOOD_SLAB.newItemStack(1, 4));
 		addShapedRecipe(ModBlocks.BAMBOO_MOSAIC_SLAB.newItemStack(6, 5), "xxx", 'x', ModBlocks.BAMBOO_MOSAIC.newItemStack(1, 0));

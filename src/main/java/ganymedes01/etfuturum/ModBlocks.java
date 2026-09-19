@@ -138,6 +138,7 @@ import ganymedes01.etfuturum.blocks.BlockSmoothSandstoneSlab;
 import ganymedes01.etfuturum.blocks.BlockSoulSoil;
 import ganymedes01.etfuturum.blocks.BlockSoulTorch;
 import ganymedes01.etfuturum.blocks.BlockSponge;
+import ganymedes01.etfuturum.blocks.BlockScaffolding;
 import ganymedes01.etfuturum.blocks.BlockStoneSlab1;
 import ganymedes01.etfuturum.blocks.BlockStoneWall;
 import ganymedes01.etfuturum.blocks.BlockStonecutter;
@@ -174,6 +175,7 @@ import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockLantern;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockGlowLichen;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockNewDoor;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockRedSandstone;
+import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockScaffolding;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockSeaPickle;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockShulkerBox;
 import ganymedes01.etfuturum.blocks.itemblocks.ItemBlockSign;
@@ -937,7 +939,9 @@ public enum ModBlocks {
 	CAVE_VINE_PLANT(ConfigBlocksItems.enableGlowBerries, new BlockCaveVinesPlant()),
 	// Has a plain ItemBlock so the Waila stack provider (CaveVinesDataProvider) can build a real
 	// ItemStack ("Cave Vines"); never added to creative tabs.
-	CAVE_VINE(ConfigBlocksItems.enableGlowBerries, new BlockCaveVines(), ItemBlock.class)
+	CAVE_VINE(ConfigBlocksItems.enableGlowBerries, new BlockCaveVines(), ItemBlock.class),
+
+	SCAFFOLDING(ConfigBlocksItems.enableScaffolding, new BlockScaffolding(), ItemBlockScaffolding.class)
 	;
 
 	public static final ModBlocks[] DOORS = new ModBlocks[]{SPRUCE_DOOR, BIRCH_DOOR, JUNGLE_DOOR, ACACIA_DOOR, DARK_OAK_DOOR, CRIMSON_DOOR, WARPED_DOOR, MANGROVE_DOOR, CHERRY_DOOR, BAMBOO_DOOR};

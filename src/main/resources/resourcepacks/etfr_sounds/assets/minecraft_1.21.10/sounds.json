@@ -3932,6 +3932,67 @@
     "category": "block",
     "subtitle": "subtitles.block.generic.footsteps"
   },
+  "block.scaffolding.break": {
+    "sounds": [
+      {
+        "name": "block/scaffold/place1",
+        "pitch": 1.4,
+        "volume": 0.8
+      },
+      {
+        "name": "block/scaffold/place2",
+        "pitch": 1.4,
+        "volume": 0.8
+      },
+      {
+        "name": "block/scaffold/place3",
+        "pitch": 1.4,
+        "volume": 0.8
+      },
+      {
+        "name": "block/scaffold/place4",
+        "pitch": 1.4,
+        "volume": 0.8
+      }
+    ],
+    "category": "block",
+    "subtitle": "subtitles.block.generic.break"
+  },
+  "block.scaffolding.place": {
+    "sounds": [
+      {
+        "name": "block/scaffold/place1",
+        "volume": 0.9
+      },
+      {
+        "name": "block/scaffold/place2",
+        "volume": 0.9
+      },
+      {
+        "name": "block/scaffold/place3",
+        "volume": 0.9
+      },
+      {
+        "name": "block/scaffold/place4",
+        "volume": 0.9
+      }
+    ],
+    "category": "block",
+    "subtitle": "subtitles.block.generic.place"
+  },
+  "block.scaffolding.step": {
+    "sounds": [
+      "step/scaffold1",
+      "step/scaffold2",
+      "step/scaffold3",
+      "step/scaffold4",
+      "step/scaffold5",
+      "step/scaffold6",
+      "step/scaffold7"
+    ],
+    "category": "block",
+    "subtitle": "subtitles.block.generic.footsteps"
+  },
   "block.sculk.break": {
     "sounds": [
       "block/sculk/break1",

@@ -302,6 +302,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
             mixins.add("isLadderFix.MixinEntityLivingBase");
         }
 
+		if (ConfigBlocksItems.enableScaffolding) {
+			mixins.add("scaffolding.MixinEntityLivingBase");
+		}
+
 		if (ConfigMixins.adjustedLiquidPhysics) {
 			mixins.add("liquidphysics.MixinEntity");
 			mixins.add("liquidphysics.MixinWorld");
