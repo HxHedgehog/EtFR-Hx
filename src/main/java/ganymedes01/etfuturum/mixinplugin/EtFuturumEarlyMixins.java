@@ -425,35 +425,6 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.client.MixinItemRenderer");
 		}
 
-		if (ConfigMixins.stairWaterlogging) {
-			// Stateless waterlogged stairs: the look re-derives on section rebuilds,
-			// which are triggered by client-side water changes next to stairs.
-			mixins.add("waterlog.MixinWorld");
-			if (side == MixinEnvironment.Side.CLIENT) {
-				// Water shell suppression applies to both pipelines.
-				mixins.add("waterlog.client.MixinRenderBlocksShell");
-				if (angelicaLoaded) {
-					// Celeritas owns chunk building when Angelica is loaded: reroute the
-					// qualifying stairs' single render call into the translucent pass and
-					// paint the complement water before the buffer capture (Angelica's own
-					// HEAD gate skips func_147805_b for vanilla render types, so the
-					// RenderBlocks TAIL never fires for stairs there).
-					mixins.add("waterlog.client.MixinAngelicaChunkBuilderMeshingTask");
-				} else {
-									// Vanilla chunk builder: the stair keeps
-									// rendering normally in pass 0; its water
-									// complement is a translucent volume, so the
-									// pass gates make qualifying stairs report
-									// pass 1, where the stair's pass-1 slot
-									// paints the complement water instead of a
-									// geometry copy (MixinWorldRenderer +
-									// MixinRenderBlocks).
-									mixins.add("waterlog.client.MixinWorldRenderer");
-									mixins.add("waterlog.client.MixinRenderBlocks");
-								}
-			}
-		}
-
 		if (ConfigFunctions.enableSilkTouchingMushrooms) {
 			mixins.add("mushroom.MixinBlockHugeMushroom");
 		}
