@@ -401,13 +401,19 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("oceanplants.client.MixinRenderBlocks");
 				mixins.add("oceanplants.client.MixinItemRenderer");
-				// Angelica's shader hand pipeline routes pass-1 blocks to the translucent
-				// hand pass; flat-icon items must be exempted. Only registered when
-				// Angelica's loading plugin is present (its HandRenderer is targeted).
-				if (angelicaLoaded) {
-					mixins.add("oceanplants.client.MixinHandRenderer");
-				}
 			}
+		}
+
+		// Angelica's shader hand pipeline routes pass-1 blocks to the translucent
+		// hand pass (enableBlend + depthMask(false)), which shatters the flat 2D
+		// card geometry of renderItemIn2D into a pixel-slice mesh. Exempt flat-icon
+		// items from the translucency check: items-atlas sprites (ocean plants) and
+		// block items drawn as 2D cards rather than 3D models (the backported
+		// stained glass panes, renderType 41). Independent of the ocean plants
+		// feature; only registered when Angelica's loading plugin is present (its
+		// HandRenderer is targeted).
+		if (side == MixinEnvironment.Side.CLIENT && angelicaLoaded) {
+			mixins.add("oceanplants.client.MixinHandRenderer");
 		}
 
 		// Underwater visual fixes for real water, independent of any waterlogged
