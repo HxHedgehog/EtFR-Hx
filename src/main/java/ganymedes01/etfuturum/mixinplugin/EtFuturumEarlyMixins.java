@@ -410,6 +410,15 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			}
 		}
 
+		// Underwater visual fixes for real water, independent of any waterlogged
+		// block feature: fog the sunrise/sunset sky band while the eye is
+		// underwater (closes the water/sky seam, keeps sun/moon/stars crisp) and
+		// dim the underwater overlay to 26.2's alpha 0.1.
+		if (side == MixinEnvironment.Side.CLIENT) {
+			mixins.add("waterlog.client.MixinRenderGlobal");
+			mixins.add("waterlog.client.MixinItemRenderer");
+		}
+
 		if (ConfigMixins.stairWaterlogging) {
 			// Stateless waterlogged stairs: the look re-derives on section rebuilds,
 			// which are triggered by client-side water changes next to stairs.
