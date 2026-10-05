@@ -425,6 +425,23 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.client.MixinItemRenderer");
 		}
 
+		// Real waterlogging (26.2-style, metadata bit 16): needs NEIDs' 16-bit
+		// metadata patches for storage/sync (probed via its mixin config resource,
+		// same trick as the Angelica probe above) on both sides, and the
+		// disableWaterlogging config off. The vanilla-pipeline paint hooks only
+		// register when Angelica is absent; the Angelica (celeritas) pipeline
+		// comes in a later phase.
+		if (!ConfigMixins.disableWaterlogging && Launch.classLoader.getResource("mixins.neid.early.json") != null) {
+			mixins.add("waterlog.MixinItemBlock");
+			if (side == MixinEnvironment.Side.CLIENT) {
+				mixins.add("waterlog.client.MixinBlockLiquid");
+				if (!angelicaLoaded) {
+					mixins.add("waterlog.client.MixinWorldRenderer");
+					mixins.add("waterlog.client.MixinRenderBlocks");
+				}
+			}
+		}
+
 		if (ConfigFunctions.enableSilkTouchingMushrooms) {
 			mixins.add("mushroom.MixinBlockHugeMushroom");
 		}

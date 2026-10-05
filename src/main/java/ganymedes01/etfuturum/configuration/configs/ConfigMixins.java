@@ -60,6 +60,7 @@ public class ConfigMixins extends ConfigBase {
 	public static boolean betterDyeTextures;
 	public static boolean betterVanillaTextures;
 	public static boolean secretTotem;
+	public static boolean disableWaterlogging;
 	/** TEMPORARY debug flag for the sand dump machine (SandDupingHelper). Remove along with the TRACKED/trackTick
 	 * debug tracing once the machine layouts are finalised over the next few releases. */
 	public static boolean sandDupingDebug;
@@ -150,5 +151,6 @@ public class ConfigMixins extends ConfigBase {
 		hideSingleLevelEnchants = getBoolean("hideSingleLevelEnchants", catFixes, true, "Fixes enchantments with only one possible level displaying a level in their name. E.G. \"Silk Touch I\" becomes \"Silk Touch\".\nModified Classes: net.minecraft.enchantment.Enchantment");
 		enablePlayersSleepingPecentageGamerule = getBoolean("enablePlayersSleepingPecentageGamerule", catBackport, true, "You nappa, you get slappa");
         enableJumpClimbing = getBoolean("enableClimbingPlants", catBackport, true, "Allows players to simply hold jump to climb up climable blocks instead of having to collide with something horizontally.");
+		disableWaterlogging = getBoolean("disableWaterlogging", catBackport, false, "Disables the modern waterlogging system (26.2-style stairs holding water inside their cell). The water state lives in metadata bit 16, which only NotEnoughIDs' 16-bit metadata patches can store and sync, so the feature also requires NEIDs on BOTH the client and the server and stays off automatically when NEIDs is missing.\nModified Classes: net.minecraft.item.ItemBlock\nModified Client Classes: net.minecraft.block.BlockLiquid net.minecraft.client.renderer.RenderBlocks net.minecraft.client.renderer.WorldRenderer");
 	}
 }
