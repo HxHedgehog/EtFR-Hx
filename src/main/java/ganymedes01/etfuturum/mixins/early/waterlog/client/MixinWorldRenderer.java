@@ -20,7 +20,7 @@ import net.minecraft.world.IBlockAccess;
  *
  * <p>门控要做的是"让 pass-1 画水发生"：{@code getRenderBlockPass} 对含水格
  * 报 1，使 {@code k3 > pass} 检查在 pass-1 循环里保住该格；{@code canRenderInPass}
- * 打开该格的 pass-1 槽位并置 {@link WaterlogPaint#paintNextCall}，随后
+ * 打开该格的 pass-1 槽位并置 {@link WaterlogPaint#flagNextCall}，随后
  * renderBlockByRenderType（MixinRenderBlocks）画水替代第二份几何拷贝。
  * 每格门控判定 O(1)（bit16 测试），无需 memo。追踪格由同迭代里先于两次
  * 门控调用的 getBlock 捕获；区块构建在渲染线程，无同步问题。
@@ -65,9 +65,9 @@ public abstract class MixinWorldRenderer {
 
 	@Redirect(method = "updateRenderer", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;canRenderInPass(I)Z", remap = false))
 	private boolean etfuturum$waterloggedBlocksFlagPassOneSlot(Block block, int pass) {
-		WaterlogPaint.paintNextCall = false;
+		WaterlogPaint.clearFlag();
 		if (pass == 1 && etfuturum$isWaterlogged()) {
-			WaterlogPaint.paintNextCall = true;
+			WaterlogPaint.flagNextCall();
 			WaterlogRuntime.debug("GATE " + etfuturum$trackedX + "," + etfuturum$trackedY + "," + etfuturum$trackedZ + " pass-1 slot opened");
 			return true; // 打开槽位：renderBlockByRenderType 将画水替代几何拷贝
 		}

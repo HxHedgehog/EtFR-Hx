@@ -445,10 +445,14 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 				// Underwater fog (density + colour) goes through
 				// ActiveRenderInfo.getBlockAtEntityViewpoint in both pipelines.
 				mixins.add("waterlog.client.MixinActiveRenderInfo");
-				WaterlogRuntime.debug("registered: waterlog.client.MixinBlockLiquid + MixinActiveRenderInfo");
-				if (!angelicaLoaded) {
+				// Paint hook + member-aware liquid heights: shared by the vanilla
+				// pipeline and Angelica's celeritas pipeline alike.
+				mixins.add("waterlog.client.MixinRenderBlocks");
+				if (angelicaLoaded) {
+					mixins.add("waterlog.client.MixinAngelicaChunkBuilderMeshingTask");
+					WaterlogRuntime.debug("registered: celeritas paint mixins (angelicaLoaded=true)");
+				} else {
 					mixins.add("waterlog.client.MixinWorldRenderer");
-					mixins.add("waterlog.client.MixinRenderBlocks");
 					WaterlogRuntime.debug("registered: vanilla-pipeline paint mixins (angelicaLoaded=false)");
 				}
 			}
