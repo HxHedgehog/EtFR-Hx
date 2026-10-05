@@ -68,6 +68,7 @@ public abstract class MixinWorldRenderer {
 		WaterlogPaint.paintNextCall = false;
 		if (pass == 1 && etfuturum$isWaterlogged()) {
 			WaterlogPaint.paintNextCall = true;
+			WaterlogRuntime.debug("GATE " + etfuturum$trackedX + "," + etfuturum$trackedY + "," + etfuturum$trackedZ + " pass-1 slot opened");
 			return true; // 打开槽位：renderBlockByRenderType 将画水替代几何拷贝
 		}
 		return block.canRenderInPass(pass);

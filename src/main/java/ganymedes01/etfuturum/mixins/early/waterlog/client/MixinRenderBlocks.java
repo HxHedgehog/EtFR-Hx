@@ -38,7 +38,9 @@ public abstract class MixinRenderBlocks {
 	private void etfuturum$paintWaterInsteadOfBlockCopy(Block block, int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
 		if (WaterlogPaint.paintNextCall) {
 			WaterlogPaint.paintNextCall = false;
-			cir.setReturnValue(WaterlogPaint.paintIfWaterlogged(this.blockAccess, block, x, y, z));
+			boolean emitted = WaterlogPaint.paintIfWaterlogged(this.blockAccess, block, x, y, z);
+			WaterlogRuntime.debug("PAINT " + x + "," + y + "," + z + " block=" + block + " -> emitted=" + emitted);
+			cir.setReturnValue(emitted);
 		}
 	}
 

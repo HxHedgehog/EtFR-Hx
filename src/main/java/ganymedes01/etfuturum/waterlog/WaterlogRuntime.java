@@ -20,6 +20,26 @@ public final class WaterlogRuntime {
 
 	public static final int WATERLOGGED_BIT = 0x10;
 
+	/**
+	 * 测试期管线日志总闸（放置捕获/写入、pass-1 门控、画水结果探针）。
+	 * 惯例：联调新管线（Angelica/扩族）时临时开，验收后关闭；含水系列
+	 * 全部收尾时连同探针一并清理。
+	 */
+	public static final boolean WATERLOG_DEBUG = false;
+
+	public static void debug(String msg) {
+		if (WATERLOG_DEBUG) {
+			System.out.println("[EtFuturumWaterlog] " + msg);
+		}
+	}
+
+	/**
+	 * 放置链路的"目标格放置前是水源"标记：MixinItemBlock 在 onBlockPlaced
+	 * 调用点捕获（此时格子还是水），MixinBlockStairs 在 onBlockPlacedBy TAIL
+	 * 消费（metadata 重写完成）。线程隔离：客户端预测与服务端执行互不串扰。
+	 */
+	private static final ThreadLocal<Boolean> placementSource = new ThreadLocal<>();
+
 	private static boolean enabled;
 	private static boolean resolved;
 
@@ -50,5 +70,21 @@ public final class WaterlogRuntime {
 	/** 写入含水位。只允许在 {@link #isEnabled()} 为真时调用（无 NEIDs 时写入会被 nibble 静默截断，禁止走到）。 */
 	public static void markWaterlogged(World world, int x, int y, int z) {
 		world.setBlockMetadataWithNotify(x, y, z, world.getBlockMetadata(x, y, z) | WATERLOGGED_BIT, 2);
+	}
+
+	/** 放置捕获：无条件覆盖（自动清除上次 placeBlockAt 失败残留的标记）。 */
+	public static void capturePlacementSource(boolean wasSource) {
+		if (wasSource) {
+			placementSource.set(Boolean.TRUE);
+		} else {
+			placementSource.remove();
+		}
+	}
+
+	/** 放置写入端：取出并清空捕获标记。 */
+	public static boolean consumePlacementSource() {
+		Boolean wasSource = placementSource.get();
+		placementSource.remove();
+		return Boolean.TRUE.equals(wasSource);
 	}
 }

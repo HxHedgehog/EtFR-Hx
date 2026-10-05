@@ -29,9 +29,13 @@ public class StairWaterRenderer {
 
 	/**
 	 * 角高采样：{@code RenderBlocks#getLiquidHeight}（vanilla L4343-4381）的
-	 * 成员感知移植。真水按 meta 计权；海洋植物与含水格强制按 meta 0 源水
-	 * 计权（含水格自身材质是 rock，vanilla 会走实心排除分支）；上方有真水
-	 * 或含水格时角高直接取满格。无特殊成员时结果与 vanilla 完全一致。
+	 * 成员感知移植。真水按 meta 计权；海洋植物与含水格（自身格与邻居格）强制
+	 * 按 meta 0 源水计权——26.2 {@code getHeight}（FluidRenderer L289-301）里
+	 * 含水格内部是 8/9 静水源，走 same-fluid 分支；1.7.10 侧它材质是 rock，
+	 * 若不显式分支会落进实心 skip：全实心样本集（玻璃板围 8 格）时
+	 * {@code l==0 → NaN → 全顶点丢失整格不显示}，部分实心时角高被拉到 0
+	 * （斜对角方块致表面塌陷）、开口相对的楼梯互相计不进角高。上方有真水或
+	 * 含水格时角高直接取满格；无特殊成员时结果与 vanilla 完全一致。
 	 */
 	public static double getLiquidHeight(IBlockAccess world, int x, int y, int z) {
 		int l = 0;
@@ -50,7 +54,7 @@ public class StairWaterRenderer {
 
 			if (material == Material.water) {
 				int meta = world.getBlockMetadata(j1, y, k1);
-				if (BlockAquaticPlant.isOceanPlant(block) || WaterlogRuntime.isWaterlogged(world, j1, y, k1)) {
+				if (BlockAquaticPlant.isOceanPlant(block)) {
 					meta = 0;
 				}
 				if (meta >= 8 || meta == 0) {
@@ -60,21 +64,41 @@ public class StairWaterRenderer {
 
 				f += BlockLiquid.getLiquidHeightPercent(meta);
 				++l;
+			} else if (WaterlogRuntime.isWaterlogged(world, j1, y, k1)) {
+				// 含水家族格（rock 材质，含角点采样中的自身格）：内部是 8/9
+				// 静水源，与 262 same-fluid 分支同权（meta 0 双计权）
+				f += BlockLiquid.getLiquidHeightPercent(0) * 10.0F;
+				l += 10;
+
+				f += BlockLiquid.getLiquidHeightPercent(0);
+				++l;
 			} else if (!material.isSolid()) {
 				f += 1;
 				++l;
 			}
 		}
 
+		if (l == 0) {
+			return 1.0D; // 防御：全实心样本（含水格自身在场时不可达；真水侧此时面已被剔除）
+		}
 		return 1.0D - (double) (f / (float) l);
 	}
 
 	/**
-	 * 画水面的面剔除（全部六面）：不透明邻居、水材质邻居（vanilla 对同
-	 * 材质邻居不画）与含水邻居（同流体语义）都不画。
+	 * 画水面的面剔除。底面/侧面（26.2 FluidRenderer L85/L225、原版
+	 * BlockLiquid side!=1 走 Block.shouldSideBeRendered）：满格不透明邻居、
+	 * 水材质邻居（同流体不互画）与含水邻居（同流体语义）都剔除。
+	 *
+	 * <p>顶面例外（26.2 L84/L119：{@code renderUp = !isNeighborSameFluid}，
+	 * 满格邻居只在 height==1.0 时挡；原版 L170 {@code side == 1 ? true}）：
+	 * 只对同流体剔除——上方是固体方块时 8/9 水面照画（面藏在邻格墙内，
+	 * 有开放侧面时可见），保证含水格被方块围住/上方盖方块时外观不消失。
 	 */
-	public static boolean isFaceCulled(IBlockAccess world, int x, int y, int z) {
+	public static boolean isFaceCulled(IBlockAccess world, int x, int y, int z, boolean topFace) {
 		Block neighbour = world.getBlock(x, y, z);
+		if (topFace) {
+			return neighbour.getMaterial() == Material.water || WaterlogRuntime.isWaterlogged(world, x, y, z);
+		}
 		return neighbour.isOpaqueCube() || neighbour.getMaterial() == Material.water || WaterlogRuntime.isWaterlogged(world, x, y, z);
 	}
 
@@ -108,7 +132,7 @@ public class StairWaterRenderer {
 		double d4 = getLiquidHeight(world, x + 1, y, z + 1);
 		double d5 = getLiquidHeight(world, x + 1, y, z);
 
-		if (!isFaceCulled(world, x, y + 1, z)) {
+		if (!isFaceCulled(world, x, y + 1, z, true)) {
 			emitted = true;
 			d2 -= eps;
 			d3 -= eps;
@@ -124,7 +148,7 @@ public class StairWaterRenderer {
 		}
 
 		// Vanilla shades the bottom face grey without biome tint
-		if (!isFaceCulled(world, x, y - 1, z)) {
+		if (!isFaceCulled(world, x, y - 1, z, false)) {
 			emitted = true;
 			tessellator.setBrightness(Blocks.water.getMixedBrightnessForBlock(world, x, y - 1, z));
 			tessellator.setColorOpaque_F(0.5F, 0.5F, 0.5F);
@@ -138,7 +162,7 @@ public class StairWaterRenderer {
 		int[] dx = {0, 0, -1, 1};
 		int[] dz = {-1, 1, 0, 0};
 		for (int dir = 0; dir < 4; dir++) {
-			if (isFaceCulled(world, x + dx[dir], y, z + dz[dir])) {
+			if (isFaceCulled(world, x + dx[dir], y, z + dz[dir], false)) {
 				continue;
 			}
 			emitted = true;

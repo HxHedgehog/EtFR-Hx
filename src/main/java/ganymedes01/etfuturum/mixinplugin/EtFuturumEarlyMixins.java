@@ -14,6 +14,7 @@ import ganymedes01.etfuturum.configuration.configs.ConfigTweaks;
 import ganymedes01.etfuturum.configuration.configs.ConfigWorld;
 import ganymedes01.etfuturum.core.utils.Logger;
 import ganymedes01.etfuturum.lib.Reference;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.launchwrapper.Launch;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 
@@ -431,13 +432,24 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		// disableWaterlogging config off. The vanilla-pipeline paint hooks only
 		// register when Angelica is absent; the Angelica (celeritas) pipeline
 		// comes in a later phase.
-		if (!ConfigMixins.disableWaterlogging && Launch.classLoader.getResource("mixins.neid.early.json") != null) {
+		final boolean neidPresent = Launch.classLoader.getResource("mixins.neid.early.json") != null;
+		WaterlogRuntime.debug("probe: neidPresent=" + neidPresent + ", disableWaterlogging=" + ConfigMixins.disableWaterlogging);
+		if (!ConfigMixins.disableWaterlogging && neidPresent) {
 			mixins.add("waterlog.MixinItemBlock");
+			mixins.add("waterlog.MixinBlockStairs");
+			mixins.add("waterlog.MixinEntity");
+			mixins.add("waterlog.MixinWorld");
+			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/Entity/World waterlog mixins");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("waterlog.client.MixinBlockLiquid");
+				// Underwater fog (density + colour) goes through
+				// ActiveRenderInfo.getBlockAtEntityViewpoint in both pipelines.
+				mixins.add("waterlog.client.MixinActiveRenderInfo");
+				WaterlogRuntime.debug("registered: waterlog.client.MixinBlockLiquid + MixinActiveRenderInfo");
 				if (!angelicaLoaded) {
 					mixins.add("waterlog.client.MixinWorldRenderer");
 					mixins.add("waterlog.client.MixinRenderBlocks");
+					WaterlogRuntime.debug("registered: vanilla-pipeline paint mixins (angelicaLoaded=false)");
 				}
 			}
 		}
