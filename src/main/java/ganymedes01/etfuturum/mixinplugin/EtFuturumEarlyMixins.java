@@ -391,18 +391,36 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("sponge.MixinBlockSponge");
 		}
 
+		// Real waterlogging (26.2-style, metadata bit 16): needs NEIDs' 16-bit
+		// metadata patches for storage/sync (probed via its mixin config resource,
+		// same trick as the Angelica probe above) on both sides, and the
+		// disableWaterlogging config off. The bucket + liquid-ray mixins below are
+		// shared with the ocean plants feature and registered on the union of both
+		// feature flags.
+		final boolean neidPresent = Launch.classLoader.getResource("mixins.neid.early.json") != null;
+		final boolean waterlogOn = !ConfigMixins.disableWaterlogging && neidPresent;
+		WaterlogRuntime.debug("probe: neidPresent=" + neidPresent + ", disableWaterlogging=" + ConfigMixins.disableWaterlogging);
+
 		if (ConfigBlocksItems.enableOceanPlants) {
 			mixins.add("oceanplants.MixinBlockLiquid");
-			mixins.add("oceanplants.MixinBlockDynamicLiquid");
 			mixins.add("oceanplants.MixinBlockDynamicLiquidBackfill");
-			mixins.add("oceanplants.MixinItemBucket");
 			mixins.add("oceanplants.MixinBlockFalling");
 			mixins.add("oceanplants.MixinItemDye");
-			mixins.add("oceanplants.MixinWorld");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("oceanplants.client.MixinRenderBlocks");
 				mixins.add("oceanplants.client.MixinItemRenderer");
 			}
+		}
+
+		// The flow-invoker interface (backing the sea pickle and waterlog spread)
+		// plus the bucket scoop/drain + full-cell liquid ray clip, serving both the
+		// sea pickle (needs the blocks, so only with ocean plants on) and the true
+		// waterlogging family (needs NEIDs + config). All identity checks inside
+		// are null-safe for whichever feature is absent.
+		if (ConfigBlocksItems.enableOceanPlants || waterlogOn) {
+			mixins.add("oceanplants.MixinBlockDynamicLiquid");
+			mixins.add("oceanplants.MixinItemBucket");
+			mixins.add("oceanplants.MixinWorld");
 		}
 
 		// Angelica's shader hand pipeline routes pass-1 blocks to the translucent
@@ -426,17 +444,11 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.client.MixinItemRenderer");
 		}
 
-		// Real waterlogging (26.2-style, metadata bit 16): needs NEIDs' 16-bit
-		// metadata patches for storage/sync (probed via its mixin config resource,
-		// same trick as the Angelica probe above) on both sides, and the
-		// disableWaterlogging config off. The vanilla-pipeline paint hooks only
-		// register when Angelica is absent; the Angelica (celeritas) pipeline
-		// comes in a later phase.
-		final boolean neidPresent = Launch.classLoader.getResource("mixins.neid.early.json") != null;
-		WaterlogRuntime.debug("probe: neidPresent=" + neidPresent + ", disableWaterlogging=" + ConfigMixins.disableWaterlogging);
-		if (!ConfigMixins.disableWaterlogging && neidPresent) {
+		if (waterlogOn) {
 			mixins.add("waterlog.MixinItemBlock");
 			mixins.add("waterlog.MixinBlockStairs");
+			mixins.add("waterlog.MixinBlockDynamicLiquid");
+			mixins.add("waterlog.MixinBlockLiquid");
 			mixins.add("waterlog.MixinEntity");
 			mixins.add("waterlog.MixinWorld");
 			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/Entity/World waterlog mixins");

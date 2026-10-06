@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.client.sound.ModSounds;
 import ganymedes01.etfuturum.core.utils.Utils;
+import ganymedes01.etfuturum.lib.Reference;
 import ganymedes01.etfuturum.lib.RenderIDs;
 import ganymedes01.etfuturum.mixins.early.oceanplants.MixinBlockDynamicLiquid;
 import net.minecraft.block.Block;
@@ -213,13 +214,14 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 	}
 
 	/**
-	 * In-place dry -> wet conversion keeping the pickle count (splash + flag 3
-	 * so neighbours and clients sync). The converted cell's onBlockAdded
-	 * schedules the spread one fluid tick later.
+	 * In-place dry -> wet conversion keeping the pickle count (flag 3 so
+	 * neighbours and clients sync). The converted cell's onBlockAdded schedules
+	 * the spread one fluid tick later. Silent: this is the ambient backfill, not
+	 * a player action (26.2 ambient waterlogging makes no sound) - a sound here
+	 * read as a mysterious "second scoop sound" right after bucket scooping.
 	 */
 	private void rehydrate(World world, int x, int y, int z) {
 		world.setBlock(x, y, z, ModBlocks.SEA_PICKLE.get(), world.getBlockMetadata(x, y, z), 3);
-		world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, "random.splash", 0.5F, 1.0F);
 	}
 
 	@Override
@@ -292,7 +294,9 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 		if (wet && held != null && held.getItem() == Items.bucket) {
 			if (!world.isRemote) {
 				world.setBlock(x, y, z, ModBlocks.DEAD_SEA_PICKLE.get(), meta, 3);
-				world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, "random.splash", 0.5F, 1.0F);
+				// 26.2 pickupBlock sound, matching onFillBucketEvent's fill for the
+				// sneak path so both scoop routes sound identical
+				world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, Reference.MCAssetVer + ":item.bucket.fill", 1.0F, 1.0F);
 			}
 			// The inventory change must run on both sides, like vanilla
 			// ItemBucket#func_150910_a does: a server-only change gets its slot
@@ -321,7 +325,7 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 		if (!wet && held != null && held.getItem() == Items.water_bucket) {
 			if (!world.isRemote) {
 				world.setBlock(x, y, z, ModBlocks.SEA_PICKLE.get(), meta, 3);
-				world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, "random.splash", 0.5F, 1.0F);
+				world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, Reference.MCAssetVer + ":item.bucket.empty", 1.0F, 1.0F);
 				if (!player.capabilities.isCreativeMode) {
 					if (--held.stackSize <= 0) {
 						player.inventory.mainInventory[player.inventory.currentItem] = new ItemStack(Items.bucket);

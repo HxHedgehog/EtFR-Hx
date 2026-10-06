@@ -62,6 +62,7 @@ import ganymedes01.etfuturum.gamerule.PlayersSleepingPercentage;
 import ganymedes01.etfuturum.gamerule.RandomTickSpeed;
 import ganymedes01.etfuturum.items.ItemArrowTipped;
 import ganymedes01.etfuturum.lib.Reference;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import ganymedes01.etfuturum.network.AttackYawMessage;
 import ganymedes01.etfuturum.network.BlackHeartParticlesMessage;
 import ganymedes01.etfuturum.network.TotemParticlesMessage;
@@ -1276,7 +1277,10 @@ public class ServerEventHandler {
 				} else if (isFull != Blocks.air) {// --- Pour something else --- //
 					event.world.playSoundEffect(target.blockX + 0.5, target.blockY + 0.5, target.blockZ + 0.5, Reference.MCAssetVer + ":item.bucket.empty_lava", 1.0F, 1.0F);
 				} else {
-					if (event.world.getBlock(target.blockX, target.blockY, target.blockZ).getMaterial() == Material.water) {// --- Fill with water --- //
+					// True waterlogging (bit16): family cells are rock material, so
+					// the material check below never sees them - check the bit first.
+					if (WaterlogRuntime.isWaterlogged(event.world, target.blockX, target.blockY, target.blockZ)
+							|| event.world.getBlock(target.blockX, target.blockY, target.blockZ).getMaterial() == Material.water) {// --- Fill with water --- //
 						event.world.playSoundEffect(target.blockX + 0.5, target.blockY + 0.5, target.blockZ + 0.5, Reference.MCAssetVer + ":item.bucket.fill", 1.0F, 1.0F);
 					} else if (event.world.getBlock(target.blockX, target.blockY, target.blockZ).getMaterial().isLiquid()) {// --- Fill with something else --- //
 						event.world.playSoundEffect(target.blockX + 0.5, target.blockY + 0.5, target.blockZ + 0.5, Reference.MCAssetVer + ":item.bucket.fill_lava", 1.0F, 1.0F);

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.configuration.configs.ConfigSounds;
 import ganymedes01.etfuturum.lib.Reference;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import ganymedes01.etfuturum.world.WorldCoord;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSponge;
@@ -70,6 +71,19 @@ public abstract class MixinBlockSponge extends Block {
 				WorldCoord blockpos2 = blockpos1.add(dir);
 
 				Block neighborBlock = world.getBlock(blockpos2.x, blockpos2.y, blockpos2.z);
+				// True waterlogging (bit16): 26.2 removes just the water
+				// (BucketPickup) - the block dries in place, counts as absorbed
+				// water, and the BFS does not spread through the now-dry cell.
+				// Checked before the material gate: family blocks are rock and
+				// would be skipped otherwise.
+				if (WaterlogRuntime.isWaterlogged(world, blockpos2.x, blockpos2.y, blockpos2.z)) {
+					WaterlogRuntime.debug("SPONGE-DRAIN " + blockpos2.x + "," + blockpos2.y + "," + blockpos2.z);
+					world.setBlockMetadataWithNotify(blockpos2.x, blockpos2.y, blockpos2.z,
+							world.getBlockMetadata(blockpos2.x, blockpos2.y, blockpos2.z) & ~WaterlogRuntime.WATERLOGGED_BIT, 3);
+					arraylist.add(blockpos2);
+					i++;
+					continue;
+				}
 				if (neighborBlock.getMaterial() != Material.water) {
 					continue;
 				}
