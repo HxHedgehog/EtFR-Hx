@@ -181,8 +181,22 @@ public abstract class BlockAquaticPlant extends BaseBlock {
 	 * Called when the plant loses support or becomes invalid.
 	 * Drops whatever the block would normally drop (kelp drops itself; seagrass drops nothing)
 	 * and restores a still water source.
+	 *
+	 * <p>26.2 equivalent: the plant's self-destruction path (GrowingPlantBlock#tick ->
+	 * {@code Level.destroyBlock(pos, true)}) plays the 2001 break-particles effect,
+	 * drops resources and leaves the cell's FluidState (createLegacyBlock) as a still
+	 * source. The sponge BFS branch itself destroys in-budget cells silently
+	 * (dropResources + setBlock AIR); the visible poof comes from this cascade path.
 	 */
 	protected void die(World world, int x, int y, int z) {
+		if (!world.isRemote) {
+			// 2001 = block break particles; data = blockId + (meta << 12), like
+			// ItemInWorldManager's own broadcast on player digs. Server side only -
+			// the client receives it via the S28 effect packet, so a local replay
+			// would double the particles.
+			world.playAuxSFX(2001, x, y, z,
+					Block.getIdFromBlock(world.getBlock(x, y, z)) + (world.getBlockMetadata(x, y, z) << 12));
+		}
 		dropBlockAsItemWithChance(world, x, y, z, world.getBlockMetadata(x, y, z), 1.0F, 0);
 		world.setBlock(x, y, z, Blocks.water, 0, 3);
 	}

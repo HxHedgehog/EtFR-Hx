@@ -3,6 +3,7 @@ package ganymedes01.etfuturum.blocks;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.client.sound.ModSounds;
 import ganymedes01.etfuturum.core.utils.Utils;
+import ganymedes01.etfuturum.waterlog.WaterlogFlow;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.entity.player.EntityPlayer;
@@ -61,6 +62,27 @@ public class BlockKelpPlant extends BlockAquaticPlant implements IGrowable {
 			if (!world.isRemote) {
 				world.setBlock(x, y, z, ModBlocks.KELP.get(), world.rand.nextInt(BlockKelp.MAX_AGE), 3);
 			}
+			return; // converted - the new head's onBlockAdded schedules its spread
+		}
+		// 26.2 GrowingPlantBodyBlock#updateShape: every neighbour change schedules
+		// the fluid tick of the permanent source water -> one spread step
+		WaterlogFlow.scheduleSpread(world, x, y, z, this);
+	}
+
+	@Override
+	public void onBlockAdded(World world, int x, int y, int z) {
+		// 26.2: body segments hold a permanent source FluidState too - placement
+		// (kelp growth, head conversion) starts the spread chain
+		WaterlogFlow.scheduleSpread(world, x, y, z, this);
+	}
+
+	@Override
+	public void updateTick(World world, int x, int y, int z, Random rand) {
+		// Scheduled fluid tick on a body segment: permanent source -> plain spread
+		// step. Guarded on the cell still being a plant segment (a stale tick must
+		// not create water after a drain).
+		if (!world.isRemote && world.getBlock(x, y, z) == this) {
+			WaterlogFlow.spreadFromSource(world, x, y, z);
 		}
 	}
 

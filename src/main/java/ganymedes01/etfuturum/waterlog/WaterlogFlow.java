@@ -1,5 +1,6 @@
 package ganymedes01.etfuturum.waterlog;
 
+import ganymedes01.etfuturum.blocks.BlockAquaticPlant;
 import ganymedes01.etfuturum.mixins.early.oceanplants.MixinBlockDynamicLiquid;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -50,9 +51,15 @@ public final class WaterlogFlow {
 		return below.getMaterial().isSolid() || isSourceCell(world, x, y - 1, z);
 	}
 
-	/** 源格判定：静态水 meta 0，或含水家族格（内部虚拟源）。 */
+	/**
+	 * 源格判定：静态水 meta 0、含水家族格（内部虚拟源）、或海洋植物格（26.2
+	 * getFluidState 恒为 getSource(false) 源水——海草/海带的 meta 是株龄/半位，
+	 * 不能用 meta==0 判源，须按 block 身份；枯死海泡菜是 Material.coral 天然排除）。
+	 */
 	public static boolean isSourceCell(World world, int x, int y, int z) {
-		return world.getBlock(x, y, z).getMaterial() == Material.water && world.getBlockMetadata(x, y, z) == 0
+		Block block = world.getBlock(x, y, z);
+		return block.getMaterial() == Material.water && world.getBlockMetadata(x, y, z) == 0
+				|| BlockAquaticPlant.isOceanPlant(block)
 				|| WaterlogRuntime.isWaterlogged(world, x, y, z);
 	}
 
@@ -65,6 +72,27 @@ public final class WaterlogFlow {
 		if (!world.isRemote) {
 			WaterlogRuntime.debug("SCHEDULE " + x + "," + y + "," + z);
 			world.scheduleBlockUpdate(x, y, z, hostBlock, WATER_TICK_RATE);
+		}
+	}
+
+	/**
+	 * 家族方块的调度 tick 统一入口（MixinBlockStairs / MixinBlockSlab 的
+	 * updateTick 都走这里）：含水 → 蔓延一步；未含水 → 3c 的延迟成源重查
+	 * （5gt 前的流尝试调度的重查，水源移走则保持干），含水后再延 5gt 蔓延。
+	 */
+	public static void handleFamilyTick(World world, int x, int y, int z, Block host) {
+		if (world.isRemote) {
+			return;
+		}
+		if (WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+			WaterlogRuntime.debug("SPREAD " + x + "," + y + "," + z);
+			spreadFromSource(world, x, y, z);
+			return;
+		}
+		if (wouldFormSource(world, x, y, z)) {
+			WaterlogRuntime.markWaterlogged(world, x, y, z);
+			WaterlogRuntime.debug("SOURCE-FORM " + x + "," + y + "," + z);
+			scheduleSpread(world, x, y, z, host); // 含水后再延 5gt 蔓延
 		}
 	}
 

@@ -2,6 +2,8 @@ package ganymedes01.etfuturum.mixins.early.oceanplants;
 
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.blocks.BlockAquaticPlant;
+import ganymedes01.etfuturum.configuration.configs.ConfigSounds;
+import ganymedes01.etfuturum.lib.Reference;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.entity.player.EntityPlayer;
@@ -98,6 +100,14 @@ public abstract class MixinItemDye {
 			}
 		}
 		world.playAuxSFX(2005, wx, wy, wz, 0);
+		// 26.2 BoneMealItem#useOn: both paths fire levelEvent(1505), whose client
+		// handler plays item.bone_meal.use next to the growth particles. The crop
+		// path gets this via ServerEventHandler#onBoneMeal already; the water-plant
+		// path bypasses vanilla applyBonemeal (no BonemealEvent), so play it here.
+		// 26.2 fires the event at the grown cell, not the clicked face.
+		if (ConfigSounds.bonemealing) {
+			world.playSoundEffect(wx + 0.5D, wy + 0.5D, wz + 0.5D, Reference.MCAssetVer + ":item.bone_meal.use", 1.0F, 1.0F);
+		}
 		stack.stackSize--;
 		cir.setReturnValue(true);
 	}

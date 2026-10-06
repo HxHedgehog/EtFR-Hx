@@ -98,9 +98,13 @@ public abstract class MixinBlockSponge extends Block {
 					i++;
 					continue;
 				}
-				// Kelp drops itself when destroyed (dropResources behaviour);
-				// seagrass just gets destroyed without drops like in modern versions.
-				if (neighborBlock == ModBlocks.KELP.get() || neighborBlock == ModBlocks.KELP_PLANT.get()) {
+				// 26.2 SpongeBlock: kelp, kelp plant, seagrass and tall seagrass go
+				// through Block.dropResources before the cell is cleared. Kelp drops
+				// itself; seagrass loot is empty without shears so nothing falls for
+				// it, and neither emits break particles (plain setBlock(AIR) - that
+				// matches modern behaviour exactly).
+				if (neighborBlock == ModBlocks.KELP.get() || neighborBlock == ModBlocks.KELP_PLANT.get()
+						|| neighborBlock == ModBlocks.SEAGRASS.get()) {
 					neighborBlock.dropBlockAsItem(world, blockpos2.x, blockpos2.y, blockpos2.z,
 							world.getBlockMetadata(blockpos2.x, blockpos2.y, blockpos2.z), 0);
 				}

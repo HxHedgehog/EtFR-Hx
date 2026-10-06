@@ -447,6 +447,7 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		if (waterlogOn) {
 			mixins.add("waterlog.MixinItemBlock");
 			mixins.add("waterlog.MixinBlockStairs");
+			mixins.add("waterlog.MixinBlockSlab");
 			mixins.add("waterlog.MixinBlockDynamicLiquid");
 			mixins.add("waterlog.MixinBlockLiquid");
 			mixins.add("waterlog.MixinEntity");
