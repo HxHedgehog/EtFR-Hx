@@ -97,6 +97,27 @@ public final class WaterlogFlow {
 	}
 
 	/**
+	 * 挖掘含水方块留下水源格（26.2 {@code Level.destroyBlock} =
+	 * {@code setBlock(pos, fluidState.createLegacyBlock(), 3)}——含水方块的
+	 * FluidState 是源水，破坏与留水在同一 setBlock 原子完成）。GTNH forge 的
+	 * removedByPlayer 双载都要走这里：6 参 = 服务端挖掘路径
+	 * （ItemInWorldManager.removeBlock(IIIZ)Z）；5 参 = 客户端挖掘预测
+	 * （PlayerControllerMP.onPlayerDestroyBlock 直接调用，Block 默认
+	 * setBlockToAir）——漏掉 5 参则客户端预测先画空气，等服务端水包到达才
+	 * 回填，肉眼可见"空气闪一下"（2026-10-07 用户实证）。
+	 *
+	 * @return true = 已写水源格，调用方直接 return true；false = 未含水，走原逻辑
+	 */
+	public static boolean leaveSourceWater(World world, int x, int y, int z) {
+		if (WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+			world.setBlock(x, y, z, Blocks.water, 0, 3);
+			WaterlogRuntime.debug("DIG-SOURCE " + x + "," + y + "," + z);
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * 源格蔓延一步（调用方保证该格当前含水且在服务端线程）。对应
 	 * {@code BlockDynamicLiquid.updateTick} 的 L117-168 段：下方可流入 →
 	 * falling（meta 8）；否则按 vanilla 权重寻路横流（meta 1）。

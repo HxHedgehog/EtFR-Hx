@@ -10,7 +10,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 
 /**
@@ -33,18 +32,18 @@ public abstract class MixinBlockSlab extends Block {
 	}
 
 	/**
-	 * 挖掘含水方块留下水源格——与 MixinBlockStairs 同款（GTNH forge 挖掘路径
-	 * ItemInWorldManager.removeBlock(IIIZ)Z 调用此 6 参重载；26.2
-	 * Level.removeBlock = setBlock(pos, fluidState.createLegacyBlock(), 3)）。
+	 * 挖掘含水方块留下水源格——与 MixinBlockStairs 同款双载全覆写（6 参 =
+	 * 服务端挖掘路径；5 参 = GTNH 客户端挖掘预测，默认 setBlockToAir），共用
+	 * {@link WaterlogFlow#leaveSourceWater}。
 	 */
 	@Override
 	public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z, boolean willHarvest) {
-		if (WaterlogRuntime.isWaterlogged(world, x, y, z)) {
-			world.setBlock(x, y, z, Blocks.water, 0, 3);
-			WaterlogRuntime.debug("DIG-SOURCE " + x + "," + y + "," + z);
-			return true;
-		}
-		return super.removedByPlayer(world, player, x, y, z, willHarvest);
+		return WaterlogFlow.leaveSourceWater(world, x, y, z) || super.removedByPlayer(world, player, x, y, z, willHarvest);
+	}
+
+	@Override
+	public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z) {
+		return WaterlogFlow.leaveSourceWater(world, x, y, z) || super.removedByPlayer(world, player, x, y, z);
 	}
 
 	@Override

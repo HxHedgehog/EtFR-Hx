@@ -5,6 +5,7 @@ import java.util.Random;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import ganymedes01.etfuturum.waterlog.WaterlogFlow;
@@ -13,7 +14,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockStairs;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 
 /**
@@ -39,24 +39,37 @@ public abstract class MixinBlockStairs extends Block {
 	}
 
 	/**
-	 * 挖掘含水方块留下水源格（26.2 {@code Level.removeBlock(pos, movedByPiston)} =
-	 * {@code setBlock(pos, fluidState.createLegacyBlock(), 3)}——含水方块的
-	 * FluidState 是源水，破坏后留下静态源水而非空气）。
-	 *
-	 * <p>GTNH forge 的挖掘路径 {@code ItemInWorldManager.removeBlock(IIIZ)Z}
-	 * 调用的正是这个 6 参重载（@Deprecated 的 5 参默认实现只是向下委托，生产
-	 * 环境虚分派经合并后的覆写命中）。返回 true 让 tryHarvestBlock 的
-	 * harvestBlock（掉落）照常进行——它用挖掘前捕获的 meta，与本返回值无关。
-	 * 海洋植物不走这里：它们的格不带 bit16，且 BlockAquaticPlant 已覆写恢复水源。
+	 * 挖掘含水方块留下水源格——双载双参全覆写，共用
+	 * {@link WaterlogFlow#leaveSourceWater}：6 参 = 服务端挖掘路径
+	 * （ItemInWorldManager.removeBlock(IIIZ)Z）；5 参 = 客户端挖掘预测
+	 * （PlayerControllerMP.onPlayerDestroyBlock 直接调用，Block 默认
+	 * setBlockToAir）。海洋植物不走这里：格不带 bit16，且 BlockAquaticPlant
+	 * 已覆写恢复水源。
 	 */
 	@Override
 	public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z, boolean willHarvest) {
-		if (WaterlogRuntime.isWaterlogged(world, x, y, z)) {
-			world.setBlock(x, y, z, Blocks.water, 0, 3);
-			WaterlogRuntime.debug("DIG-SOURCE " + x + "," + y + "," + z);
-			return true;
+		return WaterlogFlow.leaveSourceWater(world, x, y, z) || super.removedByPlayer(world, player, x, y, z, willHarvest);
+	}
+
+	@Override
+	public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z) {
+		return WaterlogFlow.leaveSourceWater(world, x, y, z) || super.removedByPlayer(world, player, x, y, z);
+	}
+
+	/**
+	 * 原子含水放置（26.2 getStateForPlacement 语义：含水状态与方块同一 setBlock
+	 * 写入，双端预测/确认零闪）：onBlockPlacedBy 把 meta 重写为 facing|上下半位
+	 * （旧 meta 只保留 &4），会抹掉 MixinItemBlock 在 onBlockPlaced 返回值里并入
+	 * 的 bit16——在此并回。捕获标记此时仍在线程上（onItemUse RETURN 才消费），
+	 * 只读不消费；非放置上下文（发射器等）标记为空，vanilla 行为不变。
+	 */
+	@Redirect(method = "onBlockPlacedBy(Lnet/minecraft/world/World;IIILnet/minecraft/entity/EntityLivingBase;Lnet/minecraft/item/ItemStack;)V",
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockMetadataWithNotify(IIIII)Z"))
+	private boolean etfuturum$keepWaterlogInPlacedMeta(World world, int x, int y, int z, int meta, int flags) {
+		if (WaterlogRuntime.isEnabled() && WaterlogRuntime.isPlacementSource()) {
+			meta |= WaterlogRuntime.WATERLOGGED_BIT;
 		}
-		return super.removedByPlayer(world, player, x, y, z, willHarvest);
+		return world.setBlockMetadataWithNotify(x, y, z, meta, flags);
 	}
 
 	@Override

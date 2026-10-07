@@ -31,6 +31,11 @@ import net.minecraft.world.IBlockAccess;
  * 涉及含水格时改走 StairWaterRenderer 的成员感知角高（含水格按 meta 0
  * 源水计权），与含水格内部水体的表面完全一致；不涉及含水格时保持 vanilla
  * 结果逐位一致（ocean plants 的 meta 0 强制不在此扩散，最小化行为面）。</li>
+ * <li><b>pass-1 原住民例外</b>（染色玻璃板 getRenderBlockPass()==1）：pass-1
+ * 的 renderBlockByRenderType 调用画的是本体真身而非重复拷贝——含水格先画水
+ * 再放行 vanilla 本体（不取消），干格整体放行；否则板体被当副本抑制/替换 →
+ * 隐身或只剩水（2026-10-07 玻璃板扩族实测）。判断标准 = 该 renderType 的
+ * 本体画在哪个 pass，而非"家族格一律抑制"。</li>
  * </ol>
  */
 @Mixin(RenderBlocks.class)
@@ -49,11 +54,27 @@ public abstract class MixinRenderBlocks {
 		boolean waterlogged = WaterlogRuntime.isWaterlogged(this.blockAccess, x, y, z);
 		if (flagged) {
 			WaterlogPaint.clearFlag();
+		}
+		// pass-1 原住民（染色玻璃板，BlockStainedGlassPane.getRenderBlockPass()==1）：
+		// pass-1 的本次调用画的是本体真身，不是 pass-0 本体的重复拷贝——含水 =
+		// 先画水再放行 vanilla 画本体（水与板同进 pass-1 缓冲，26.2 里即 translucent
+		// 流体层与板模型分层合成）；干格 = 整体放行照 vanilla 渲染。此前把真身当
+		// 副本替换/抑制：含水染色板只剩水没有板（"自带水+隐身"）、干染色板在
+		// celeritas 下完全隐身（2026-10-07 玻璃板扩族实测）。
+		if (block.getRenderBlockPass() == 1) {
+			if (waterlogged) {
+				StairWaterRenderer.renderStillWaterVolume(this.blockAccess, x, y, z);
+				WaterlogRuntime.debug("PAINT+BODY " + x + "," + y + "," + z + " block=" + block);
+			}
+			return;
+		}
+		if (flagged) {
 			if (waterlogged) {
 				boolean emitted = StairWaterRenderer.renderStillWaterVolume(this.blockAccess, x, y, z);
 				WaterlogRuntime.debug("PAINT " + x + "," + y + "," + z + " block=" + block + " -> emitted=" + emitted);
 				cir.setReturnValue(emitted);
 			} else {
+				WaterlogRuntime.debug("SUPPRESS-DRY(vanilla) " + x + "," + y + "," + z + " block=" + block);
 				cir.setReturnValue(false); // 防御：置位但格已变干 → 仍取消第二份几何
 			}
 			return;
@@ -69,6 +90,9 @@ public abstract class MixinRenderBlocks {
 			WaterlogRuntime.debug("PAINT " + x + "," + y + "," + z + " block=" + block + " -> emitted=" + emitted);
 			cir.setReturnValue(emitted);
 		} else {
+			// 干格抑制探针：连放"干块闪"若来自渲染层（构建快照过期/竞态），
+			// 此行会在实际含水的格上出现——与同格 PAINT 行的时序对照定性
+			WaterlogRuntime.debug("SUPPRESS-DRY " + x + "," + y + "," + z + " block=" + block);
 			cir.setReturnValue(false);
 		}
 	}

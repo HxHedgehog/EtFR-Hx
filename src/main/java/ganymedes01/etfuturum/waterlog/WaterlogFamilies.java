@@ -1,6 +1,7 @@
 package ganymedes01.etfuturum.waterlog;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.BlockStairs;
 
@@ -17,12 +18,18 @@ import net.minecraft.block.BlockStairs;
  * 单层的 {@code meta & 8} 是上/下半标志（BlockSlab.onBlockPlaced 的
  * {@code meta | 8}），与 bit16 独立——上/下半砖都可含水（26.2 SlabBlock
  * L86 对 TYPE=TOP 同样判定 waterlogged）。
+ *
+ * <p>玻璃板（26.2 PaneBlock）：无朝向/变体 meta（1.7.10 原版板 meta 0，
+ * EtFR 染色板为独立 Block 实例）→ 无需排除项，也无 canSurvive 要求
+ * （26.2 PaneBlock.canSurvive 恒真）；含水视觉 = 整格 8/9 静水体叠在
+ * 薄板几何上（画水管线按本家族过滤，玻璃板自动生效）。
  */
 public final class WaterlogFamilies {
 
 	private WaterlogFamilies() {}
 
 	public static boolean isWaterloggable(Block block) {
-		return (block instanceof BlockStairs || block instanceof BlockSlab) && !block.isOpaqueCube();
+		return block instanceof BlockPane
+				|| (block instanceof BlockStairs || block instanceof BlockSlab) && !block.isOpaqueCube();
 	}
 }

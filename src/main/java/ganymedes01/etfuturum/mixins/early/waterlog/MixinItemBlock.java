@@ -41,6 +41,13 @@ public abstract class MixinItemBlock {
 
 	@Redirect(method = "onItemUse(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;IIIIFFF)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onBlockPlaced(Lnet/minecraft/world/World;IIIIFFFI)I"))
 	private int etfuturum$capturePlacementCell(Block block, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, int metadata) {
+		// 物品永不携带含水位（26.2 铁律：ItemStack 无 waterlogged 概念）——
+		// 修复前链路产出的含水 damage 物品（中键取块/掉落残留）在此剥离：
+		// BlockStairs.onBlockPlaced 是 meta|4 保留输入位，bit16 会直通世界。
+		// 家族格 vanilla meta 语义只用低 4 位，剥 bit16 对放置零影响。
+		if (WaterlogFamilies.isWaterloggable(this.field_150939_a) && (metadata & WaterlogRuntime.WATERLOGGED_BIT) != 0) {
+			metadata &= ~WaterlogRuntime.WATERLOGGED_BIT;
+		}
 		boolean enabled = WaterlogRuntime.isEnabled();
 		boolean family = WaterlogFamilies.isWaterloggable(this.field_150939_a);
 		boolean wasSource = enabled && family && WaterlogRuntime.isSourceWater(world, x, y, z);
@@ -48,7 +55,17 @@ public abstract class MixinItemBlock {
 				+ " cell=" + world.getBlock(x, y, z) + "/" + world.getBlockMetadata(x, y, z) + " -> wasSource=" + wasSource);
 		// 无条件覆盖：上次 placeBlockAt 失败时残留的 true 会被本次捕获清除
 		WaterlogRuntime.capturePlacementSource(wasSource);
-		return block.onBlockPlaced(world, x, y, z, side, hitX, hitY, hitZ, metadata);
+		int result = block.onBlockPlaced(world, x, y, z, side, hitX, hitY, hitZ, metadata);
+		// 原子含水放置（26.2 getStateForPlacement 语义：含水状态与方块同一
+		// setBlock 落地）：bit16 并入 onBlockPlaced 返回值 → placeBlockAt 的
+		// setBlock 一步写入。此前服务端两步写（setBlock 干块 + markWaterlogged）
+		// 会让客户端预测先呈现干块外观，等服务端修正包到达才填水——快速放置
+		// 可见闪烁（2026-10-07 用户实证）。result < 0 为取消语义，不动。楼梯
+		// onBlockPlacedBy 的 meta 重写由 MixinBlockStairs 并回 bit16。
+		if (wasSource && result >= 0) {
+			result |= WaterlogRuntime.WATERLOGGED_BIT;
+		}
+		return result;
 	}
 
 	/**
@@ -56,7 +73,9 @@ public abstract class MixinItemBlock {
 	 * 的成功路径 {@code return true}（placeBlockAt 之后）在最后一条
 	 * {@code return false} 之前，TAIL 只挂最后一条 return，成功路径永不经过
 	 * （2026-10-06 日志实证：CAPTURE wasSource=true 而无 WRITE，放置出干块）。
-	 * 每条 return 都消费捕获标记（防残留自愈），仅放置成功且捕获到源水时写入。
+	 * 每条 return 都消费捕获标记（防残留自愈）。原子路径（捕获重定向把 bit16
+	 * 并入放置 meta）已含水，此处只做兜底 mark（重写 meta 的 ItemBlock 子类等
+	 * 未命中路径）并统一调度蔓延。
 	 */
 	@Inject(method = "onItemUse(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;IIIIFFF)Z", at = @At("RETURN"))
 	private void etfuturum$writeWaterlogOnPlace(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ, CallbackInfoReturnable<Boolean> cir) {
@@ -66,10 +85,12 @@ public abstract class MixinItemBlock {
 			return;
 		}
 		Block block = world.getBlock(x, y, z);
-		if (!WaterlogFamilies.isWaterloggable(block) || WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+		if (!WaterlogFamilies.isWaterloggable(block)) {
 			return;
 		}
-		WaterlogRuntime.markWaterlogged(world, x, y, z);
+		if (!WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+			WaterlogRuntime.markWaterlogged(world, x, y, z);
+		}
 		WaterlogFlow.scheduleSpread(world, x, y, z, block);
 		WaterlogRuntime.debug("WRITE " + x + "," + y + "," + z + " block=" + block);
 	}

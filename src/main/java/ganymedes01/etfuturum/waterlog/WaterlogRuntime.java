@@ -62,9 +62,22 @@ public final class WaterlogRuntime {
 		return WaterlogFamilies.isWaterloggable(block) && (world.getBlockMetadata(x, y, z) & WATERLOGGED_BIT) != 0;
 	}
 
-	/** 26.2 只认精确水源（{@code is(Fluids.WATER)}）：1.7.10 对应静态水 Blocks.water 且 meta 0（流水/跌水均不算）。 */
+	/**
+	 * 26.2 只认精确水源（{@code is(Fluids.WATER)}）：1.7.10 对应静态水
+	 * Blocks.water 且 meta 0（流水 meta 1-7/跌水 meta 8 不算——26.2 中放置进
+	 * 真流水同样先干、由流体 tick 回填，与成源重查延迟语义一致）。
+	 *
+	 * <p>例外：{@code BlockDynamicLiquid} meta 0 是 1.7.10 特有的"满格流水
+	 * 沉降等待"态——两股源水收敛先写入 Dynamic meta 0，下一流体 tick 才沉降
+	 * 为静态源；26.2 收敛直接写 source state，无此中间态。连放时目标格恰好
+	 * 处于该窗口会误判干放（2026-10-07 日志实证：CAPTURE cell=
+	 * BlockDynamicLiquid/0 -> wasSource=false → 干板可见约 1s 后才
+	 * SOURCE-FORM），按 26.2 等价语义视作源。视觉上满格流水与静态源同为
+	 * 8/9 水面，无法区分；沉降后本就是源。
+	 */
 	public static boolean isSourceWater(IBlockAccess world, int x, int y, int z) {
-		return world.getBlock(x, y, z) == Blocks.water && world.getBlockMetadata(x, y, z) == 0;
+		Block block = world.getBlock(x, y, z);
+		return (block == Blocks.water || block == Blocks.flowing_water) && world.getBlockMetadata(x, y, z) == 0;
 	}
 
 	/** 写入含水位。只允许在 {@link #isEnabled()} 为真时调用（无 NEIDs 时写入会被 nibble 静默截断，禁止走到）。 */
@@ -86,5 +99,13 @@ public final class WaterlogRuntime {
 		Boolean wasSource = placementSource.get();
 		placementSource.remove();
 		return Boolean.TRUE.equals(wasSource);
+	}
+
+	/**
+	 * 放置捕获的前置检查（只读不消费）：{@code onBlockPlacedBy} 等在捕获与
+	 * RETURN 消费之间执行的 meta 重写钩子用它并回 bit16，保证原子含水放置。
+	 */
+	public static boolean isPlacementSource() {
+		return Boolean.TRUE.equals(placementSource.get());
 	}
 }
