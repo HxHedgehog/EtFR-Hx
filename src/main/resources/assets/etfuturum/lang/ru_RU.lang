@@ -962,6 +962,7 @@ death.attack.flyIntoWall.player=%1$s познал кинетическую эн�
 death.attack.sting=%1$s был исколот до смерти
 death.attack.sting.item=%1$s был исколот до смерти %2$s с помощью %3$s
 death.attack.sting.player=%1$s был исколот до смерти %2$s
+death.attack.fireworks=%1$s улетел с бабахом
 
 # Знамена (Banners)
 item.banner.black.name=Чёрный флаг

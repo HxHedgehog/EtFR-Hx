@@ -994,6 +994,7 @@ death.attack.sting.item=%1$s 被 %2$s 用 %3$s 蛰死了
 death.attack.sting.player=%1$s 被 %2$s 蛰死了
 death.attack.stonecutter=%1$s 发现了为什么需要OSHA指南
 death.attack.stonecutter.player=%2$s 将 %1$s 推入了运转中的锯片
+death.attack.fireworks=%1$s被烟花炸飞了
 
 # Banners
 item.banner.black.name=黑色旗帜

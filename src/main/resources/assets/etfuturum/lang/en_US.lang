@@ -1289,6 +1289,7 @@ death.attack.sting.item=%1$s was stung to death by %2$s using %3$s
 death.attack.sting.player=%1$s was stung to death by %2$s
 death.attack.stonecutter=%1$s discovered why OSHA guidelines were created
 death.attack.stonecutter.player=%2$s pushed %1$s into a live saw blade
+death.attack.fireworks=%1$s went off with a bang
 
 # Banners
 item.banner.black.name=Black Banner

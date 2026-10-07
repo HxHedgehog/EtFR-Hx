@@ -792,7 +792,11 @@ public class ServerEventHandler {
 					if (!player.capabilities.isCreativeMode) {
 						--heldStack.stackSize;
 					}
-					event.useItem = Result.ALLOW;
+					/* 26.2 replaces the vanilla rocket with the attached boosting one, so the vanilla
+					 * item use must be denied on the server: ALLOW/DEFAULT would still run
+					 * ItemFireworks.onItemRightClick, spawning a second vanilla rocket and consuming
+					 * a second rocket item. The client keeps DEFAULT so it still sends the use packet. */
+					event.useItem = Result.DENY;
 				}
 			}
 		}

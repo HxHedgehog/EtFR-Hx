@@ -7,6 +7,7 @@ import ganymedes01.etfuturum.core.utils.Utils;
 import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import ganymedes01.etfuturum.items.equipment.ItemArmorElytra;
 import ganymedes01.etfuturum.network.StartElytraFlyingMessage;
+import ganymedes01.etfuturum.potion.ModPotions;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.item.ItemStack;
@@ -32,7 +33,10 @@ public abstract class MixinEntityPlayerSP extends AbstractClientPlayer {
 	@Inject(method = "onLivingUpdate", at = @At("TAIL"))
 	private void startElytraFlying(CallbackInfo ci) {
 		if (!Utils.badBetterFPSAlgorithm()) {
-			if (this.movementInput.jump && !etfu$lastIsJumping && !this.onGround && (ConfigMixins.enableNewElytraTakeoffLogic || this.motionY < 0.0D) && !((IElytraPlayer) this).etfu$isElytraFlying() && !etfu$lastIsFlying) {
+			/* 26.2 LocalPlayer.aiStep(): jump edge-trigger, not climbing (onClimbable),
+			 * then Player.tryToStartFallFlying() -> canGlide() + !isInWater(),
+			 * where canGlide() also rejects levitation */
+			if (this.movementInput.jump && !etfu$lastIsJumping && !this.onGround && !this.isOnLadder() && !this.isInWater() && (ModPotions.levitation == null || this.getActivePotionEffect(ModPotions.levitation) == null) && (ConfigMixins.enableNewElytraTakeoffLogic || this.motionY < 0.0D) && !((IElytraPlayer) this).etfu$isElytraFlying() && !etfu$lastIsFlying) {
 				ItemStack itemstack = ItemArmorElytra.getElytra(this);
 				if (itemstack != null && !ItemArmorElytra.isBroken(itemstack)) {
 					EtFuturum.networkWrapper.sendToServer(new StartElytraFlyingMessage());

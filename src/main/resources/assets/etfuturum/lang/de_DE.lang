@@ -916,6 +916,7 @@ death.attack.flyIntoWall.player=%1$s erfuhr beim Versuch, %2$s zu entkommen, kin
 death.attack.sting=%1$s wurde zu Tode gestochen
 death.attack.sting.item=%1$s wurde von %2$s mit %3$s zu Tode gestochen
 death.attack.sting.player=%1$s wurde von %2$s zu Tode gestochen
+death.attack.fireworks=%1$s flog in die Luft
 
 # Banners
 item.banner.black.name=Schwarzes Banner

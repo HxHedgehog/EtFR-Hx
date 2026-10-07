@@ -53,6 +53,7 @@ public class LayerBetterElytra {
 
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0.0F, 0.0F, 0.125F);
+			modelElytra.partialTicks = partialTicks; // for wing angle interpolation (26.2 ElytraAnimationState)
 			modelElytra.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, entityIn);
 			modelElytra.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
 

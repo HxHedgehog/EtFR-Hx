@@ -40,7 +40,10 @@ public class ItemArmorElytra extends BaseItem implements IBaubleExpanded {
 	}
 
 	public static boolean isBroken(ItemStack stack) {
-		return stack.getItemDamage() >= stack.getMaxDamage();
+		/* 26.2 uses ItemStack.nextDamageWillBreak(): the elytra stops gliding one
+		 * point before exhausting its durability, so the item is never destroyed
+		 * mid-flight and remains as a (repairable) broken elytra. */
+		return stack.getItemDamage() >= stack.getMaxDamage() - 1;
 	}
 
 	/**
@@ -79,7 +82,8 @@ public class ItemArmorElytra extends BaseItem implements IBaubleExpanded {
 
 	@Override
 	public IIcon getIconFromDamage(int meta) {
-		return meta >= getMaxDamage() ? broken : super.getIconFromDamage(meta);
+		/* 26.2 shows the broken item model as soon as nextDamageWillBreak() is true */
+		return meta >= getMaxDamage() - 1 ? broken : super.getIconFromDamage(meta);
 	}
 
 	@Override

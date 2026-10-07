@@ -16,16 +16,13 @@ public class MixinEntityRenderer {
 	private Minecraft mc;
 
 	@Inject(method = "orientCamera", at = @At("TAIL"))
-	private void adjustThirdPersonForElytra(float partialTicks, CallbackInfo ci) {
+	private void adjustCameraForElytra(float partialTicks, CallbackInfo ci) {
 		if (this.mc.renderViewEntity instanceof IElytraPlayer) {
 			if (((IElytraPlayer) this.mc.renderViewEntity).etfu$isElytraFlying()) {
-				if (this.mc.gameSettings.thirdPersonView > 0) {
-					/* Move the camera down 1.62 blocks to sit at the player's feet and then up by 0.4 blocks, like 1.12 does */
-					GL11.glTranslatef(0, 1.22f, 0f);
-				} else {
-					/* First person: lower the camera by 1.22 to match elytra eye height (1.62 - 0.4) */
-					GL11.glTranslatef(0, -1.22f, 0f);
-				}
+				/* 26.2 fall flying eye height is 0.4 (Avatar.POSES) instead of the standing 1.62,
+				 * so shift the camera down by 1.22 in both first and third person. A +Y glTranslate
+				 * here moves the camera down: it is applied first in world space. */
+				GL11.glTranslatef(0, 1.22f, 0f);
 			}
 		}
 	}
