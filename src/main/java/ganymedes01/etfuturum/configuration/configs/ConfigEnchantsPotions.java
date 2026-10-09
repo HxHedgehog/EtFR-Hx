@@ -9,9 +9,11 @@ public class ConfigEnchantsPotions extends ConfigBase {
 	public static boolean enableFrostWalker;
 	public static boolean enableMending;
 	public static boolean enableSwiftSneak;
+	public static boolean elytraOceanEnchant;
 	public static int mendingID;
 	public static int frostWalkerID;
 	public static int swiftSneakID;
+	public static int waterWalkerID;
 	public static int levitationID;
 
 	static final String catEnchants = "enchantments";
@@ -36,6 +38,8 @@ public class ConfigEnchantsPotions extends ConfigBase {
 		mendingID = getInt("mendingID", catEnchants, 201, 0, Short.MAX_VALUE, "");
 		enableSwiftSneak = getBoolean("swiftSneak", catEnchants, true, "");
 		swiftSneakID = getInt("swiftSneakID", catEnchants, 202, 0, Short.MAX_VALUE, "");
+		elytraOceanEnchant = getBoolean("elytraOceanEnchant", catEnchants, true, "When enabled, an elytra enchanted with Depth Strider can keep gliding underwater (water no longer stops the glide), like the pre-26.2 behavior. When disabled, the elytra fully matches 26.2: water never stops the glide, but there is no underwater gliding. The Depth Strider enchantment itself is always registered and always works on boots.");
+		waterWalkerID = getInt("waterWalkerID", catEnchants, 203, 0, Short.MAX_VALUE, "");
 
 		//potions
 		levitationID = getInt("levitationID", catPotions, 27, 0, Short.MAX_VALUE, "Since this is essential for Shulkers, this is tied to Shulkers being enabled instead of having its own option.");

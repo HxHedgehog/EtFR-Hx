@@ -55,6 +55,13 @@ public class ItemArmorElytra extends BaseItem implements IBaubleExpanded {
 	}
 
 	@Override
+	public int getItemEnchantability() {
+		// 26.2 uses an enchantability of 10 for the elytra (iron-tier armor value),
+		// letting the enchanting table roll enchantments onto it (e.g. Depth Strider).
+		return 10;
+	}
+
+	@Override
 	public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn) {
 		if (getElytra(playerIn) != null) {
 			return itemStackIn;

@@ -1,8 +1,11 @@
 package ganymedes01.etfuturum.mixins.early.backlytra;
 
+import ganymedes01.etfuturum.ModEnchantments;
+import ganymedes01.etfuturum.configuration.configs.ConfigEnchantsPotions;
 import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -18,6 +21,21 @@ public abstract class MixinEntityLivingBase extends Entity {
 	@Shadow
 	public abstract boolean isClientWorld();
 
+	@Shadow
+	protected abstract boolean isAIEnabled();
+
+	@Shadow
+	public abstract float getAIMoveSpeed();
+
+	@Shadow
+	public float prevLimbSwingAmount;
+
+	@Shadow
+	public float limbSwingAmount;
+
+	@Shadow
+	public float limbSwing;
+
 	private static final DamageSource flyIntoWall = (new DamageSource("flyIntoWall")).setDamageBypassesArmor();
 
 	public MixinEntityLivingBase(World worldIn) {
@@ -27,7 +45,7 @@ public abstract class MixinEntityLivingBase extends Entity {
 	@Inject(method = "moveEntityWithHeading", at = @At("HEAD"), cancellable = true)
 	private void moveElytra(float p_70612_1_, float p_70612_2_, CallbackInfo ci) {
 		/* method is named incorrectly in these older mappings, it's really isServerWorld */
-		if (this.isClientWorld() && !this.isInWater() && !this.handleLavaMovement()) {
+		if (this.isClientWorld() && (!this.isInWater() || (ConfigEnchantsPotions.elytraOceanEnchant && ModEnchantments.getElytraWaterWalkerLevel((EntityLivingBase) (Object) this) > 0)) && !this.handleLavaMovement()) {
 			if (this instanceof IElytraPlayer && ((IElytraPlayer) this).etfu$isElytraFlying()) {
 				if (this.motionY > -0.5D) {
 					this.fallDistance = 1.0F;
@@ -83,5 +101,72 @@ public abstract class MixinEntityLivingBase extends Entity {
 				ci.cancel();
 			}
 		}
+	}
+
+	/**
+	 * 26.2 water travel with Depth Strider (travelInWater), replicated on top of the
+	 * vanilla 1.7.10 water branch of {@code moveEntityWithHeading}. Only takes over
+	 * when the entity is in the vanilla water branch, is not elytra gliding (the
+	 * glide physics above already cancel the whole method) and the equipped boots
+	 * carry Depth Strider. Without this handler, the unenchanted vanilla formula
+	 * runs unchanged; Depth Strider then reduces the water drag and boosts the
+	 * swim acceleration exactly like modern versions (level 3 = no penalty).
+	 * This is NOT gated by elytraOceanEnchant: the enchantment works on boots always.
+	 */
+	@Inject(method = "moveEntityWithHeading", at = @At("HEAD"), cancellable = true)
+	private void waterWalkerSwim(float p_70612_1_, float p_70612_2_, CallbackInfo ci) {
+		if (this instanceof IElytraPlayer && ((IElytraPlayer) this).etfu$isElytraFlying()) {
+			return;
+		}
+		// Vanilla water branch condition (flying players are excluded there too).
+		Object self = this;
+		if (!this.isInWater() || self instanceof EntityPlayer && ((EntityPlayer) self).capabilities.isFlying) {
+			return;
+		}
+		int level = ModEnchantments.getBootWaterWalkerLevel((EntityLivingBase) (Object) this);
+		if (level <= 0) {
+			return;
+		}
+
+		// 26.2 LivingEntity#travelInWater: waterMovementEfficiency = level / 3, halved airborne.
+		float waterWalker = Math.min(level, 3) * (1.0F / 3.0F);
+		if (!this.onGround) {
+			waterWalker *= 0.5F;
+		}
+		// Keep the vanilla 1.7.10 base values, then blend them towards the modern targets.
+		float speed = this.isAIEnabled() ? 0.04F : 0.02F;
+		float slowDown = 0.8F;
+		if (waterWalker > 0.0F) {
+			slowDown += (0.54600006F - slowDown) * waterWalker;
+			speed += (this.getAIMoveSpeed() - speed) * waterWalker;
+		}
+
+		double d0 = this.posY;
+		this.moveFlying(p_70612_1_, p_70612_2_, speed);
+		this.moveEntity(this.motionX, this.motionY, this.motionZ);
+		// 26.2 keeps the vertical drag at 0.8; Depth Strider only eases X/Z.
+		this.motionX *= slowDown;
+		this.motionY *= 0.800000011920929D;
+		this.motionZ *= slowDown;
+		this.motionY -= 0.02D;
+
+		if (this.isCollidedHorizontally && this.isOffsetPositionInLiquid(this.motionX, this.motionY + 0.6000000238418579D - this.posY + d0, this.motionZ)) {
+			this.motionY = 0.30000001192092896D;
+		}
+
+		// The vanilla water branch lives inside moveEntityWithHeading, whose tail
+		// (shared by every branch) advances the limb-swing animation from the actual
+		// displacement. Cancelling the whole method from HEAD would freeze the legs,
+		// so the tail is replicated here after the replicated water branch.
+		this.prevLimbSwingAmount = this.limbSwingAmount;
+		double d2 = this.posX - this.prevPosX;
+		double d3 = this.posZ - this.prevPosZ;
+		float f6 = MathHelper.sqrt_double(d2 * d2 + d3 * d3) * 4.0F;
+		if (f6 > 1.0F) {
+			f6 = 1.0F;
+		}
+		this.limbSwingAmount += (f6 - this.limbSwingAmount) * 0.4F;
+		this.limbSwing += this.limbSwingAmount;
+		ci.cancel();
 	}
 }

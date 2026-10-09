@@ -7,6 +7,8 @@ import ganymedes01.etfuturum.configuration.configs.ConfigModCompat;
 import ganymedes01.etfuturum.enchantment.FrostWalker;
 import ganymedes01.etfuturum.enchantment.Mending;
 import ganymedes01.etfuturum.enchantment.SwiftSneak;
+import ganymedes01.etfuturum.enchantment.WaterWalker;
+import ganymedes01.etfuturum.items.equipment.ItemArmorElytra;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.Enchantment;
@@ -30,6 +32,7 @@ public class ModEnchantments {
 	public static Enchantment frostWalker;
 	public static Enchantment mending;
 	public static Enchantment swiftSneak;
+	public static Enchantment waterWalker;
 
 	private static final Map<EntityLivingBase, double[]> prevMoveCache = new WeakHashMap<>();
 
@@ -40,6 +43,9 @@ public class ModEnchantments {
 			mending = new Mending();
 		if (ConfigEnchantsPotions.enableSwiftSneak)
 			swiftSneak = new SwiftSneak();
+		// Depth Strider is always registered: it works on boots regardless of the
+		// elytraOceanEnchant config, which only toggles the underwater elytra gliding feature.
+		waterWalker = new WaterWalker();
 	}
 
 	// Frost Walker logic
@@ -78,6 +84,23 @@ public class ModEnchantments {
 		} else {
 			prevMoveCache.remove(entity);
 		}
+	}
+
+	// Water Walker (Depth Strider) logic
+	/** Level of Depth Strider on the equipped boots: drives the 26.2 underwater movement formula. */
+	public static int getBootWaterWalkerLevel(EntityLivingBase entity) {
+		if (waterWalker == null)
+			return 0;
+		ItemStack boots = entity.getEquipmentInSlot(1);
+		return boots == null ? 0 : EnchantmentHelper.getEnchantmentLevel(waterWalker.effectId, boots);
+	}
+
+	/** Level of Depth Strider on the equipped elytra: drives the underwater gliding feature. */
+	public static int getElytraWaterWalkerLevel(EntityLivingBase entity) {
+		if (waterWalker == null)
+			return 0;
+		ItemStack elytra = ItemArmorElytra.getElytra(entity);
+		return elytra == null ? 0 : EnchantmentHelper.getEnchantmentLevel(waterWalker.effectId, elytra);
 	}
 
 	// Mending logic

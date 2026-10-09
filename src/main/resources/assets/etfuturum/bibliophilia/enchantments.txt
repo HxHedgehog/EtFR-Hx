@@ -71,6 +71,7 @@ swift_sneak	vanilla/swift_sneak
 thorns	vanilla/thorns
 unbreaking	vanilla/unbreaking
 vanishing_curse	vanilla/vanishing_curse
+water_walker	vanilla/depth_strider
 wind_burst	vanilla/wind_burst
 
 # ---------------- [minecraft] : namespaced vanilla ----------------

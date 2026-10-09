@@ -33,4 +33,10 @@ public class FrostWalker extends Enchantment {
 	public boolean canApplyAtEnchantingTable(ItemStack stack) {
 		return stack != null && stack.getItem() == Items.book;
 	}
+
+	@Override
+	public boolean canApplyTogether(Enchantment ench) {
+		// 26.2: mutually exclusive with Depth Strider (BOOTS_EXCLUSIVE set).
+		return !(ench instanceof WaterWalker) && super.canApplyTogether(ench);
+	}
 }
