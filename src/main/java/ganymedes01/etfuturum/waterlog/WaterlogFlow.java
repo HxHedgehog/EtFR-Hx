@@ -5,7 +5,11 @@ import ganymedes01.etfuturum.mixins.early.oceanplants.MixinBlockDynamicLiquid;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 含水格向外蔓延（26.2 语义：含水格内部是 {@code Fluids.WATER.getSource(false)}
@@ -30,16 +34,111 @@ public final class WaterlogFlow {
 	public static final int WATER_TICK_RATE = 5;
 
 	/**
+	 * 26.2 FlowingFluid.canPassThroughWall 语义：宿主方块碰撞形状完整覆盖某方向的
+	 * 格边界平面（mergedFaceOccludes）时该方向不流水——含水楼梯的底面与背面、
+	 * 下半砖的底面是完整面，水只从开口部分流出；部分覆盖照常流动。1.7.10 侧用
+	 * 宿主碰撞箱集合做等价判定（vanilla addCollisionBoxesToList 收集）：楼梯碰撞箱
+	 * 随邻居动态拐角（func_150145_f 外角收缩台阶 / func_150144_g 内角补 1/4 块）——
+	 * 直梯 = 底/顶 + 背面 2 完整面、内角 = 3 完整面（底/顶 + 两个背向）、外角 = 仅
+	 * 底/顶 1 完整面，与 26.2 StairBlock 形状自动拐角同构；玻璃板等薄面无完整面。
+	 * 覆盖判定用四象限采样：1.7.10 家族碰撞箱全部 0.5 对齐，四象限各被某箱覆盖
+	 * ⇔ 整面覆盖（半格对齐下精确）。
+	 */
+	public static boolean isFaceComplete(List<AxisAlignedBB> boxes, int x, int y, int z, int side) {
+		for (int quadrant = 0; quadrant < 4; ++quadrant) {
+			if (!isQuadrantCovered(boxes, side, x, y, z, (quadrant & 1) != 0, (quadrant >> 1 & 1) != 0)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** 收集宿主方块在整格范围内的全部碰撞箱（楼梯含动态拐角收缩/补块）。 */
+	private static List<AxisAlignedBB> getHostCollisionBoxes(World world, int x, int y, int z) {
+		List<AxisAlignedBB> list = new ArrayList<AxisAlignedBB>();
+		world.getBlock(x, y, z).addCollisionBoxesToList(world, x, y, z,
+				AxisAlignedBB.getBoundingBox(x, y, z, x + 1.0D, y + 1.0D, z + 1.0D), list, null);
+		return list;
+	}
+
+	/** side：0=下(y=min) 1=上(y=max) 2=北(z=min) 3=南(z=max) 4=西(x=min) 5=东(x=max)。 */
+	private static boolean isFaceCovered(List<AxisAlignedBB> boxes, int x, int y, int z, int side) {
+		for (int quadrant = 0; quadrant < 4; ++quadrant) {
+			if (!isQuadrantCovered(boxes, side, x, y, z, (quadrant & 1) != 0, (quadrant >> 1 & 1) != 0)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean isQuadrantCovered(List<AxisAlignedBB> boxes, int side, int x, int y, int z, boolean half1, boolean half2) {
+		for (AxisAlignedBB bb : boxes) {
+			if (quadrantCoveredByBox(bb, side, x, y, z, half1, half2)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean quadrantCoveredByBox(AxisAlignedBB bb, int side, int x, int y, int z, boolean half1, boolean half2) {
+		switch (side) {
+			case 0: // y = min
+				if (bb.minY > y + EPS) return false;
+				return coversHalf(bb.minX, bb.maxX, x, half1) && coversHalf(bb.minZ, bb.maxZ, z, half2);
+			case 1: // y = max
+				if (bb.maxY < y + 1 - EPS) return false;
+				return coversHalf(bb.minX, bb.maxX, x, half1) && coversHalf(bb.minZ, bb.maxZ, z, half2);
+			case 2: // z = min
+				if (bb.minZ > z + EPS) return false;
+				return coversHalf(bb.minX, bb.maxX, x, half1) && coversHalf(bb.minY, bb.maxY, y, half2);
+			case 3: // z = max
+				if (bb.maxZ < z + 1 - EPS) return false;
+				return coversHalf(bb.minX, bb.maxX, x, half1) && coversHalf(bb.minY, bb.maxY, y, half2);
+			case 4: // x = min
+				if (bb.minX > x + EPS) return false;
+				return coversHalf(bb.minZ, bb.maxZ, z, half1) && coversHalf(bb.minY, bb.maxY, y, half2);
+			default: // x = max
+				if (bb.maxX < x + 1 - EPS) return false;
+				return coversHalf(bb.minZ, bb.maxZ, z, half1) && coversHalf(bb.minY, bb.maxY, y, half2);
+		}
+	}
+
+	/** 盒在面内轴上覆盖该轴的前半（false）/后半（true）半格区间。 */
+	private static boolean coversHalf(double min, double max, int cellCoord, boolean upperHalf) {
+		double q0 = cellCoord + (upperHalf ? 0.5D : 0.0D);
+		double q1 = q0 + 0.5D;
+		return min <= q0 + EPS && max >= q1 - EPS;
+	}
+
+	private static final double EPS = 1.0E-7D;
+
+	/** MixinBlockDynamicLiquid 喂养重定向用：采样格 (x,y,z) 朝 side 侧的完整面判定。 */
+	public static boolean isCellFaceComplete(World world, int x, int y, int z, int side) {
+		return isFaceCovered(getHostCollisionBoxes(world, x, y, z), x, y, z, side);
+	}
+
+	/** dir（0=x-1, 1=x+1, 2=z-1, 3=z+1）→ Forge 侧面号（4=西, 5=东, 2=北, 3=南）。 */
+	private static int sideOfDir(int dir) {
+		return dir == 0 ? 4 : dir == 1 ? 5 : dir == 2 ? 2 : 3;
+	}
+
+	/**
 	 * 目标格成源判定（26.2 {@code getNewLiquid} / 1.7.10 BlockDynamicLiquid
 	 * L72-82 语义）：水平 ≥2 个源（含水家族邻居是虚拟源，计入）+ 下方固体或
 	 * 源水。3c"无限水成源自动含水"的 target-centric 判定：真实水流向干家族
 	 * 格蔓延时，若该格在空气中本会成源，则含水家族方块直接获得含水位。
 	 */
 	public static boolean wouldFormSource(World world, int x, int y, int z) {
+		List<AxisAlignedBB> hostBoxes = getHostCollisionBoxes(world, x, y, z);
 		int sources = 0;
 		for (int dir = 0; dir < 4; ++dir) {
 			int nx = dir == 0 ? x - 1 : dir == 1 ? x + 1 : x;
 			int nz = dir == 2 ? z - 1 : dir == 3 ? z + 1 : z;
+			// 26.2 getNewLiquid L174：邻居水须穿过本格朝向该邻居的面才参与喂养/源计数
+			// ——干楼梯背面贴着的源水不计数
+			if (isFaceComplete(hostBoxes, x, y, z, sideOfDir(dir))) {
+				continue;
+			}
 			if (isSourceCell(world, nx, y, nz)) {
 				++sources;
 			}
@@ -125,20 +224,36 @@ public final class WaterlogFlow {
 	public static void spreadFromSource(World world, int x, int y, int z) {
 		WaterlogRuntime.debug("SPREAD " + x + "," + y + "," + z);
 		MixinBlockDynamicLiquid flow = (MixinBlockDynamicLiquid) Blocks.flowing_water;
+		List<AxisAlignedBB> hostBoxes = getHostCollisionBoxes(world, x, y, z);
 
-		if (flow.etfuturum$canFlowInto(world, x, y - 1, z)) {
+		// 26.2 isWaterHole：下行先过宿主底面完整面门控——楼梯/下半砖底面完整时不下行，
+		// 落回横向蔓延（vanilla updateTick 的下行受阻分支）
+		if (!isFaceComplete(hostBoxes, x, y, z, 0) && flow.etfuturum$canFlowInto(world, x, y - 1, z)) {
 			flow.etfuturum$flowInto(world, x, y - 1, z, 8); // 源 l=0 → 下方 falling（l + 8）
 			return;
 		}
-		// 源 l == 0：横向蔓延（vanilla else-if 的 l == 0 分支）
+		// 源 l == 0：横向蔓延（vanilla else-if 的 l == 0 分支），逐方向过宿主完整面门控
+		//（26.2 spreadToSides：完整面不流水，楼梯背面/半砖底面朝向的邻格不出水）
 		boolean[] dirs = flow.etfuturum$findFlowDirections(world, x, y, z);
 		for (int dir = 0; dir < 4; ++dir) {
-			if (!dirs[dir]) {
-				continue;
+			if (isFaceComplete(hostBoxes, x, y, z, sideOfDir(dir))) {
+				continue; // 完整面不出水也不传导含水
 			}
 			int nx = dir == 0 ? x - 1 : dir == 1 ? x + 1 : x;
 			int nz = dir == 2 ? z - 1 : dir == 3 ? z + 1 : z;
-			flow.etfuturum$flowInto(world, nx, y, nz, 1); // j1 = l + 1 = 1
+			Block neighbor = world.getBlock(nx, y, nz);
+			if (WaterlogFamilies.isWaterloggable(neighbor) && !WaterlogRuntime.isWaterlogged(world, nx, y, nz)) {
+				// 26.2 spreadToSides 扩散进相邻可含水格：仅当目标格 getNewLiquid 成源
+				//（getSpread 传源流体 → canPlaceLiquid(WATER) 通过 → waterlogged）。
+				// 本实现等价 = flowInto 触发 HEAD 调度，5gt 后 wouldFormSource 重查
+				// 通过即含水——对角双源的楼梯圈由此 4 格全含水（用户场景）
+				flow.etfuturum$flowInto(world, nx, y, nz, 1);
+				continue;
+			}
+			if (!dirs[dir]) {
+				continue;
+			}
+			flow.etfuturum$flowInto(world, nx, y, nz, 1);
 		}
 	}
 }

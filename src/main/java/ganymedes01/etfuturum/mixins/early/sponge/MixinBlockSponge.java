@@ -82,6 +82,11 @@ public abstract class MixinBlockSponge extends Block {
 							world.getBlockMetadata(blockpos2.x, blockpos2.y, blockpos2.z) & ~WaterlogRuntime.WATERLOGGED_BIT, 3);
 					arraylist.add(blockpos2);
 					i++;
+					// 26.2 SpongeBlock：含水格移除的流体计入吸水量，BFS 穿过该格继续
+					//（顺着含水方块吸收其后/其周的水，用户实证 262 能吸一大片）
+					if (j < 6) {
+						linkedlist.add(new Tuple(blockpos2, j + 1));
+					}
 					continue;
 				}
 				if (neighborBlock.getMaterial() != Material.water) {
