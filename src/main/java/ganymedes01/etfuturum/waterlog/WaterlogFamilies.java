@@ -1,6 +1,7 @@
 package ganymedes01.etfuturum.waterlog;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.BlockStairs;
@@ -23,6 +24,12 @@ import net.minecraft.block.BlockStairs;
  * EtFR 染色板为独立 Block 实例）→ 无需排除项，也无 canSurvive 要求
  * （26.2 PaneBlock.canSurvive 恒真）；含水视觉 = 整格 8/9 静水体叠在
  * 薄板几何上（画水管线按本家族过滤，玻璃板自动生效）。
+ * <p>栅栏（26.2 FenceBlock extends CrossCollisionBlock——与玻璃板/铁栏杆同基类）：
+ * WATERLOGGED 完整支持（getStateForPlacement L96 按 replacedFluidState 判定、
+ * updateShape L101-103 含水 scheduleTick 蔓延）→ 26.2 忠实对象；1.7.10 无 meta
+ * （连接状态靠邻居查询），EtFR 木栅栏/新木栅栏子类自动继承。注意 26.2 的
+ * FenceGateBlock（栅栏门）state definition 只有 FACING/OPEN/POWERED/IN_WALL、
+ * **无 WATERLOGGED 属性 → 26.2 栅栏门不可含水**，不在本家族（用户决策项）。
  */
 public final class WaterlogFamilies {
 
@@ -30,6 +37,7 @@ public final class WaterlogFamilies {
 
 	public static boolean isWaterloggable(Block block) {
 		return block instanceof BlockPane
+				|| block instanceof BlockFence
 				|| (block instanceof BlockStairs || block instanceof BlockSlab) && !block.isOpaqueCube();
 	}
 }

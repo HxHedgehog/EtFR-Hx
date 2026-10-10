@@ -37,6 +37,9 @@ public abstract class MixinEntity {
 	@Shadow
 	public abstract float getEyeHeight();
 
+	/** 探针节流计数（仅 WATERLOG_DEBUG）。 */
+	private static int etfuturum$insideProbe;
+
 	@Inject(method = "isInsideOfMaterial(Lnet/minecraft/block/material/Material;)Z", at = @At("HEAD"), cancellable = true)
 	private void etfuturum$waterloggedEye(Material materialIn, CallbackInfoReturnable<Boolean> cir) {
 		if (materialIn != Material.water || !WaterlogRuntime.isEnabled()) {
@@ -46,7 +49,17 @@ public abstract class MixinEntity {
 		int i = MathHelper.floor_double(this.posX);
 		int j = MathHelper.floor_double(d0);
 		int k = MathHelper.floor_double(this.posZ);
-		if (WaterlogRuntime.isWaterlogged(this.worldObj, i, j, k) && d0 < (double) j + 8.0D / 9.0D) {
+		boolean wet = WaterlogRuntime.isWaterlogged(this.worldObj, i, j, k);
+		// 探针（WATERLOG_DEBUG）：覆盖层/溺水/减速链路的眼位判定——INSIDE 行
+		if (WaterlogRuntime.WATERLOG_DEBUG && ++etfuturum$insideProbe % 40 == 0) {
+			WaterlogRuntime.debug("INSIDE #" + etfuturum$insideProbe + " eyeCell=" + i + "," + j + "," + k + " d0=" + d0
+					+ " bound=" + (j + 8.0D / 9.0D) + " wet=" + wet + " -> " + wet);
+		}
+		// 26.2 = "眼位格 fluid state 非空即水下"整格判定（与雾链
+		// getBlockAtEntityViewpoint 眼位格语义一致）——含水格内任意高度都算水下，
+		// 不设 8/9 眼位门（曾与雾链分裂：雾 true / 覆盖层 false，用户实证）。
+		// 真水格不拦截，vanilla 8/9 表面判线照旧。
+		if (wet) {
 			cir.setReturnValue(true);
 		}
 	}
