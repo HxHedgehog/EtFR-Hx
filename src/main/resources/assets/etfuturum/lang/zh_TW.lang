@@ -41,6 +41,13 @@ item.etfuturum.chorus_fruit_popped.name=爆裂紫影果
 item.etfuturum.dragon_breath.name=龍息
 item.etfuturum.elytra.name=滑翔翅
 item.etfuturum.end_crystal.name=末影水晶
+item.etfuturum.wooden_spear.name=木矛
+item.etfuturum.stone_spear.name=石矛
+item.etfuturum.copper_spear.name=銅矛
+item.etfuturum.iron_spear.name=鐵矛
+item.etfuturum.golden_spear.name=金矛
+item.etfuturum.diamond_spear.name=鑽石矛
+item.etfuturum.netherite_spear.name=獄髓矛
 potion.prefix.lingering=滯留
 
 # Arrows

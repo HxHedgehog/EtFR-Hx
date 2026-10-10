@@ -84,6 +84,7 @@ public class ConfigBlocksItems extends ConfigBase {
 	public static boolean enableNetherwartBlock;
 	public static boolean enableMagmaBlock;
 	public static boolean enableNetherite;
+	public static boolean enableSpears;
 	public static boolean enableBoneBlock;
 	public static boolean enableConcrete;
 	public static boolean enableTotemUndying;
@@ -377,6 +378,8 @@ public class ConfigBlocksItems extends ConfigBase {
 		netheriteChestplateProtection = getInt("netheriteChestplateProtection", catItemEquipment, 8, 1, Integer.MAX_VALUE, "Netherite Chestplate Protection");
 		netheriteLeggingsProtection = getInt("netheriteLeggingsProtection", catItemEquipment, 6, 1, Integer.MAX_VALUE, "Netherite Leggings Protection");
 		netheriteBootsProtection = getInt("netheriteBootsProtection", catItemEquipment, 3, 1, Integer.MAX_VALUE, "Netherite Boots Protection");
+
+		enableSpears = getBoolean("enableSpears", catItemEquipment, true, "Adds the spears from modern versions: wooden, stone, copper, iron, golden, diamond and netherite spears.");
 
 		//Entity Items
 		enableArmourStand = getBoolean("enableArmorStand", catItemEntity, true, "");
