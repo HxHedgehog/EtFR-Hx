@@ -445,17 +445,21 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		}
 
 		if (waterlogOn) {
+			WaterlogRuntime.debug("=== BUILD " + WaterlogRuntime.BUILD_TAG + " ===");
 			mixins.add("waterlog.MixinItemBlock");
 			mixins.add("waterlog.MixinBlockStairs");
 			mixins.add("waterlog.MixinBlockSlab");
 			mixins.add("waterlog.MixinBlockPane");
 			mixins.add("waterlog.MixinBlockFence");
+			mixins.add("waterlog.MixinBlockLadder");
+			mixins.add("waterlog.MixinBlockTrapDoor");
 			mixins.add("waterlog.MixinBlockStainedGlassPane");
 			mixins.add("waterlog.MixinBlockDynamicLiquid");
 			mixins.add("waterlog.MixinBlockLiquid");
 			mixins.add("waterlog.MixinEntity");
+			mixins.add("waterlog.MixinEntityLivingBase");
 			mixins.add("waterlog.MixinWorld");
-			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/StainedGlassPane/Entity/World waterlog mixins");
+			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/Ladder/TrapDoor/StainedGlassPane/Entity/EntityLivingBase/World waterlog mixins");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("waterlog.client.MixinBlockLiquid");
 				// Underwater fog (density + colour) goes through

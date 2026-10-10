@@ -50,7 +50,7 @@ public abstract class MixinItemBlock {
 		}
 		boolean enabled = WaterlogRuntime.isEnabled();
 		boolean family = WaterlogFamilies.isWaterloggable(this.field_150939_a);
-		boolean wasSource = enabled && family && WaterlogRuntime.isSourceWater(world, x, y, z);
+		boolean wasSource = enabled && family && WaterlogRuntime.isWaterCell(world, x, y, z);
 		WaterlogRuntime.debug("CAPTURE " + x + "," + y + "," + z + " enabled=" + enabled + " family=" + family
 				+ " cell=" + world.getBlock(x, y, z) + "/" + world.getBlockMetadata(x, y, z) + " -> wasSource=" + wasSource);
 		// 无条件覆盖：上次 placeBlockAt 失败时残留的 true 会被本次捕获清除

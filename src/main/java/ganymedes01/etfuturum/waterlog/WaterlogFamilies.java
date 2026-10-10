@@ -2,9 +2,11 @@ package ganymedes01.etfuturum.waterlog;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
+import net.minecraft.block.BlockLadder;
 import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.BlockStairs;
+import net.minecraft.block.BlockTrapDoor;
 
 /**
  * 含水家族注册表（plan §3.3）：按基类 instanceof 判定可含水的方块，
@@ -30,6 +32,11 @@ import net.minecraft.block.BlockStairs;
  * （连接状态靠邻居查询），EtFR 木栅栏/新木栅栏子类自动继承。注意 26.2 的
  * FenceGateBlock（栅栏门）state definition 只有 FACING/OPEN/POWERED/IN_WALL、
  * **无 WATERLOGGED 属性 → 26.2 栅栏门不可含水**，不在本家族（用户决策项）。
+ * <p>梯子/活板门（26.2 LadderBlock/TrapDoorBlock）：WATERLOGGED 完整支持
+ * （放置判定、updateShape/neighborChanged 蔓延调度）→ 26.2 忠实对象；1.7.10
+ * 梯子 meta = 朝向 2-5、活板门 meta = 朝向&3 + bit2 开 + bit3 上/下半，均无
+ * 清 bit16 的重写（开关为 XOR/AND/OR 位操作）；两者的 onNeighborBlockChange
+ * 为支撑移除逻辑（掉落 + setBlockToAir），mixin 必须 super 调用保留。
  */
 public final class WaterlogFamilies {
 
@@ -38,6 +45,8 @@ public final class WaterlogFamilies {
 	public static boolean isWaterloggable(Block block) {
 		return block instanceof BlockPane
 				|| block instanceof BlockFence
+				|| block instanceof BlockLadder
+				|| block instanceof BlockTrapDoor
 				|| (block instanceof BlockStairs || block instanceof BlockSlab) && !block.isOpaqueCube();
 	}
 }

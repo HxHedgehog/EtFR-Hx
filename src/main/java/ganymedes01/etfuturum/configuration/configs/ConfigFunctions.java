@@ -146,6 +146,7 @@ public class ConfigFunctions extends ConfigBase {
 	public static boolean registerRawItemAsOre;
 	public static boolean enableFloatingTrapDoors;
 	public static boolean enableHoeMining;
+	public static boolean waterBuoyancy;
 	public static boolean enableHayBaleFalls;
 	public static int hayBaleReducePercent;
 	public static int totemHealPercent;
@@ -225,6 +226,7 @@ public class ConfigFunctions extends ConfigBase {
 		extraDropRawOres = getStringList("extraDropRawOres", catSettings, new String[]{"oreCopper", "oreTin"}, "OreDictionary values for ore blocks that should drop extra items (2-3) instead of the usual one, before fortune.");
 		elytraDataWatcherFlag = (byte) getInt("elytraDataWatcherFlag", catSettings, 7, 0, 31, "The data watcher flag for the Elytra, used to sync the elytra animation with other players. In vanilla the max value is 7, players use 0-4, so you can set this to 6 or 7 by default. ASJCore increases the max value to 31.\nDo not change this value if you don't need to, or do not know what you're doing.");
 		useStoneHardnessForDeepslate = getBoolean("useStoneHardnessForDeepslate", catSettings, false, "Whether deepslate blocks should have the same hardness as their stone counterparts. This allows the asthetics of deepslate without the added hardness.");
+		waterBuoyancy = getBoolean("waterBuoyancy", catSettings, true, "Use 26.2 water physics: reduced underwater gravity (0.005 instead of 0.02) makes sinking slower, floating easier and hovering steadier. Affects all entities in vanilla water.");
 
 		//client
 		enableTransparentAmour = getBoolean("enableTransparentAmour", catClient, true, "Allow non-opaque armour");

@@ -25,7 +25,10 @@ public final class WaterlogRuntime {
 	 * 惯例：联调新管线（Angelica/扩族）时临时开，验收后关闭；含水系列
 	 * 全部收尾时连同探针一并清理。
 	 */
-	public static final boolean WATERLOG_DEBUG = false;
+	public static final boolean WATERLOG_DEBUG = true;
+
+	/** 构建标签：日志中核对运行中的 jar 是否为本次构建（防旧 jar 误测）。 */
+	public static final String BUILD_TAG = "20261010-D";
 
 	public static void debug(String msg) {
 		if (WATERLOG_DEBUG) {
@@ -48,8 +51,11 @@ public final class WaterlogRuntime {
 	/** 配置不能游戏中途变更，首次调用后缓存（客户端渲染线程与服务端线程并发首调结果是确定的，无需同步）。 */
 	public static boolean isEnabled() {
 		if (!resolved) {
-			enabled = Loader.isModLoaded("neid") && !ConfigMixins.disableWaterlogging;
+			boolean neid = Loader.isModLoaded("neid");
+			enabled = neid && !ConfigMixins.disableWaterlogging;
 			resolved = true;
+			debug("isEnabled resolved: neid=" + neid + " disableWaterlogging=" + ConfigMixins.disableWaterlogging
+					+ " -> " + enabled + " build=" + BUILD_TAG);
 		}
 		return enabled;
 	}
@@ -63,21 +69,15 @@ public final class WaterlogRuntime {
 	}
 
 	/**
-	 * 26.2 只认精确水源（{@code is(Fluids.WATER)}）：1.7.10 对应静态水
-	 * Blocks.water 且 meta 0（流水 meta 1-7/跌水 meta 8 不算——26.2 中放置进
-	 * 真流水同样先干、由流体 tick 回填，与成源重查延迟语义一致）。
-	 *
-	 * <p>例外：{@code BlockDynamicLiquid} meta 0 是 1.7.10 特有的"满格流水
-	 * 沉降等待"态——两股源水收敛先写入 Dynamic meta 0，下一流体 tick 才沉降
-	 * 为静态源；26.2 收敛直接写 source state，无此中间态。连放时目标格恰好
-	 * 处于该窗口会误判干放（2026-10-07 日志实证：CAPTURE cell=
-	 * BlockDynamicLiquid/0 -> wasSource=false → 干板可见约 1s 后才
-	 * SOURCE-FORM），按 26.2 等价语义视作源。视觉上满格流水与静态源同为
-	 * 8/9 水面，无法区分；沉降后本就是源。
+	 * 放置含水判定（26.2 getStateForPlacement 的 {@code getFluidState(pos).is(Fluids.WATER)}）：
+	 * <b>WaterFluid.isSame 覆写为"源与流水同属水"</b>（rfg 佐证：FlowingFluid 内部
+	 * 全部 {@code getType().isSame(this)}）→ 任何水（静态/流水 meta 1-7/满格流水
+	 * 沉降窗）均算——旧实现只认 meta 0，一格流水坑放置活板门不含水（2026-10-10
+	 * 用户实证）。只认水体方块本体（含水植物格是虚拟水，不在放置语义内）。
 	 */
-	public static boolean isSourceWater(IBlockAccess world, int x, int y, int z) {
+	public static boolean isWaterCell(IBlockAccess world, int x, int y, int z) {
 		Block block = world.getBlock(x, y, z);
-		return (block == Blocks.water || block == Blocks.flowing_water) && world.getBlockMetadata(x, y, z) == 0;
+		return block == Blocks.water || block == Blocks.flowing_water;
 	}
 
 	/** 写入含水位。只允许在 {@link #isEnabled()} 为真时调用（无 NEIDs 时写入会被 nibble 静默截断，禁止走到）。 */

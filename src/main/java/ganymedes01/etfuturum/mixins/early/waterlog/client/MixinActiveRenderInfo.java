@@ -2,7 +2,9 @@ package ganymedes01.etfuturum.mixins.early.waterlog.client;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
@@ -10,6 +12,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
@@ -20,17 +23,23 @@ import net.minecraft.world.World;
  * {@code Entity.isInsideOfMaterial} 不参与——{@link ganymedes01.etfuturum.mixins.early.waterlog.MixinEntity}
  * 只覆盖溺水/第一人称覆盖层/粒子链路，没有这个桥时含水楼梯里无水下视野。
  *
- * <p>含水格替身 = 静态水 + meta 1：{@code getLiquidHeightPercent(1) = 2/9} →
- * 方法的视点表面判线恰为 {@code y + 8/9}，与 MixinEntity 的 8/9 眼位分界、
- * StairWaterRenderer 的渲染水面三点一致——眼位低于 8/9 时返回 water（雾 ✓）。
+ * <p>含水格替身 = 无条件返回静态水，表面的高低取舍交还 vanilla 自带的上方
+ * 回退——meta 替身（下方 redirect 返回 1）使 vanilla 的视点判线恰为
+ * {@code y + 8/9}，与 StairWaterRenderer 的渲染水面一致：眼位低于 8/9 →
+ * 返回替身水（雾 ✓）；高于 8/9 → vanilla 改查上方格，上方是空气则无雾、
+ * 是真水（淹没含水块）则雾连续——<b>干缝自动闭合</b>。
  *
- * <p><b>上部 1/9 无雾修复（2026-10-09 用户实证）</b>：眼位高于替身水面 8/9 时
- * vanilla 改查上方格（空气 → 无雾）——紧贴含水栅栏/玻璃板时眼位格会进入栅栏格
- * （玩家中心越界 ~0.075m），其上部 1/9 窄窗内无雾且随高度上下变化。26.2 的
- * 判定是"眼位格 fluid state 非空即水下"的<b>整格判定，无表面判线</b>——修复 =
- * 上方回退时若<b>眼位格</b>（y-1）含水则强制返回 water（26.2 parity：含水格内
- * 任意高度都有雾，雾先于视觉水面 1/9 格）。真水格（非含水）不拦截，vanilla
- * 表面判线照旧；两个注入点（主采样 + 上方回退）都在本 redirect 内。
+ * <p><b>干缝修复（2026-10-10 探针实证）</b>：早先"眼位高于 8/9 不替身"短路了
+ * vanilla 回退（直接返回栅栏/玻璃板本体 → 非水材质 → 无雾），淹没含水块的
+ * 8/9 判线与上方真水格底之间出现 1/9 格干缝，海中贴栅栏上下移动时 FOV/蒙版
+ * 连续闪烁。修复 = 含水格无条件替身返回水，让 vanilla 判线/回退自己做取舍：
+ * 海上回退命中真水（雾连续），干地上回退命中空气（正确无雾）。<b>含水块柱
+ * 补丁（BUILD-D）</b>：回退命中"上方含水块"（柱叠）时同样返回水——柱内逐格
+ * 8/9 判线之间的 1/9 干缝闭合，与蒙版链 wetAbove 一致（BUILD-C 探针实证：
+ * 3 层含水玻璃板柱，眼位驻留 60.91 干缝 ret=Pane 无雾而蒙版开 → FOV 闪烁）。
+ * 真水流水格（meta 1-7）用真水面判线修正 vanilla +1/9 泄漏，源水/跌水整格
+ * 放行 vanilla（海面浮游不闪烁，见方法注释）。两个注入点（主采样 + 上方
+ * 回退）都在本 redirect 内。
  *
  * <p><b>视线采样点修复（2026-10-10 用户实证"最新 jar 无效果"）</b>：真正的根因
  * 是 {@code projectViewFromEntity}——采样点 = <b>眼位 + 视线方向 × 1.0</b>
@@ -46,11 +55,14 @@ public abstract class MixinActiveRenderInfo {
 	/**
 	 * 采样点改为纯眼位（26.2 camera 格语义）：去掉沿视线 +1.0 的偏移，让
 	 * getBlockAtEntityViewpoint 判定眼位格而非视线前方 1 格。唯一调用方即
-	 * getBlockAtEntityViewpoint（rfg 全树实证），无外溢。
+	 * getBlockAtEntityViewpoint（rfg 全树实证），无外溢。眼位格坐标进
+	 * ThreadLocal，供 getBlock 重定向精确区分主采样与上方回退两个调用点。
 	 *
 	 * <p>探针（WATERLOG_DEBUG）：FOG-EYE 行 = 眼位采样坐标；若日志中无 FOG 行
 	 * 说明该链路未被执行（如 Angelica 绕过 EntityRenderer 雾管线）。
 	 */
+	private static final ThreadLocal<double[]> EYE_POS = new ThreadLocal<double[]>();
+
 	private static int etfuturum$eyeProbe;
 
 	@Redirect(method = "getBlockAtEntityViewpoint(Lnet/minecraft/world/World;Lnet/minecraft/entity/EntityLivingBase;F)Lnet/minecraft/block/Block;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ActiveRenderInfo;projectViewFromEntity(Lnet/minecraft/entity/EntityLivingBase;D)Lnet/minecraft/util/Vec3;"))
@@ -58,6 +70,7 @@ public abstract class MixinActiveRenderInfo {
 		double x = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
 		double y = entity.prevPosY + (entity.posY - entity.prevPosY) * partialTicks + entity.getEyeHeight();
 		double z = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * partialTicks;
+		EYE_POS.set(new double[] {x, y, z});
 		if (WaterlogRuntime.WATERLOG_DEBUG && ++etfuturum$eyeProbe % 40 == 0) {
 			WaterlogRuntime.debug("FOG-EYE #" + etfuturum$eyeProbe + " eye=" + x + "," + y + "," + z + " view=" + entity.rotationPitch + "/" + entity.rotationYaw);
 		}
@@ -67,28 +80,88 @@ public abstract class MixinActiveRenderInfo {
 	/** 探针节流计数（仅 WATERLOG_DEBUG）。 */
 	private static int etfuturum$cellProbe;
 
+	/**
+	 * 主采样按 26.2 相机格语义处理：含水眼位格 → 无条件替身返回水，高低取舍
+	 * 交还 vanilla 表面门（meta 替身 = 8/9 判线）：眼位低于 8/9 → 返回替身水；
+	 * 高于 8/9 → vanilla 改查上方格（空气 → 无雾；真水 → 雾连续，干缝闭合）。
+	 * 流水眼位格（meta 1-7）→ 真水面判线修正 vanilla (9−meta)/9 判线的 +1/9
+	 * 泄漏（"流动水末端蓝雾泄漏到水面上方"）。
+	 *
+	 * <p><b>源水（meta 0）/跌水（meta≥8）不干预</b>（2026-10-10 用户实证"海中
+	 * 贴栅栏上下移动 FOV 连续闪烁"）：本方法同时喂 fog 色/密度与 FOV×60/70
+	 * （EntityRenderer.getFOVModifier L496-501）——若以视觉水面 8/9 为界，海面
+	 * 浮游的眼位围绕 8/9 波动，FOV/雾逐帧翻转；vanilla/26.2 整格判定的边界在
+	 * 格顶（meta 0 判线 f2 = y+1），只在离水时快速跨越一次、无驻留 → 不闪烁，
+	 * 且源水整格观感与原版/26.2 一致。
+	 *
+	 * <p><b>禁止无条件 y-1/y+1 检查</b>（2026-10-10 两轮用户实证）：y-1 在主
+	 * 采样上命中下方含水格 → 水上出雾；y+1 在眼位处于上方空气格时命中下方
+	 * 含水格 → FOV/雾闪。效果边界必须锁在 8/9 水面线/流水真水面上。
+	 */
 	@Redirect(method = "getBlockAtEntityViewpoint(Lnet/minecraft/world/World;Lnet/minecraft/entity/EntityLivingBase;F)Lnet/minecraft/block/Block;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getBlock(III)Lnet/minecraft/block/Block;"))
 	private static Block etfuturum$waterloggedEyeCell(World world, int x, int y, int z) {
 		Block block = world.getBlock(x, y, z);
-		boolean wet = WaterlogRuntime.isWaterlogged(world, x, y, z);
-		boolean wetBelow = WaterlogRuntime.isWaterlogged(world, x, y - 1, z);
+		double[] eye = EYE_POS.get();
+		if (eye != null) {
+			int cx = MathHelper.floor_double(eye[0]);
+			int cy = MathHelper.floor_double(eye[1]);
+			int cz = MathHelper.floor_double(eye[2]);
+			if (x == cx && z == cz && y == cy) {
+				if (WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+					// 含水眼位格：无条件替身返回水，高低取舍交还 vanilla 表面门
+					// （meta 替身 = 8/9 判线）——眼位高于判线时 vanilla 自己回退
+					// 上方格：真水 → 雾连续（干缝闭合），空气 → 无雾（水面之上）
+					return Blocks.water;
+				} else if (block.getMaterial().isLiquid()) {
+					// 流水 meta 1-7：真水面判线修正 vanilla (9−meta)/9 判线的 +1/9
+					// 泄漏。源水/跌水放行 vanilla（整格边界=格顶，海面浮游不闪烁）。
+					int meta = world.getBlockMetadata(x, y, z);
+					if (meta >= 1 && meta < 8 && eye[1] >= y + (8 - meta) / 9.0D) {
+						Block above = world.getBlock(x, y + 1, z);
+						// 上方是含水块 → 返回水（静态部分水之上的含水干缝同理闭合，
+						// 与蒙版链 wetAbove 一致）
+						return WaterlogRuntime.isWaterlogged(world, x, y + 1, z) ? Blocks.water : above;
+					}
+				}
+			} else if (x == cx && z == cz && y == cy + 1 && WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+				// 上方回退点（vanilla 表面门通过后改查眼位格 y+1）：命中含水块 →
+				// 返回水——含水块柱逐格 8/9 判线之间的 1/9 干缝闭合（BUILD-C 探针
+				// 实证：3 层含水玻璃板柱，眼位驻留 60.91 干缝 ret=Pane 无雾，而蒙版
+				// 链 wetAbove 判水下 → 两链不一致 + FOV 随眼位跨缝闪烁）。空气/干块
+				// → 原样返回（栅栏露出水面部分正确无雾）。
+				return Blocks.water;
+			}
+		}
 		if (WaterlogRuntime.WATERLOG_DEBUG && ++etfuturum$cellProbe % 40 == 0) {
+			double[] eyeDbg = EYE_POS.get();
 			WaterlogRuntime.debug("FOG-CELL #" + etfuturum$cellProbe + " cell=" + x + "," + y + "," + z + " block=" + block
-					+ " wet=" + wet + " wetBelow=" + wetBelow + " -> " + (wet || wetBelow ? "WATER" : block.getMaterial()));
+					+ " wet=" + WaterlogRuntime.isWaterlogged(world, x, y, z) + " -> " + block.getMaterial()
+					+ " eyeY=" + (eyeDbg != null ? eyeDbg[1] : -1));
 			etfuturum$dumpNeighborhood(world, x, y, z);
-		}
-		if (wet) {
-			return Blocks.water;
-		}
-		// 上方回退（vanilla L96-100：眼位高于液体表面判线时改查上方格）：
-		// 眼位格（y-1）含水 → 强制 water，保住 26.2 的整格判定
-		if (wetBelow) {
-			return Blocks.water;
 		}
 		return block;
 	}
 
-	/** 探针：眼位 3x3x3 邻域快照。W=水材质 L=含水家族 .=空气 B=其他。中格 = [1,1]。 */
+	/** 探针节流计数（仅 WATERLOG_DEBUG）。 */
+	private static int etfuturum$retProbe;
+
+	/**
+	 * 探针（WATERLOG_DEBUG）：getBlockAtEntityViewpoint 返回值——FOV×60/70、
+	 * 雾色、雾密度三个消费方共用此判定；ret 材质 water = 水下视野开启。
+	 * 每帧约 3 次调用（FOV/色/密度），÷120 ≈ 1 行/秒。
+	 */
+	@Inject(method = "getBlockAtEntityViewpoint(Lnet/minecraft/world/World;Lnet/minecraft/entity/EntityLivingBase;F)Lnet/minecraft/block/Block;", at = @At("RETURN"))
+	private static void etfuturum$fogReturnProbe(World world, net.minecraft.entity.EntityLivingBase entity, float partialTicks, CallbackInfoReturnable<Block> cir) {
+		if (!WaterlogRuntime.WATERLOG_DEBUG || ++etfuturum$retProbe % 120 != 0) {
+			return;
+		}
+		Block ret = cir.getReturnValue();
+		double[] eye = EYE_POS.get();
+		WaterlogRuntime.debug("FOG-RET #" + etfuturum$retProbe + " ret=" + (ret != null ? ret.getClass().getSimpleName() + "/" + ret.getMaterial() : "null")
+				+ " eyeY=" + (eye != null ? eye[1] : -1));
+	}
+
+	/** 探针：眼位 3x3x3 邻域快照 + 眼位纵列 ±3。W=水材质 L=含水家族 .=空气 B=其他。中格 = [1,1]。 */
 	private static void etfuturum$dumpNeighborhood(World world, int cx, int cy, int cz) {
 		for (int dy = 1; dy >= -1; --dy) {
 			StringBuilder sb = new StringBuilder("FOG-3x3 y=" + (cy + dy) + ":");
@@ -112,29 +185,16 @@ public abstract class MixinActiveRenderInfo {
 			}
 			WaterlogRuntime.debug(sb.toString());
 		}
+		for (int dy = 3; dy >= -3; --dy) {
+			Block b = world.getBlock(cx, cy + dy, cz);
+			WaterlogRuntime.debug("FOG-COL d=" + dy + " y=" + (cy + dy) + " " + b.getClass().getSimpleName()
+					+ "/" + world.getBlockMetadata(cx, cy + dy, cz)
+					+ (WaterlogRuntime.isWaterlogged(world, cx, cy + dy, cz) ? " WET" : ""));
+		}
 	}
 
 	@Redirect(method = "getBlockAtEntityViewpoint(Lnet/minecraft/world/World;Lnet/minecraft/entity/EntityLivingBase;F)Lnet/minecraft/block/Block;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getBlockMetadata(III)I"))
 	private static int etfuturum$waterloggedSurfaceMeta(World world, int x, int y, int z) {
 		return WaterlogRuntime.isWaterlogged(world, x, y, z) ? 1 : world.getBlockMetadata(x, y, z);
-	}
-
-	/** 探针节流计数（仅 WATERLOG_DEBUG）。 */
-	private static int etfuturum$fogEventProbe;
-
-	/**
-	 * 探针（WATERLOG_DEBUG）：setupFog 的 Forge FogDensity 事件——被取消时
-	 * vanilla 水雾分支（L2004）整体跳过（Angelica shader 组件挂此事件）。
-	 * FOG-EVENT cancelled=true 即雾被外部接管。
-	 */
-	@Redirect(method = "func_78468_a(IF)V", remap = false, at = @At(value = "INVOKE", target = "Lcpw/mods/fml/common/eventhandler/EventBus;post(Lcpw/mods/fml/common/eventhandler/Event;)Z", remap = false))
-	private static boolean etfuturum$probeFogDensityEvent(cpw.mods.fml.common.eventhandler.EventBus bus, cpw.mods.fml.common.eventhandler.Event event) {
-		boolean cancelled = bus.post(event);
-		if (WaterlogRuntime.WATERLOG_DEBUG && event instanceof net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity
-				&& ++etfuturum$fogEventProbe % 40 == 0) {
-			WaterlogRuntime.debug("FOG-EVENT #" + etfuturum$fogEventProbe + " cancelled=" + cancelled
-					+ " density=" + ((net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity) event).density);
-		}
-		return cancelled;
 	}
 }

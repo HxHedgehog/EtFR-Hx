@@ -4,6 +4,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import ganymedes01.etfuturum.waterlog.WaterlogFamilies;
@@ -110,5 +111,16 @@ public abstract class MixinRenderBlocks {
 				return;
 			}
 		}
+	}
+
+	/**
+	 * 梯子渲染的裸 meta 开关剥离含水位：renderBlockLadder（rfg L2719-2748）按
+	 * {@code l == 2/3/4/5} 画面片，含水位 meta（0x12+）无一命中 → 水中梯子
+	 * 完全不画（2026-10-10 用户实证）。楼梯/半砖的渲染 meta 消费天然掩码，
+	 * 只有梯子需要。
+	 */
+	@Redirect(method = "renderBlockLadder", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IBlockAccess;getBlockMetadata(III)I"))
+	private int etfuturum$maskLadderRenderMeta(net.minecraft.world.IBlockAccess world, int x, int y, int z) {
+		return world.getBlockMetadata(x, y, z) & ~WaterlogRuntime.WATERLOGGED_BIT;
 	}
 }
