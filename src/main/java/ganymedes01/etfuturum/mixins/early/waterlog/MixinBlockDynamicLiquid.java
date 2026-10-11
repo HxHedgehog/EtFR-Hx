@@ -14,6 +14,7 @@ import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDynamicLiquid;
 import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.material.Material;
 import net.minecraft.world.World;
 
 /**
@@ -121,5 +122,41 @@ public abstract class MixinBlockDynamicLiquid {
 			return true;
 		}
 		return ((ganymedes01.etfuturum.mixins.early.oceanplants.MixinBlockDynamicLiquid) (Object) liquid).etfuturum$canFlowInto(world, x, y, z);
+	}
+
+	/**
+	 * 26.2 getSpread 的家族候选（遗留对齐）：vanilla {@code func_149808_o} 用
+	 * {@code func_149807_p}（blocksMovement 材质）把干家族格当墙排除——该方向
+	 * 恒不入选，{@code func_149813_h}（写入咽喉，HEAD 已挂含水调度）不会被调用。
+	 * 26.2 中家族格是 LiquidBlockContainer：{@code canHoldAnyFluid} 恒真进入
+	 * getSpread 候选，且仍要过 {@code getNewLiquid} 的成源判定
+	 * （canHoldSpecificFluid → canPlaceLiquid 只认源流体）——与本 mod 既有的
+	 * "5gt 重查 wouldFormSource" 同构（单源贴家族格两侧都不含水，行为一致）。
+	 * 修复 = 原方法跑完后把干家族格方向补回 true，vanilla 现成的横向
+	 * {@code func_149813_h} 调用链自动触发调度（{@code func_149809_q} 的材质门
+	 * 仍阻断真实写入）；已含水格不补（26.2 canPlaceLiquid 对 WATERLOGGED=true
+	 * 拒绝），岩浆用材质门排除（canPlaceLiquid 拒绝非水流体）。仅 updateTick
+	 * 的调用点被改写——含水格源的蔓延（spreadFromSource）不经此路径，其家族
+	 * 绕过已在 WaterlogFlow 中实现。
+	 */
+	@Redirect(method = "updateTick", at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/block/BlockDynamicLiquid;func_149808_o(Lnet/minecraft/world/World;III)[Z"))
+	private boolean[] etfuturum$familyAwareSpread(BlockDynamicLiquid liquid, World world, int x, int y, int z) {
+		boolean[] dirs = ((ganymedes01.etfuturum.mixins.early.oceanplants.MixinBlockDynamicLiquid) (Object) liquid)
+				.etfuturum$findFlowDirections(world, x, y, z);
+		if (liquid.getMaterial() != Material.water || !WaterlogRuntime.isEnabled()) {
+			return dirs;
+		}
+		for (int dir = 0; dir < 4; ++dir) {
+			if (dirs[dir]) {
+				continue;
+			}
+			int nx = dir == 0 ? x - 1 : dir == 1 ? x + 1 : x;
+			int nz = dir == 2 ? z - 1 : dir == 3 ? z + 1 : z;
+			if (WaterlogFamilies.isWaterloggable(world.getBlock(nx, y, nz)) && !WaterlogRuntime.isWaterlogged(world, nx, y, nz)) {
+				dirs[dir] = true;
+			}
+		}
+		return dirs;
 	}
 }
