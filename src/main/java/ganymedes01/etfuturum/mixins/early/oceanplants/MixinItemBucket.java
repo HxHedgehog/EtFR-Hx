@@ -7,6 +7,7 @@ import ganymedes01.etfuturum.waterlog.WaterlogFamilies;
 import ganymedes01.etfuturum.waterlog.WaterlogFlow;
 import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockWall;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -81,6 +82,11 @@ public abstract class MixinItemBucket {
 	private boolean etfuturum$waterlogFamilyAtMop(World world, EntityPlayer player, int x, int y, int z) {
 		Block block = world.getBlock(x, y, z);
 		boolean family = WaterlogFamilies.isWaterloggable(block);
+		// 探针（20261012-W）：水桶点名墙但家族判定没认——isWaterloggable 失效证据
+		if (!family && block instanceof BlockWall) {
+			WaterlogRuntime.debug("MOP-MISS-WALL " + x + "," + y + "," + z
+					+ " cls=" + block.getClass().getSimpleName() + " remote=" + world.isRemote);
+		}
 		if (family) {
 			WaterlogRuntime.debug("MOP-HIT " + x + "," + y + "," + z + " isFullWater=" + (this.isFull == Blocks.flowing_water)
 					+ " sneak=" + player.isSneaking() + " wet=" + WaterlogRuntime.isWaterlogged(world, x, y, z) + " remote=" + world.isRemote);

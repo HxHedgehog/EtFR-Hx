@@ -51,7 +51,9 @@ public abstract class MixinItemBlock {
 		boolean enabled = WaterlogRuntime.isEnabled();
 		boolean family = WaterlogFamilies.isWaterloggable(this.field_150939_a);
 		boolean wasSource = enabled && family && WaterlogRuntime.isWaterCell(world, x, y, z);
-		WaterlogRuntime.debug("CAPTURE " + x + "," + y + "," + z + " enabled=" + enabled + " family=" + family
+		WaterlogRuntime.debug("CAPTURE " + x + "," + y + "," + z + " " + (world.isRemote ? "client" : "server")
+				+ " item=" + this.field_150939_a.getClass().getSimpleName() + " inMeta=" + metadata
+				+ " enabled=" + enabled + " family=" + family
 				+ " cell=" + world.getBlock(x, y, z) + "/" + world.getBlockMetadata(x, y, z) + " -> wasSource=" + wasSource);
 		// 无条件覆盖：上次 placeBlockAt 失败时残留的 true 会被本次捕获清除
 		WaterlogRuntime.capturePlacementSource(wasSource);
@@ -64,6 +66,10 @@ public abstract class MixinItemBlock {
 		// onBlockPlacedBy 的 meta 重写由 MixinBlockStairs 并回 bit16。
 		if (wasSource && result >= 0) {
 			result |= WaterlogRuntime.WATERLOGGED_BIT;
+		}
+		if (wasSource) {
+			WaterlogRuntime.debug("CAPTURE-ATOM " + x + "," + y + "," + z + " " + (world.isRemote ? "client" : "server")
+					+ " -> placeMeta=" + result);
 		}
 		return result;
 	}
@@ -92,6 +98,7 @@ public abstract class MixinItemBlock {
 			WaterlogRuntime.markWaterlogged(world, x, y, z);
 		}
 		WaterlogFlow.scheduleSpread(world, x, y, z, block);
-		WaterlogRuntime.debug("WRITE " + x + "," + y + "," + z + " block=" + block);
+		WaterlogRuntime.debug("WRITE " + x + "," + y + "," + z + " " + (world.isRemote ? "client" : "server")
+				+ " block=" + block.getClass().getSimpleName() + " meta=" + world.getBlockMetadata(x, y, z));
 	}
 }

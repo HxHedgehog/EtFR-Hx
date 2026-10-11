@@ -14,6 +14,8 @@ import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 含水格向外蔓延（26.2 语义：含水格内部是 {@code Fluids.WATER.getSource(false)}
@@ -33,6 +35,23 @@ import java.util.List;
 public final class WaterlogFlow {
 
 	private WaterlogFlow() {}
+
+	/**
+	 * 探针预算（20261012-W 墙排查用）：同一 key 最多放行 cap 条日志——一次游戏
+	 * 会话拿全量链路数据且不刷屏。ConcurrentHashMap：celeritas 构建线程并发探针。
+	 */
+	private static final Map<String, Integer> PROBE_BUDGET = new ConcurrentHashMap<String, Integer>();
+
+	public static boolean probeBudget(String key, int cap) {
+		Integer used = PROBE_BUDGET.get(key);
+		int u = used == null ? 0 : used;
+		if (u >= cap) {
+			return false;
+		}
+		PROBE_BUDGET.put(key, u + 1);
+		return true;
+	}
+
 
 	/** 水的流体 tick 间隔（BlockLiquid.tickRate 水分支，L329）。 */
 	public static final int WATER_TICK_RATE = 5;

@@ -14,6 +14,7 @@ import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDynamicLiquid;
 import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.BlockWall;
 import net.minecraft.block.material.Material;
 import net.minecraft.world.World;
 
@@ -46,6 +47,13 @@ public abstract class MixinBlockDynamicLiquid {
 	@Inject(method = "func_149813_h(Lnet/minecraft/world/World;IIII)V", at = @At("HEAD"))
 	private void etfuturum$scheduleFamilySourceFormation(World world, int x, int y, int z, int meta, CallbackInfo ci) {
 		Block block = world.getBlock(x, y, z);
+		// 探针（20261012-W）：流尝试写到墙格（成源调度的入口）；不命中 = 流水
+		// 根本没流到墙格（func_149808_o 家族补道/func_149809_q 材质门问题）
+		if (block instanceof BlockWall && WaterlogFlow.probeBudget("WALL-FLOW", 40)) {
+			WaterlogRuntime.debug("WALL-FLOW " + x + "," + y + "," + z + " " + (world.isRemote ? "client" : "server")
+					+ " family=" + WaterlogFamilies.isWaterloggable(block)
+					+ " wet=" + WaterlogRuntime.isWaterlogged(world, x, y, z) + " liquidMeta=" + meta);
+		}
 		// wet 早退：已含水格无需成源调度（蔓延重调度由 onNeighborBlockChange
 		// 负责）——否则邻水的每次流动尝试都会空转调度，SCHEDULE 刷屏
 		if (WaterlogFamilies.isWaterloggable(block) && !WaterlogRuntime.isWaterlogged(world, x, y, z)) {

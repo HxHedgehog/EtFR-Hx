@@ -8,10 +8,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import ganymedes01.etfuturum.waterlog.WaterlogFamilies;
+import ganymedes01.etfuturum.waterlog.WaterlogFlow;
 import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import ganymedes01.etfuturum.waterlog.client.StairWaterRenderer;
 import ganymedes01.etfuturum.waterlog.client.WaterlogPaint;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockWall;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.world.IBlockAccess;
@@ -47,6 +49,17 @@ public abstract class MixinRenderBlocks {
 
 	@Inject(method = "renderBlockByRenderType", at = @At("HEAD"), cancellable = true)
 	private void etfuturum$paintWaterInsteadOfBlockCopy(Block block, int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
+		// 探针（20261012-W）：墙的客户端渲染取样——rawMeta 是判定核心：
+		// 服务端 MARK 了 16+ 而这里 rawMeta < 16 = S21 网络层丢 bit16（NEID）；
+		// rawMeta 有 bit16 而 flag/cel 全 false = pass-1 门控没给墙开槽
+		if (block instanceof BlockWall && WaterlogFlow.probeBudget("RENDER-WALL", 40)) {
+			WaterlogRuntime.debug("RENDER-WALL " + x + "," + y + "," + z
+					+ " cls=" + block.getClass().getSimpleName()
+					+ " rawMeta=" + this.blockAccess.getBlockMetadata(x, y, z)
+					+ " family=" + WaterlogFamilies.isWaterloggable(block)
+					+ " wet=" + WaterlogRuntime.isWaterlogged(this.blockAccess, x, y, z)
+					+ " flag=" + WaterlogPaint.isFlagged() + " cel=" + WaterlogPaint.isCeleritasPassOne());
+		}
 		boolean flagged = WaterlogPaint.isFlagged(); // vanilla 管线：MixinWorldRenderer 门控置位
 		boolean celeritasPassOne = WaterlogPaint.isCeleritasPassOne(); // celeritas 管线：pass 捕获
 		if (!flagged && !celeritasPassOne) {
@@ -122,5 +135,25 @@ public abstract class MixinRenderBlocks {
 	@Redirect(method = "renderBlockLadder", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IBlockAccess;getBlockMetadata(III)I"))
 	private int etfuturum$maskLadderRenderMeta(net.minecraft.world.IBlockAccess world, int x, int y, int z) {
 		return world.getBlockMetadata(x, y, z) & ~WaterlogRuntime.WATERLOGGED_BIT;
+	}
+
+	/**
+	 * 墙的"上方开放"判定含水对齐（26.2 WallBlock.shouldRaisePost → isCovered）：
+	 * vanilla renderBlockWall（rfg L6595）的低直墙分支要求上方格是空气
+	 * （{@code flag6 = isAirBlock}），含水墙上方是水体 → 直墙线整体走"柱+臂"
+	 * 分支，水下墙线视觉上全是竖桩（2026-10-12 用户实证）。26.2 的升柱判定 =
+	 * 上方块碰撞形状覆盖柱测试形状（TEST_SHAPE_POST）——水体无碰撞形状 →
+	 * 不覆盖 → 不升柱（与空气同权，低直墙）；上方是实心方块/含水墙（自身碰撞
+	 * 覆盖柱列）/含水栅栏 → 维持升柱（1.7.10 现行为已一致）。拐角升柱由
+	 * hasCorner 驱动，两侧一致不受影响。修复 = renderBlockWall 的 isAirBlock
+	 * 调用点对水体格（静态/流水任意 meta）返回 true；enableWaterlogging 关闭时
+	 * 保留原版行为（ vanilla 瀑布下的墙维持柱剖面）。
+	 */
+	@Redirect(method = "renderBlockWall", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IBlockAccess;isAirBlock(III)Z"))
+	private boolean etfuturum$waterAboveKeepsLowProfile(net.minecraft.world.IBlockAccess world, int x, int y, int z) {
+		if (WaterlogRuntime.isEnabled() && WaterlogRuntime.isWaterCell(world, x, y, z)) {
+			return true;
+		}
+		return world.isAirBlock(x, y, z);
 	}
 }

@@ -5,9 +5,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import ganymedes01.etfuturum.waterlog.WaterlogFamilies;
+import ganymedes01.etfuturum.waterlog.WaterlogFlow;
 import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import ganymedes01.etfuturum.waterlog.client.WaterlogPaint;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockWall;
 
 /**
  * celeritas（Angelica 接管 embeddium 区块构建）管线的 pass-1 门控与 pass
@@ -40,6 +42,13 @@ public abstract class MixinAngelicaChunkBuilderMeshingTask {
 
 	@Redirect(method = "execute", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;canRenderInPass(I)Z", remap = false))
 	private boolean etfuturum$waterloggedBlocksGetPassOneSlot(Block block, int pass) {
+		// 探针（20261012-W）：墙有没有拿到 pass-1 槽位（没拿到 = celeritas 门控问题）
+		if (block instanceof BlockWall && WaterlogFlow.probeBudget("CEL-SLOT-WALL", 20)) {
+			WaterlogRuntime.debug("CEL-SLOT-WALL pass=" + pass
+					+ " family=" + WaterlogFamilies.isWaterloggable(block)
+					+ " enabled=" + WaterlogRuntime.isEnabled()
+					+ " -> slot=" + (pass == 1 && WaterlogRuntime.isEnabled() && WaterlogFamilies.isWaterloggable(block)));
+		}
 		if (pass == 1 && WaterlogRuntime.isEnabled() && WaterlogFamilies.isWaterloggable(block)) {
 			return true; // 打开槽位；含水判定在画水挂点做（画水或抑制空几何）
 		}
@@ -48,6 +57,10 @@ public abstract class MixinAngelicaChunkBuilderMeshingTask {
 
 	@Redirect(method = "renderBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;canRenderInPass(I)Z", remap = false))
 	private boolean etfuturum$captureRenderBlockPass(Block block, int pass) {
+		// 探针（20261012-W）：墙的 renderBlock 走到哪个 pass（画水挂点按此分流）
+		if (block instanceof BlockWall && WaterlogFlow.probeBudget("CEL-PASS-WALL", 20)) {
+			WaterlogRuntime.debug("CEL-PASS-WALL pass=" + pass + " cls=" + block.getClass().getSimpleName());
+		}
 		WaterlogPaint.captureCeleritasPass(pass);
 		return block.canRenderInPass(pass); // 行为不变，纯捕获
 	}

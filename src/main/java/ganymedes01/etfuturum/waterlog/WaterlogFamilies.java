@@ -7,6 +7,7 @@ import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.BlockStairs;
 import net.minecraft.block.BlockTrapDoor;
+import net.minecraft.block.BlockWall;
 
 /**
  * 含水家族注册表（plan §3.3）：按基类 instanceof 判定可含水的方块，
@@ -37,6 +38,18 @@ import net.minecraft.block.BlockTrapDoor;
  * 梯子 meta = 朝向 2-5、活板门 meta = 朝向&3 + bit2 开 + bit3 上/下半，均无
  * 清 bit16 的重写（开关为 XOR/AND/OR 位操作）；两者的 onNeighborBlockChange
  * 为支撑移除逻辑（掉落 + setBlockToAir），mixin 必须 super 调用保留。
+ *
+ * <p>墙（26.2 WallBlock implements SimpleWaterloggedBlock）：WATERLOGGED 完整
+ * 支持（getStateForPlacement L133 按 replacedFluidState 判定、updateShape
+ * L139-141 含水 scheduleTick 蔓延、getFluidState L226）→ 26.2 忠实对象；
+ * 1.7.10 连接状态靠 canConnectWallTo 邻居查询不存 meta（与栅栏同构），meta
+ * 只有变体位（vanilla bit0 normal/mossy；BaseWall 为多变体取模），且无支撑
+ * 判定、无 onNeighborBlockChange/updateTick/removedByPlayer 声明 → 与栅栏
+ * 同款 extends + @Override 三件套。裸 meta 污染点已全部剥位：vanilla
+ * getIcon/damageDropped（common/client mixin @Inject）、BaseWall 的
+ * getIcon/damageDropped/getBlockHardness/getExplosionResistance/getMapColor
+ * 取模与映射键（源码剥位——类型数不整除 16 时 bit16 会取模错位）、
+ * BlockStoneWall/BlockBlackstoneWall getIcon 裸比较（源码剥位）。
  */
 public final class WaterlogFamilies {
 
@@ -45,6 +58,7 @@ public final class WaterlogFamilies {
 	public static boolean isWaterloggable(Block block) {
 		return block instanceof BlockPane
 				|| block instanceof BlockFence
+				|| block instanceof BlockWall
 				|| block instanceof BlockLadder
 				|| block instanceof BlockTrapDoor
 				|| (block instanceof BlockStairs || block instanceof BlockSlab) && !block.isOpaqueCube();

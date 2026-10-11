@@ -28,7 +28,7 @@ public final class WaterlogRuntime {
 	public static final boolean WATERLOG_DEBUG = true;
 
 	/** 构建标签：日志中核对运行中的 jar 是否为本次构建（防旧 jar 误测）。 */
-	public static final String BUILD_TAG = "20261011-L";
+	public static final String BUILD_TAG = "20261012-W";
 
 	public static void debug(String msg) {
 		if (WATERLOG_DEBUG) {
@@ -82,7 +82,11 @@ public final class WaterlogRuntime {
 
 	/** 写入含水位。只允许在 {@link #isEnabled()} 为真时调用（无 NEIDs 时写入会被 nibble 静默截断，禁止走到）。 */
 	public static void markWaterlogged(World world, int x, int y, int z) {
-		world.setBlockMetadataWithNotify(x, y, z, world.getBlockMetadata(x, y, z) | WATERLOGGED_BIT, 2);
+		Block block = world.getBlock(x, y, z);
+		int oldMeta = world.getBlockMetadata(x, y, z);
+		world.setBlockMetadataWithNotify(x, y, z, oldMeta | WATERLOGGED_BIT, 2);
+		debug("MARK " + x + "," + y + "," + z + " " + (world.isRemote ? "client" : "server")
+				+ " " + block.getClass().getSimpleName() + " meta " + oldMeta + " -> " + (oldMeta | WATERLOGGED_BIT));
 	}
 
 	/** 放置捕获：无条件覆盖（自动清除上次 placeBlockAt 失败残留的标记）。 */

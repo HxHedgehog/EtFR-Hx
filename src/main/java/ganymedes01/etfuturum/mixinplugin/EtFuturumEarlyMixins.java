@@ -451,6 +451,7 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.MixinBlockSlab");
 			mixins.add("waterlog.MixinBlockPane");
 			mixins.add("waterlog.MixinBlockFence");
+			mixins.add("waterlog.MixinBlockWall");
 			mixins.add("waterlog.MixinBlockLadder");
 			mixins.add("waterlog.MixinBlockTrapDoor");
 			mixins.add("waterlog.MixinBlockStainedGlassPane");
@@ -467,9 +468,12 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.MixinEntityTNTPrimed");
 			mixins.add("waterlog.MixinItemFlintAndSteel");
 			mixins.add("waterlog.MixinItemInWorldManager");
-			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/Ladder/TrapDoor/StainedGlassPane/Entity/EntityLivingBase/World waterlog mixins + Explosion/TNT/place probes");
+			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/Wall/Ladder/TrapDoor/StainedGlassPane/Entity/EntityLivingBase/World waterlog mixins + Explosion/TNT/place probes");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("waterlog.client.MixinBlockLiquid");
+				// Wall getIcon is @SideOnly(CLIENT) (SideTransformer strips it on
+				// dedicated servers) - the bit16 strip must be a client mixin.
+				mixins.add("waterlog.client.MixinBlockWall");
 				// Underwater fog (density + colour) goes through
 				// ActiveRenderInfo.getBlockAtEntityViewpoint in both pipelines.
 				mixins.add("waterlog.client.MixinActiveRenderInfo");
