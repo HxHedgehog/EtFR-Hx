@@ -125,6 +125,7 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		if (ConfigMixins.enableElytra) {
 			mixins.add("backlytra.MixinEntityPlayer");
 			mixins.add("backlytra.MixinEntityLivingBase");
+			mixins.add("backlytra.MixinEntity");
 			mixins.add("backlytra.MixinNetHandlerPlayServer");
 			mixins.add("backlytra.MixinEntityTrackerEntry");
 			if (loadedCoreMods.stream().anyMatch(name -> name.contains("thaumcraft"))) {
@@ -410,6 +411,7 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("oceanplants.MixinBlockFalling");
 			mixins.add("oceanplants.MixinItemDye");
 			mixins.add("oceanplants.MixinWorld");
+			mixins.add("oceanplants.MixinEntity");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("oceanplants.client.MixinRenderBlocks");
 				mixins.add("oceanplants.client.MixinItemRenderer");

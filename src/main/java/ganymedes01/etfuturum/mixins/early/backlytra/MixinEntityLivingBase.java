@@ -82,6 +82,22 @@ public abstract class MixinEntityLivingBase extends Entity {
 				this.motionX *= 0.9900000095367432D;
 				this.motionY *= 0.9800000190734863D;
 				this.motionZ *= 0.9900000095367432D;
+
+				/* 26.2 applies the underwater speed penalty through the Depth Strider slowDown of
+				   travelInWater (0.8 swimming drag, blended towards 0.546 by WATER_MOVEMENT_EFFICIENCY,
+				   LivingEntity#travelInWater). The balance feature keeps the air glide physics
+				   underwater instead and scales its performance: the base 0.99/0.98 glide drag is
+				   raised so the drag balanced glide speed settles at 35% of the air speed with Depth
+				   Strider I, 55% with II and 75% with III, keeping flight over water the faster
+				   option. The boosting firework rocket scales its thrust by the same factor
+				   (EntityBoostingFireworkRocket). */
+				if (this.isInWater()) {
+					double performance = ModEnchantments.getElytraWaterWalkerPerformance((EntityLivingBase) (Object) this);
+					this.motionX *= (1.0D - 0.01D / performance) / 0.9900000095367432D;
+					this.motionY *= (1.0D - 0.02D / performance) / 0.9800000190734863D;
+					this.motionZ *= (1.0D - 0.01D / performance) / 0.9900000095367432D;
+				}
+
 				this.moveEntity(this.motionX, this.motionY, this.motionZ);
 
 				if (this.isCollidedHorizontally && !this.worldObj.isRemote) {

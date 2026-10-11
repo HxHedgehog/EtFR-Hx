@@ -1,5 +1,7 @@
 package ganymedes01.etfuturum.entities;
 
+import ganymedes01.etfuturum.ModEnchantments;
+import ganymedes01.etfuturum.configuration.configs.ConfigEnchantsPotions;
 import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -83,9 +85,22 @@ public class EntityBoostingFireworkRocket extends EntityFireworkRocket {
 				 * until it explodes at the end of its lifetime. */
 				if (this.boostedEntity instanceof IElytraPlayer && ((IElytraPlayer) this.boostedEntity).etfu$isElytraFlying()) {
 					Vec3 look = this.boostedEntity.getLookVec();
-					this.boostedEntity.motionX += look.xCoord * 0.1D + (look.xCoord * 1.5D - this.boostedEntity.motionX) * 0.5D;
-					this.boostedEntity.motionY += look.yCoord * 0.1D + (look.yCoord * 1.5D - this.boostedEntity.motionY) * 0.5D;
-					this.boostedEntity.motionZ += look.zCoord * 0.1D + (look.zCoord * 1.5D - this.boostedEntity.motionZ) * 0.5D;
+
+					/* The underwater glide drag (MixinEntityLivingBase#moveElytra) alone barely
+					 * weakens the boost: the 26.2 thrust formula self-limits towards look * 1.5
+					 * with a 50% per-tick correction that dwarfs the extra drag, so boosted speed
+					 * stays nearly identical across Depth Strider levels. Scaling the base thrust
+					 * and the target speed by the same performance factor restores the 35/55/75%
+					 * underwater gradient for rocket boosting. Like the underwater glide itself,
+					 * the scaling follows the elytraOceanEnchant gate; in air thrust is untouched. */
+					double thrust = 1.0D;
+					if (ConfigEnchantsPotions.elytraOceanEnchant && this.boostedEntity.isInWater()) {
+						thrust = ModEnchantments.getElytraWaterWalkerPerformance(this.boostedEntity);
+					}
+
+					this.boostedEntity.motionX += look.xCoord * 0.1D * thrust + (look.xCoord * 1.5D * thrust - this.boostedEntity.motionX) * 0.5D;
+					this.boostedEntity.motionY += look.yCoord * 0.1D * thrust + (look.yCoord * 1.5D * thrust - this.boostedEntity.motionY) * 0.5D;
+					this.boostedEntity.motionZ += look.zCoord * 0.1D * thrust + (look.zCoord * 1.5D * thrust - this.boostedEntity.motionZ) * 0.5D;
 
 					/* 26.2 Entity.getHandHoldingItemAngle(): the main hand view vector rotated
 					 * 80 degrees to the right and scaled by 0.5 (1.7.10 has no offhand). */

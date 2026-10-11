@@ -103,6 +103,16 @@ public class ModEnchantments {
 		return elytra == null ? 0 : EnchantmentHelper.getEnchantmentLevel(waterWalker.effectId, elytra);
 	}
 
+	/**
+	 * Underwater performance fraction of the Depth Strider level on the equipped elytra:
+	 * the drag-balanced underwater glide speed and the scaled rocket boost speed settle
+	 * at this fraction of the airborne speed (35% at level 1, 55% at level 2, 75% at level 3).
+	 */
+	public static double getElytraWaterWalkerPerformance(EntityLivingBase entity) {
+		int level = Math.min(getElytraWaterWalkerLevel(entity), 3);
+		return level >= 3 ? 0.75D : level == 2 ? 0.55D : 0.35D;
+	}
+
 	// Mending logic
 	public static void onPlayerPickupXP(PlayerPickupXpEvent event) {
 		EntityPlayer player = event.entityPlayer;

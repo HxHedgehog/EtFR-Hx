@@ -7,6 +7,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -53,6 +54,38 @@ public abstract class BlockAquaticPlant extends BaseBlock {
 
 	public static boolean isLiquidWater(Block block) {
 		return block == Blocks.water || block == Blocks.flowing_water;
+	}
+
+	/**
+	 * 1.7.10 water detection runs over the bounding box shrunk by 0.4 on both
+	 * vertical ends (Entity#handleWaterMovement), so entities gliding with the
+	 * feet in the lower part of a plant cell - or just above short plant tops -
+	 * miss every Material.water cell and keep moving at air speed. 26.2 derives
+	 * the fluid state from the full bounding box, where a pseudo-waterlogged
+	 * plant cell is a full source-water volume, so any body overlap counts.
+	 * Scans the unshrunk box for ocean plant cells; only water-material plants
+	 * qualify (a dry sea pickle is Material.coral and stays dry for physics).
+	 */
+	public static boolean isTouchingOceanPlant(World world, AxisAlignedBB bb) {
+		AxisAlignedBB box = bb.contract(0.001D, 0.001D, 0.001D);
+		int minX = MathHelper.floor_double(box.minX);
+		int maxX = MathHelper.floor_double(box.maxX + 1.0D);
+		int minY = MathHelper.floor_double(box.minY);
+		int maxY = MathHelper.floor_double(box.maxY + 1.0D);
+		int minZ = MathHelper.floor_double(box.minZ);
+		int maxZ = MathHelper.floor_double(box.maxZ + 1.0D);
+
+		for (int x = minX; x < maxX; x++) {
+			for (int y = minY; y < maxY; y++) {
+				for (int z = minZ; z < maxZ; z++) {
+					Block block = world.getBlock(x, y, z);
+					if (block.getMaterial() == Material.water && isOceanPlant(block)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
