@@ -79,6 +79,9 @@ import ganymedes01.etfuturum.network.ChestBoatOpenInventoryHandler;
 import ganymedes01.etfuturum.network.ChestBoatOpenInventoryMessage;
 import ganymedes01.etfuturum.network.StartElytraFlyingHandler;
 import ganymedes01.etfuturum.network.StartElytraFlyingMessage;
+import ganymedes01.etfuturum.network.SpearHitFeedbackMessage;
+import ganymedes01.etfuturum.network.SpearJabMessage;
+import ganymedes01.etfuturum.network.SpearStabMessage;
 import ganymedes01.etfuturum.network.TotemParticlesHandler;
 import ganymedes01.etfuturum.network.TotemParticlesMessage;
 import ganymedes01.etfuturum.network.WoodSignOpenHandler;
@@ -234,6 +237,9 @@ public class EtFuturum {
 		networkWrapper.registerMessage(StartElytraFlyingHandler.class, StartElytraFlyingMessage.class, 6, Side.SERVER);
 		networkWrapper.registerMessage(AttackYawHandler.class, AttackYawMessage.class, 7, Side.CLIENT);
 		networkWrapper.registerMessage(TotemParticlesHandler.class, TotemParticlesMessage.class, 8, Side.CLIENT);
+		networkWrapper.registerMessage(SpearStabMessage.Handler.class, SpearStabMessage.class, 9, Side.SERVER);
+		networkWrapper.registerMessage(SpearHitFeedbackMessage.Handler.class, SpearHitFeedbackMessage.class, 10, Side.CLIENT);
+		networkWrapper.registerMessage(SpearJabMessage.Handler.class, SpearJabMessage.class, 11, Side.SERVER);
 
 		if (!Reference.SNAPSHOT_BUILD && !Reference.DEV_ENVIRONMENT) {
 			MCLibModules.updateCheckAPI.submitModTask(MOD_ID, Reference.VERSION_NUMBER, Reference.VERSION_URL);

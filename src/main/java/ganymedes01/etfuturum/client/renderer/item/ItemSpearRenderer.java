@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL12;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import ganymedes01.etfuturum.client.handler.SpearHitFeedbackTracker;
 import ganymedes01.etfuturum.items.ItemSpear;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemRenderer;
@@ -13,6 +14,8 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
@@ -55,9 +58,26 @@ public class ItemSpearRenderer implements IItemRenderer {
 
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack stack, Object... data) {
-		IIcon icon = ((ItemSpear) stack.getItem()).getInHandIcon();
+		ItemSpear spear = (ItemSpear) stack.getItem();
+		IIcon icon = spear.getInHandIcon();
 		if (icon == null)
 			return;
+
+		// Forge passes [RenderBlocks, holder] for both EQUIPPED and EQUIPPED_FIRST_PERSON
+		EntityLivingBase holder = null;
+		for (Object o : data)
+			if (o instanceof EntityLivingBase) {
+				holder = (EntityLivingBase) o;
+				break;
+			}
+		// 26.2: the use animations run while the spear is the item in use. 1.7.10 keeps the
+		// item-in-use state on EntityPlayer only (itemInUse moves down to LivingEntity in 1.9).
+		EntityPlayer playerHolder = holder instanceof EntityPlayer ? (EntityPlayer) holder : null;
+		boolean using = playerHolder != null && playerHolder.isUsingItem() && playerHolder.getItemInUse() == stack;
+		float partial = Minecraft.getMinecraft().timer.renderPartialTicks;
+		// 26.2 timeHeld = useDuration - (remaining - frameInterp + 1); 1.7.10 counts the remaining ticks down
+		float timeHeld = playerHolder == null ? 0.0F : ItemSpear.USE_DURATION - playerHolder.getItemInUseCount() + partial - 1.0F;
+		float ticksSinceHit = holder == null ? 10.0F : SpearHitFeedbackTracker.getTicksSinceLastHit(holder, holder.worldObj.getTotalWorldTime()) + partial;
 
 		TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 		textureManager.bindTexture(TextureMap.locationItemsTexture);
@@ -91,6 +111,22 @@ public class ItemSpearRenderer implements IItemRenderer {
 			// display transform). Invert both differences to land in 26.2's space.
 			GL11.glScalef(2.5F, 2.5F, 2.5F);
 			GL11.glRotatef(-45.0F, 0.0F, 1.0F, 0.0F);
+			if (using) {
+				// 26.2 ItemInHandRenderer SPEAR case: firstPersonUse directly after the arm-space
+				// shift T(invert*0.56, -0.52, -0.72) that replaces applyItemArmTransform. 1.7.10
+				// already applied that identical shift unconditionally (ItemRenderer L434:
+				// T(0.7*0.8, -0.65*0.8 - equip, -0.9*0.8), before R(45Y)/S(0.4) which we undid
+				// above), so do NOT repeat it here or the spear drifts away from the camera.
+				SpearAnimations.firstPersonUse(ticksSinceHit, timeHeld, spear, true);
+			} else if (playerHolder != null) {
+				// 26.2 ItemInHandRenderer STAB case: attackTime = getAttackAnim(frameInterp) is the
+				// interpolated swingProgress (identical wrap-around interpolation, EntityLivingBase
+				// L2180-2187); the vanilla arc blocks are suppressed by spear.client.MixinItemRenderer.
+				float stab = playerHolder.getSwingProgress(partial);
+				if (stab > 0.0F) {
+					SpearAnimations.firstPersonAttack(stab, true);
+				}
+			}
 		} else {
 			// Undo the whole RenderBiped isFull3D branch on top of the frame (RenderBiped.java
 			// L287-301, applied after T(-0.0625, 0.4375, 0.0625) at L264), then apply 26.2's
@@ -103,6 +139,18 @@ public class ItemSpearRenderer implements IItemRenderer {
 			GL11.glRotatef(-90.0F, 1.0F, 0.0F, 0.0F);
 			GL11.glRotatef(180.0F, 0.0F, 1.0F, 0.0F);
 			GL11.glTranslatef(1.0F / 16.0F, 2.0F / 16.0F, -10.0F / 16.0F);
+			if (using) {
+				// 26.2 ItemInHandLayer L44-56: translateToHand -> -90X/180Y -> T(1/16,2/16,-10/16)
+				// -> animateUseItem (thirdPersonUseItem) -> display transform
+				SpearAnimations.thirdPersonUseItem(timeHeld, 0.0F, ticksSinceHit, spear, true);
+			} else if (playerHolder != null) {
+				// 26.2 ItemInHandLayer L52-54: the STAB item transform runs in the same spot, gated
+				// on attackTime > 0 (attackArm is always the main hand in 1.7.10).
+				float stab = playerHolder.getSwingProgress(partial);
+				if (stab > 0.0F) {
+					SpearAnimations.thirdPersonAttackItem(stab);
+				}
+			}
 		}
 
 		// ItemTransform.apply: translate(/16), rotateXYZ, scale, centre the model

@@ -139,6 +139,18 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			}
 		}
 
+		if (ConfigBlocksItems.enableSpears) {
+			mixins.add("spear.common.MixinEntityLivingBase");
+			mixins.add("spear.common.MixinEntityPlayer");
+			mixins.add("spear.common.MixinNetHandlerPlayServer");
+			if (side == MixinEnvironment.Side.CLIENT) {
+				mixins.add("spear.client.MixinEntityPlayerSP");
+				mixins.add("spear.client.MixinMinecraft");
+				mixins.add("spear.client.MixinModelBiped");
+				mixins.add("spear.client.MixinItemRenderer");
+			}
+		}
+
 		if (ConfigMixins.enableDoWeatherCycle) {
 			mixins.add("doweathercycle.MixinCommandHandler");
 			mixins.add("doweathercycle.MixinWorldInfo");
