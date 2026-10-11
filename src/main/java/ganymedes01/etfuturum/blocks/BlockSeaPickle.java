@@ -18,7 +18,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -273,15 +272,10 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 		return super.removedByPlayer(world, player, x, y, z);
 	}
 
-	@Override
-	public void onBlockExploded(World world, int x, int y, int z, Explosion explosion) {
-		if (wet) {
-			dropBlockAsItemWithChance(world, x, y, z, world.getBlockMetadata(x, y, z), 1.0F, 0);
-			world.setBlock(x, y, z, Blocks.water, 0, 3);
-		} else {
-			super.onBlockExploded(world, x, y, z, explosion);
-		}
-	}
+	// 爆炸不覆写 onBlockExploded：forge 默认 setBlockToAir（flag 3）正是 26.2
+	// onExplosionHit 的语义——掉落（Explosion 前置处理，数量按 meta+1）后
+	// setBlock(pos, AIR, 3)，湿泡菜和它占住的水一起消失，邻水自然回流。旧
+	// 实现 wet 分支留水源格（die 风格）是挖掘语义，偏离 26.2 的爆炸语义。
 
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX, float hitY, float hitZ) {

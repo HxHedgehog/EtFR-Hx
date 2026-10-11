@@ -459,7 +459,15 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.MixinEntity");
 			mixins.add("waterlog.MixinEntityLivingBase");
 			mixins.add("waterlog.MixinWorld");
-			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/Ladder/TrapDoor/StainedGlassPane/Entity/EntityLivingBase/World waterlog mixins");
+			// 26.2 explosion semantics (waterlogged blocks block blast rays via
+			// their water FluidState resistance) plus the TNT test probes:
+			// placement entry, flint use, TNT spawn/boom, explosion creation.
+			mixins.add("waterlog.MixinExplosion");
+			mixins.add("waterlog.MixinWorldExplosion");
+			mixins.add("waterlog.MixinEntityTNTPrimed");
+			mixins.add("waterlog.MixinItemFlintAndSteel");
+			mixins.add("waterlog.MixinItemInWorldManager");
+			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/Ladder/TrapDoor/StainedGlassPane/Entity/EntityLivingBase/World waterlog mixins + Explosion/TNT/place probes");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("waterlog.client.MixinBlockLiquid");
 				// Underwater fog (density + colour) goes through

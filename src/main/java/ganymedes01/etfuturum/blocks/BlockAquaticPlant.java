@@ -7,7 +7,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -21,7 +20,8 @@ import java.util.Random;
  * The block uses {@link Material#water} so fluid physics, swimming drag,
  * breath, underwater fog and biome water tint all come for free, and the
  * renderer paints a full water volume in pass 1 before drawing the plant.
- * Destruction restores a still water source, matching modern waterlogging.
+ * Digging and support loss restore a still water source (26.2 destroyBlock
+ * semantics); explosions leave plain air (26.2 onExplosionHit semantics).
  * <p>
  * Shader pack contract: the painted water quads are auto-tagged with the
  * pack's water id by Angelica (sprite-based), so water programs apply on any
@@ -172,10 +172,11 @@ public abstract class BlockAquaticPlant extends BaseBlock {
 		return true;
 	}
 
-	@Override
-	public void onBlockExploded(World world, int x, int y, int z, Explosion explosion) {
-		die(world, x, y, z);
-	}
+	// 爆炸不覆写 onBlockExploded：forge 默认 setBlockToAir（flag 3）正是 26.2
+	// onExplosionHit 的语义——掉落（Explosion 在调用前自行处理：海带/海带茎掉
+	// 海带 ×1、海草不掉）后 setBlock(pos, AIR, 3)，方块和内部的水一起消失，
+	// 邻水靠流体 tick 自然回流。die() 只服务失养级联（26.2 updateShape →
+	// destroyBlock，那才留水源）；旧实现爆炸走 die() 留水是偏离 26.2 的。
 
 	/**
 	 * Called when the plant loses support or becomes invalid.
