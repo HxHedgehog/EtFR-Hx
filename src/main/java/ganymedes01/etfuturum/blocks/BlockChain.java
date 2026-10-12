@@ -19,7 +19,9 @@ public class BlockChain extends BaseBlock {
 
 	@Override
 	public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
-		switch (world.getBlockMetadata(x, y, z)) {
+		// 裸 meta 剥位（bit16）：default 分支 = Y 轴，含水横链 meta 17/18 裸判会
+		// 竖起来。轴向只用低 4 位，& 15 对干链等价。
+		switch (world.getBlockMetadata(x, y, z) & 15) {
 			case 0:
 			default:
 				return AxisAlignedBB.getBoundingBox(x + 0.40625D, y, z + 0.40625D, x + 0.59375D, y + 1.0D, z + 0.59375D);
@@ -32,7 +34,8 @@ public class BlockChain extends BaseBlock {
 
 	@Override
 	public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z) {
-		switch (world.getBlockMetadata(x, y, z)) {
+		// 裸 meta 剥位（bit16）：同 getCollisionBoundingBoxFromPool，含水横链竖起。
+		switch (world.getBlockMetadata(x, y, z) & 15) {
 			case 1:
 				setBlockBounds(0, 0.40625F, 0.40625F, 1.0F, 0.59375F, 0.59375F);
 				break;

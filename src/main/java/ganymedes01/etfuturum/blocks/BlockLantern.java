@@ -42,7 +42,9 @@ public class BlockLantern extends Block {
 		float r = 0.0625F;
 		float f = 0.375F;
 		float f1 = f / 2.0F;
-		if (worldIn.getBlockMetadata(x, y, z) == 0)
+		// 裸 meta 比较剥离含水位（bit16）：含水立灯 meta = 0x10，裸 == 0 不命中会
+		// 落到吊挂分支（碰撞箱错位）。挂位只用低 4 位，& 15 对干灯等价。
+		if ((worldIn.getBlockMetadata(x, y, z) & 15) == 0)
 			this.setBlockBounds(0.5F - f1, 0.0F, 0.5F - f1, 0.5F + f1, r * 7, 0.5F + f1);
 		else
 			this.setBlockBounds(0.5F - f1, r * 1, 0.5F - f1, 0.5F + f1, r * 8, 0.5F + f1);
@@ -60,8 +62,10 @@ public class BlockLantern extends Block {
 
 	private boolean canPlaceAbove(World world, int x, int y, int z) {
 		Block above = world.getBlock(x, y + 1, z);
-		int aboveMeta = world.getBlockMetadata(x, y + 1, z);
-		return world.isSideSolid(x, y + 1, z, ForgeDirection.DOWN) || (above == ModBlocks.CHAIN.get() && world.getBlockMetadata(x, y + 1, z) == 0)
+		// 裸 meta 比较剥离含水位（bit16）：含水的锁链/上半砖/上半楼梯若按裸 meta
+		// 判会落到错误分支 → 含水支撑面上的提灯放置失败自毁。支撑位只用低 4 位。
+		int aboveMeta = world.getBlockMetadata(x, y + 1, z) & 15;
+		return world.isSideSolid(x, y + 1, z, ForgeDirection.DOWN) || (above == ModBlocks.CHAIN.get() && aboveMeta == 0)
 				|| above instanceof BlockFence || above instanceof BlockWall || (above instanceof BlockSlab && aboveMeta < 8) || (above instanceof BlockStairs && aboveMeta < 4);
 	}
 

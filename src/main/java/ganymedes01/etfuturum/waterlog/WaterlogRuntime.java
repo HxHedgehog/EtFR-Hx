@@ -28,7 +28,7 @@ public final class WaterlogRuntime {
 	public static final boolean WATERLOG_DEBUG = true;
 
 	/** 构建标签：日志中核对运行中的 jar 是否为本次构建（防旧 jar 误测）。 */
-	public static final String BUILD_TAG = "20261012-W";
+	public static final String BUILD_TAG = "20261013-D";
 
 	public static void debug(String msg) {
 		if (WATERLOG_DEBUG) {

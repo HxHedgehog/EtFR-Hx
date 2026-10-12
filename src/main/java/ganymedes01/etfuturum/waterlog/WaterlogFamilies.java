@@ -1,5 +1,7 @@
 package ganymedes01.etfuturum.waterlog;
 
+import ganymedes01.etfuturum.blocks.BlockChain;
+import ganymedes01.etfuturum.blocks.BlockLantern;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockLadder;
@@ -50,6 +52,30 @@ import net.minecraft.block.BlockWall;
  * getIcon/damageDropped/getBlockHardness/getExplosionResistance/getMapColor
  * 取模与映射键（源码剥位——类型数不整除 16 时 bit16 会取模错位）、
  * BlockStoneWall/BlockBlackstoneWall getIcon 裸比较（源码剥位）。
+ *
+ * <p>提灯（26.2 LanternBlock implements SimpleWaterloggedBlock）：WATERLOGGED
+ * 完整支持（getStateForPlacement L53-61 按 replacedFluidState 判定、updateShape
+ * L84-92 含水 scheduleTick 蔓延 + 支撑丢失 → AIR 丢水、lightLevel 15 与含水
+ * 无关）→ 26.2 忠实对象。EtFR 自有方块（普通 + 灵魂提灯都由 {@code BlockLantern}
+ * 承载，{@code BlockSeaLantern} 非其子类不误伤）：1.7.10 meta 只有挂位
+ * （0 = 立于地面 / 1 = 吊挂），ISBRH 渲染器（RenderIDs.LANTERN）{@code % 2}
+ * 读挂位对 bit16 天然透明，getIcon 未覆写单贴图；生命周期（onNeighborBlockChange
+ * 支撑移除掉落 + 丢水保留原体、挖掘留水、蔓延调度、updateTick）走混合模式
+ * mixin（声明方法 @Inject HEAD + 未声明方法 extends + @Override），裸 meta 比较
+ * （setBlockBoundsBasedOnState 挂位 {@code == 0}、canPlaceAbove 邻居链/半砖/
+ * 楼梯 meta 比较）在源码剥位。物品侧 damageDropped 直通 meta 但提灯为单变体
+ * 物品（damage 无害）→ 不剥。
+ *
+ * <p>锁链（26.2 ChainBlock extends RotatedPillarBlock implements
+ * SimpleWaterloggedBlock）：WATERLOGGED 完整支持（getStateForPlacement L55-59
+ * 按 replacedFluidState 判定、updateShape L62-67 含水 scheduleTick 蔓延、
+ * 无 canSurvive 支撑要求）→ 26.2 忠实对象。1.7.10 meta 0/1/2 = 轴向
+ * （Y/X/Z）：碰撞箱、边界与 ISBRH 渲染器（RenderIDs.CHAIN）的 switch 裸判
+ * 已在源码剥位 {@code & 15}——default 分支 = Y 轴，含水横链 meta 17/18 裸判
+ * 会竖起来；无任何生命周期方法声明 →
+ * extends + @Override 四件套（onNeighborBlockChange 蔓延调度、updateTick、
+ * removedByPlayer 双载、damageDropped 剥位——锁链同为单变体物品但按家族
+ * 铁律审计剥位）。
  */
 public final class WaterlogFamilies {
 
@@ -61,6 +87,8 @@ public final class WaterlogFamilies {
 				|| block instanceof BlockWall
 				|| block instanceof BlockLadder
 				|| block instanceof BlockTrapDoor
+				|| block instanceof BlockLantern
+				|| block instanceof BlockChain
 				|| (block instanceof BlockStairs || block instanceof BlockSlab) && !block.isOpaqueCube();
 	}
 }
