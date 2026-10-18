@@ -7,6 +7,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 /**
  * 真含水运行时谓词（plan §3.1）。编码：{@code waterloggedMeta = baseMeta | 0x10}，
  * 低 4 位永远保留原版语义；bit16 的持久化（区块存储/NBT/网络）完全依赖
@@ -25,10 +29,123 @@ public final class WaterlogRuntime {
 	 * 惯例：联调新管线（Angelica/扩族）时临时开，验收后关闭；含水系列
 	 * 全部收尾时连同探针一并清理。
 	 */
-	public static final boolean WATERLOG_DEBUG = true;
+	public static final boolean WATERLOG_DEBUG = false;
 
 	/** 构建标签：日志中核对运行中的 jar 是否为本次构建（防旧 jar 误测）。 */
-	public static final String BUILD_TAG = "20261013-D";
+	public static final String BUILD_TAG = "20261018-D";
+
+	// ===== 20261013-J 倒水/舀水闪烁追踪：玩家事件坐标广播 =====
+	// Angelica 的 EtfrFlashProbe 每客户端 tick 反射轮询（debugTrackSeq 变化 = 新
+	// 事件）→ 锁定该格并开 60 tick 观察窗，逐 tick 记录该格区块重建有没有画水。
+	// 写序铁律：坐标先写、seq 最后写（volatile 写序），读方用 seq 前后一致做快照校验。
+	// 客户端预测与服务端各写一次同格（序号 +2），Angelica 侧同格同类事件只续窗不重置。
+	public static final int TRACK_POUR = 0;
+	public static final int TRACK_SOAK = 1;
+
+	public static volatile int debugTrackX;
+	public static volatile int debugTrackY;
+	public static volatile int debugTrackZ;
+	public static volatile int debugTrackKind;
+	public static volatile long debugTrackTick;
+	public static volatile long debugTrackSeq;
+
+	/** 玩家倒水/舀水成功路径调用（客户端预测与服务端都算，幂等）。 */
+	public static void debugTrack(World world, int kind, int x, int y, int z) {
+		debugTrackX = x;
+		debugTrackY = y;
+		debugTrackZ = z;
+		debugTrackKind = kind;
+		debugTrackTick = world.getTotalWorldTime();
+		debugTrackSeq++; // 最后写
+		debug("TRACK-ARM kind=" + (kind == TRACK_POUR ? "POUR" : "SOAK") + " " + x + "," + y + "," + z
+				+ (world.isRemote ? " client" : " server") + " tick=" + debugTrackTick);
+	}
+
+	// ===== 20261018-A 客户端预测挂起 + 迟到回声过滤（26.2 BlockStatePredictionHandler
+	// 轻量同构，无 ack 包，10 tick 超时替代）=====
+	// 竞态根因：倒水/舀水时客户端瞬时预测写入，而服务端更早写入 flush 的 S23/S22（回声，
+	// 恰好等于预测前状态）在 1-2 tick 后到达，无条件覆写预测 → DRY→WET→DRY 闪 2 tick，
+	// 随后确认包 S23(预测态) 修回。TCP 有序 ⇒ 回声必先于确认包。
+	// 语义：预测时登记 {坐标 → (预测前 block,meta), 过期 tick}；S23/S22 到包时该格有
+	// 未过期登记 且 到来状态==预测前状态 → 丢弃该包/该格（保留登记等确认包）；否则照常
+	// 应用并消费登记。超时自动失效回归原版。保守性：只丢"恰好还原预测前状态"的回声。
+	// 纯 long/int 存储，无 client 类依赖；登记/过滤都过 isEnabled() 短路，功能关闭零行为。
+	public static final int PREDICTION_TTL_TICKS = 10;
+
+	private static final Map<Long, Prediction> pendingPredictions = new HashMap<>();
+
+	private static final class Prediction {
+		final int blockId;
+		final int meta;
+		final long expireTick;
+
+		Prediction(int blockId, int meta, long expireTick) {
+			this.blockId = blockId;
+			this.meta = meta;
+			this.expireTick = expireTick;
+		}
+	}
+
+	/** 26.2 BlockPos.asLong 的打包惯例（y 12 位足够 1.7.10 的 0-255）。 */
+	private static long packCoord(int x, int y, int z) {
+		return ((long) (x & 0x3FFFFFF) << 38) | ((long) (z & 0x3FFFFFF) << 12) | (long) (y & 0xFFF);
+	}
+
+	/**
+	 * 客户端预测写入前登记预测前状态。调用方（桶路径/MarkWaterlogged）须守卫
+	 * {@code world.isRemote}；本方法只做 isEnabled() 短路。包处理与游戏逻辑同在
+	 * 客户端主线程，synchronized 仅为防御性兜底，无性能影响。
+	 */
+	public static void recordPrediction(int x, int y, int z, int blockId, int meta, long nowTick) {
+		if (!isEnabled()) {
+			return;
+		}
+		final long expireTick = nowTick + PREDICTION_TTL_TICKS;
+		synchronized (pendingPredictions) {
+			// 登记点远少于消费点的格子可能滞留过期记录，超阈值时顺手清扫（有界防泄漏）
+			if (pendingPredictions.size() > 256) {
+				final Iterator<Map.Entry<Long, Prediction>> it = pendingPredictions.entrySet().iterator();
+				while (it.hasNext()) {
+					if (it.next().getValue().expireTick < nowTick) {
+						it.remove();
+					}
+				}
+			}
+			pendingPredictions.put(packCoord(x, y, z), new Prediction(blockId, meta, expireTick));
+		}
+		debug("PRED-REC " + x + "," + y + "," + z + " pre=" + blockId + "/" + meta + " expire=" + expireTick);
+	}
+
+	/**
+	 * S23/S22 到包时的回声过滤（客户端包处理侧调用）。返回 true 表示该包/该格应丢弃。
+	 */
+	public static boolean tryFilter(int x, int y, int z, int blockId, int meta, long nowTick) {
+		if (!isEnabled() || pendingPredictions.isEmpty()) {
+			return false;
+		}
+		synchronized (pendingPredictions) {
+			final Long key = packCoord(x, y, z);
+			final Prediction p = pendingPredictions.get(key);
+			if (p == null) {
+				return false;
+			}
+			if (nowTick > p.expireTick) {
+				// 超时：回归原版无条件应用
+				pendingPredictions.remove(key);
+				debug("PRED-EXPIRE " + x + "," + y + "," + z + " was " + p.blockId + "/" + p.meta + " tick=" + nowTick);
+				return false;
+			}
+			if (p.blockId == blockId && p.meta == meta) {
+				// 迟到回声：丢弃，保留登记等确认包（TCP 有序 ⇒ 回声先于确认包）
+				debug("PRED-FILTER-ECHO " + x + "," + y + "," + z + " echo " + blockId + "/" + meta + " tick=" + nowTick);
+				return true;
+			}
+			// 与预测前状态不同：确认包或无关权威写入 → 照常应用并消费登记
+			pendingPredictions.remove(key);
+			debug("PRED-ACK " + x + "," + y + "," + z + " " + blockId + "/" + meta + " tick=" + nowTick);
+			return false;
+		}
+	}
 
 	public static void debug(String msg) {
 		if (WATERLOG_DEBUG) {
@@ -84,6 +201,11 @@ public final class WaterlogRuntime {
 	public static void markWaterlogged(World world, int x, int y, int z) {
 		Block block = world.getBlock(x, y, z);
 		int oldMeta = world.getBlockMetadata(x, y, z);
+		if (world.isRemote) {
+			// 20261018-A 客户端预测登记：bit16 置位是瞬时预测写，记下预测前的干状态
+			// 供包侧回声过滤（family 直接点击倒水 + 邻面倒入 + 含水放置共用本口）
+			recordPrediction(x, y, z, Block.getIdFromBlock(block), oldMeta, world.getTotalWorldTime());
+		}
 		world.setBlockMetadataWithNotify(x, y, z, oldMeta | WATERLOGGED_BIT, 2);
 		debug("MARK " + x + "," + y + "," + z + " " + (world.isRemote ? "client" : "server")
 				+ " " + block.getClass().getSimpleName() + " meta " + oldMeta + " -> " + (oldMeta | WATERLOGGED_BIT));

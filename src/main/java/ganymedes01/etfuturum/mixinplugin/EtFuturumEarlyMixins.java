@@ -489,6 +489,9 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 				// Paint hook + member-aware liquid heights: shared by the vanilla
 				// pipeline and Angelica's celeritas pipeline alike.
 				mixins.add("waterlog.client.MixinRenderBlocks");
+				// 20261018-A 水闪烁修复：S23/S22 迟到回声过滤（客户端预测登记在
+				// MixinItemBucket 桶路径 + WaterlogRuntime.markWaterlogged）
+				mixins.add("waterlog.client.MixinNetHandlerPlayClient");
 				if (angelicaLoaded) {
 					mixins.add("waterlog.client.MixinAngelicaChunkBuilderMeshingTask");
 					WaterlogRuntime.debug("registered: celeritas paint mixins (angelicaLoaded=true)");

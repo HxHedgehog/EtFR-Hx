@@ -92,16 +92,16 @@ public abstract class MixinItemBucket {
 					+ " sneak=" + player.isSneaking() + " wet=" + WaterlogRuntime.isWaterlogged(world, x, y, z) + " remote=" + world.isRemote);
 		}
 		if (WaterlogRuntime.isEnabled() && this.isFull == Blocks.flowing_water && !player.isSneaking() && family) {
+			// 20261013-J 闪烁追踪：玩家点名家族格倒水（含已含水格）→ 广播坐标
+			WaterlogRuntime.debugTrack(world, WaterlogRuntime.TRACK_POUR, x, y, z);
 			boolean alreadyWet = WaterlogRuntime.isWaterlogged(world, x, y, z);
+			// Both sides: client prediction + server write, idempotent bit set.
+			// (The H experiment proved the pour flash is NOT this dual write - it
+			// persists with server-only writes and zero data changes - so restore
+			// the responsive client prediction.)
 			if (!alreadyWet) {
-				// Both sides: client prediction + server write, idempotent bit set
 				WaterlogRuntime.markWaterlogged(world, x, y, z);
 				WaterlogFlow.scheduleSpread(world, x, y, z, world.getBlock(x, y, z));
-				if (!world.isRemote) {
-					// onFillBucketEvent ran earlier while the cell was still dry
-					// (rock material) and could not have played the empty sound
-					world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, Reference.MCAssetVer + ":item.bucket.empty", 1.0F, 1.0F);
-				}
 			}
 			ItemStack held = player.getCurrentEquippedItem();
 			boolean swapped = false;
@@ -168,8 +168,30 @@ public abstract class MixinItemBucket {
 	@Inject(method = "tryPlaceContainedLiquid", at = @At("RETURN"))
 	private void etfuturum$markPourResult(World world, int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
 		if (cir.getReturnValueZ()) {
+			// 20261013-J 闪烁追踪：vanilla 偏移格倒水成功（普通倒水/潜行倒入家族格）
+			// → 广播坐标；岩浆桶不追。注意家族邻面分支在 HEAD 早退，不经过这里。
+			if (this.isFull == Blocks.flowing_water) {
+				WaterlogRuntime.debugTrack(world, WaterlogRuntime.TRACK_POUR, x, y, z);
+			}
 			etfuturum$pourSucceeded.set(Boolean.TRUE);
 		}
+	}
+
+	/**
+	 * 20261018-A 预测登记：vanilla 偏移格倒水的瞬时预测写（液体/0, flag 3），20261018-B
+	 * 起通用化到水+岩浆（岩浆倒/舀回声闪烁与水完全同构）。只挂 tryPlaceContainedLiquid
+	 * 内唯一的 setBlock——写真正发生时才登记，失败的倒水（目标格 solid 早退）不留空登记；
+	 * 地狱 fizz 分支不写方块也不经过这里。family 格直接点击倒水与邻面倒入都走
+	 * markWaterlogged（内部已登记），不经过本方法。
+	 */
+	@Redirect(method = "tryPlaceContainedLiquid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlock(IIILnet/minecraft/block/Block;II)Z"))
+	private boolean etfuturum$recordPourPrediction(World world, int x, int y, int z, Block block, int meta, int flag) {
+		// 注意桶的 isFull 存的是流动液体：water_bucket=flowing_water、lava_bucket=
+		// flowing_lava（Item.java L175-176 构造），==Blocks.lava 永远为假（20261018-C 修复）
+		if (world.isRemote && (this.isFull == Blocks.flowing_water || this.isFull == Blocks.flowing_lava)) {
+			WaterlogRuntime.recordPrediction(x, y, z, Block.getIdFromBlock(world.getBlock(x, y, z)), world.getBlockMetadata(x, y, z), world.getTotalWorldTime());
+		}
+		return world.setBlock(x, y, z, block, meta, flag);
 	}
 
 	/**
@@ -178,10 +200,15 @@ public abstract class MixinItemBucket {
 	 * never changes and ItemRenderer's equip animation never triggers - the item
 	 * texture sits dead on the hand. Replacing the held SLOT instance instead
 	 * makes the animation fire (same mechanism the pickle fill path already
-	 * shows). Vanilla semantics otherwise mirrored exactly.
+	 * shows). Vanilla semantics otherwise mirrored exactly. This method is the
+	 * single funnel for successful scoops (water/lava) - flag it so the
+	 * onItemRightClick RETURN handler swings in EVERY game mode (creative
+	 * returns the input stack unchanged, so the return-differs heuristic never
+	 * fires there; 26.2 still swings on a successful pickup).
 	 */
 	@Inject(method = "func_150910_a(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/item/Item;)Lnet/minecraft/item/ItemStack;", at = @At("HEAD"), cancellable = true)
 	private void etfuturum$swapInstanceForEquipAnimation(ItemStack stack, EntityPlayer player, net.minecraft.item.Item filled, CallbackInfoReturnable<ItemStack> cir) {
+		etfuturum$pourSucceeded.set(Boolean.TRUE);
 		if (player.capabilities.isCreativeMode) {
 			return; // vanilla: keep the full bucket in creative
 		}
@@ -201,8 +228,14 @@ public abstract class MixinItemBucket {
 	 * Pour path (also the sneak path for the dry pickle fill, since sneaking skips
 	 * onBlockActivated): a water bucket on a wet plant cell does nothing and the
 	 * bucket stays full; on the dry pickle it re-hydrates the pickle in place.
-	 * Waterlogged family blocks are unaffected here - the pour target is the
-	 * adjacent cell of the ray hit, never the hit cell itself.
+	 * The pour target here is the OFFSET cell of the ray hit (onItemRightClick
+	 * shifts by the hit side before calling), which CAN be a waterlogged-family
+	 * cell - the neighbor-face pour onto toggle blocks (26.2: a water bucket on a
+	 * trapdoor cell's neighboring face fills the trapdoor, since a direct click
+	 * toggles instead; emptyContents L148-153 fills any LiquidBlockContainer the
+	 * offset lands in, ignoring placeLiquid's return - sound + consumption even
+	 * when already wet). Mark dry cells bit16 + schedule the spread; vanilla's
+	 * own return path consumes the bucket and the markPourResult inject swings.
 	 */
 	@Inject(method = "tryPlaceContainedLiquid", at = @At("HEAD"), cancellable = true)
 	private void etfuturum$oceanPlantsResistBuckets(World world, int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
@@ -210,8 +243,33 @@ public abstract class MixinItemBucket {
 		if (BlockAquaticPlant.isOceanPlant(block)) {
 			cir.setReturnValue(false);
 		} else if (block == ModBlocks.DEAD_SEA_PICKLE.get() && this.isFull == Blocks.flowing_water) {
+			// 20261013-J 闪烁追踪：死泡菜补水（干→湿，画水量变化）
+			WaterlogRuntime.debugTrack(world, WaterlogRuntime.TRACK_POUR, x, y, z);
+			// 20261018-A 预测登记：补水预测写（死泡菜→湿泡菜）的预测前状态
+			if (world.isRemote) {
+				WaterlogRuntime.recordPrediction(x, y, z, Block.getIdFromBlock(block), world.getBlockMetadata(x, y, z), world.getTotalWorldTime());
+			}
 			world.setBlock(x, y, z, ModBlocks.SEA_PICKLE.get(), world.getBlockMetadata(x, y, z), 3);
 			world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, Reference.MCAssetVer + ":item.bucket.empty", 1.0F, 1.0F);
+			cir.setReturnValue(true);
+		} else if (this.isFull == Blocks.flowing_water && WaterlogRuntime.isEnabled() && WaterlogFamilies.isWaterloggable(block)) {
+			// 20261013-J 闪烁追踪：邻面倒入家族格（活板门等开关方块）→ 广播坐标
+			WaterlogRuntime.debugTrack(world, WaterlogRuntime.TRACK_POUR, x, y, z);
+			// Both sides: client prediction + server write, idempotent bit set
+			// (the H server-only experiment proved the flash is not this dual
+			// write - restore the responsive prediction)
+			if (!WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+				WaterlogRuntime.markWaterlogged(world, x, y, z);
+				WaterlogFlow.scheduleSpread(world, x, y, z, block);
+			}
+			// This branch cancels tryPlaceContainedLiquid at HEAD - an early
+			// return does NOT pass through @At("RETURN") injection points, so
+			// markPourResult never fires; flag the success explicitly for the
+			// RETURN swing (26.2 swings on emptyContents in every game mode).
+			// The empty sound is played by ServerEventHandler#onFillBucketEvent
+			// (its familyNeighbor gate covers this exact case) - a local sound
+			// here would double up with it.
+			etfuturum$pourSucceeded.set(Boolean.TRUE);
 			cir.setReturnValue(true);
 		}
 	}
@@ -258,13 +316,28 @@ public abstract class MixinItemBucket {
 	@Redirect(method = "onItemRightClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockToAir(III)Z"))
 	private boolean etfuturum$scoopUnwaterlogsPickle(World world, int x, int y, int z) {
 		Block block = world.getBlock(x, y, z);
+		// 20261018-A 预测登记：舀液体的瞬时预测写（family bit16 清除/湿泡菜→死泡菜/
+		// 水源→air）的预测前状态，供包侧回声过滤；20261018-B 起通用化到岩浆舀取。
+		if (world.isRemote && (block == Blocks.water || block == Blocks.flowing_water
+				|| block == Blocks.lava || block == Blocks.flowing_lava
+				|| WaterlogRuntime.isWaterlogged(world, x, y, z) || block == ModBlocks.SEA_PICKLE.get())) {
+			WaterlogRuntime.recordPrediction(x, y, z, Block.getIdFromBlock(block), world.getBlockMetadata(x, y, z), world.getTotalWorldTime());
+		}
 		if (block == ModBlocks.SEA_PICKLE.get()) {
+			// 20261013-J 闪烁追踪：舀湿泡菜（湿→干，画水量变化）
+			WaterlogRuntime.debugTrack(world, WaterlogRuntime.TRACK_SOAK, x, y, z);
 			world.setBlock(x, y, z, ModBlocks.DEAD_SEA_PICKLE.get(), world.getBlockMetadata(x, y, z), 3);
 			return false;
 		}
 		if (WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+			// 20261013-J 闪烁追踪：舀含水家族格（bit16 清除）
+			WaterlogRuntime.debugTrack(world, WaterlogRuntime.TRACK_SOAK, x, y, z);
 			world.setBlockMetadataWithNotify(x, y, z, world.getBlockMetadata(x, y, z) & ~WaterlogRuntime.WATERLOGGED_BIT, 3);
 			return false;
+		}
+		// 20261013-J 闪烁追踪：舀普通水源（vanilla 路径，岩浆不追）
+		if (block == Blocks.water || block == Blocks.flowing_water) {
+			WaterlogRuntime.debugTrack(world, WaterlogRuntime.TRACK_SOAK, x, y, z);
 		}
 		return world.setBlockToAir(x, y, z);
 	}
