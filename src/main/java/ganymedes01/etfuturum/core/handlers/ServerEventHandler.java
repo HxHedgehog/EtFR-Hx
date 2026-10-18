@@ -774,6 +774,10 @@ public class ServerEventHandler {
 			if (sideHit.get() == 0) {
 				l += 8;
 			}
+			// bit16 保留（同 BlockScaffolding fallMeta 约定）：含水活板门对底/顶面
+			// 放置时浮动逻辑会整格重写朝向，直接写 l 会剥掉 WATERLOGGED_BIT →
+			// 放置 ≤5gt 内"水变干"（STRIP-WATCH old=16 new=2 实锤）。
+			l |= event.world.getBlockMetadata(event.x, event.y, event.z) & WaterlogRuntime.WATERLOGGED_BIT;
 			event.world.setBlockMetadataWithNotify(event.x, event.y, event.z, l, 2);
 		}
 	}

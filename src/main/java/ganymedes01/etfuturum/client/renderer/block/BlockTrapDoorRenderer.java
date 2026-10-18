@@ -34,7 +34,11 @@ public class BlockTrapDoorRenderer extends BlockModelBase {
 			return renderer.renderStandardBlock(block, x, y, z);
 		}
 
-		int l = renderer.blockAccess.getBlockMetadata(x, y, z);
+		// bit16 透明化（同 lantern %2 / chain switch 审计约定）：含水 meta 带有
+		// WATERLOGGED_BIT(0x10)，裸值 16-31 不落入下方任何字面量分支 → uvRotate
+		// 全 0 → 倒水含水那一刻朝向旋转突然消失（纹理"反了"）。低 4 位才是
+		// 朝向&3 + bit2 开 + bit3 上/下半。
+		int l = renderer.blockAccess.getBlockMetadata(x, y, z) & 15;
 		if (l <= 3) {
 			renderer.uvRotateEast = 3;
 			renderer.uvRotateWest = 3;
