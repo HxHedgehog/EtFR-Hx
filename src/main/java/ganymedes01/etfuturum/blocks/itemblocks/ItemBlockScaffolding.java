@@ -2,6 +2,8 @@ package ganymedes01.etfuturum.blocks.itemblocks;
 
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.blocks.BlockScaffolding;
+import ganymedes01.etfuturum.waterlog.WaterlogFlow;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
@@ -110,6 +112,15 @@ public class ItemBlockScaffolding extends ItemBlock {
 			return false;
 		}
 		int meta = placed.onBlockPlaced(world, tx, ty, tz, side, hitX, hitY, hitZ, 0);
+		// 26.2 getStateForPlacement：放进任何水（源/流水）即含水，含水位并入放置
+		// meta 同一 setBlock 原子落地（与 MixinItemBlock 捕获路径同语义）。本类
+		// 完全覆写 onItemUse（虚分派不经过 ItemBlock.onItemUse）→ MixinItemBlock
+		// 捕获对脚手架是死字节码，含水判定必须在此内联；isWaterCell 须在
+		// setBlock 之前判（放置后格子已是脚手架）。
+		boolean waterlogged = WaterlogRuntime.isEnabled() && WaterlogRuntime.isWaterCell(world, tx, ty, tz);
+		if (waterlogged) {
+			meta |= WaterlogRuntime.WATERLOGGED_BIT;
+		}
 		if (!world.setBlock(tx, ty, tz, placed, meta, 3)) {
 			return false;
 		}
@@ -117,6 +128,9 @@ public class ItemBlockScaffolding extends ItemBlock {
 			placed.onBlockPlacedBy(world, tx, ty, tz, player, stack);
 			world.playSoundEffect(tx + 0.5D, ty + 0.5D, tz + 0.5D, placed.stepSound.func_150496_b(),
 					(placed.stepSound.getVolume() + 1.0F) / 2.0F, placed.stepSound.getPitch() * 0.8F);
+			if (waterlogged) {
+				WaterlogFlow.scheduleSpread(world, tx, ty, tz, placed);
+			}
 		}
 		if (!world.isRemote && !player.capabilities.isCreativeMode) {
 			stack.stackSize--;

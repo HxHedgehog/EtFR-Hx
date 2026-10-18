@@ -210,11 +210,28 @@ public final class WaterlogFlow {
 	 */
 	public static boolean leaveSourceWater(World world, int x, int y, int z) {
 		if (WaterlogRuntime.isWaterlogged(world, x, y, z)) {
-			world.setBlock(x, y, z, Blocks.water, 0, 3);
+			placeSourceWater(world, x, y, z);
 			WaterlogRuntime.debug("DIG-SOURCE " + x + "," + y + "," + z);
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * 留下"活的"静态水源格（{@link #leaveSourceWater} 与脚手架破坏分支/
+	 * 坠落实体清原格共用的留水出口）。26.2 留水与流动是原子的：
+	 * {@code LiquidBlock.onPlace} 放置即 {@code scheduleTick}。1.7.10 静态水的
+	 * {@code updateTick} 只处理岩浆引燃（BlockStaticLiquid L50-95），唯一唤醒
+	 * 路径是 {@code onNeighborBlockChange → setNotStationary}（静态→动态
+	 * meta 0 + scheduleBlockUpdate(5gt)），而 {@code setBlock} 只通知六邻居、
+	 * 不通知新格自身 → 裸 setBlock 留下的水源悬空静止不流动（2026-10-19
+	 * 铜格栅破坏实证）。对水源格自身补发一次邻居变化走原版唤醒：下个流体
+	 * tick 动态水 updateTick 的 L112-115（l==0 → func_149811_n）沉降回静态源
+	 * 并按 vanilla 蔓延——终态与 26.2 的源水一致。
+	 */
+	public static void placeSourceWater(World world, int x, int y, int z) {
+		world.setBlock(x, y, z, Blocks.water, 0, 3);
+		world.notifyBlockOfNeighborChange(x, y, z, Blocks.water);
 	}
 
 	/**

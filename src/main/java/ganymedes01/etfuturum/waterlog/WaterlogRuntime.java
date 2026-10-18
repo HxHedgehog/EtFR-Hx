@@ -32,7 +32,7 @@ public final class WaterlogRuntime {
 	public static final boolean WATERLOG_DEBUG = false;
 
 	/** 构建标签：日志中核对运行中的 jar 是否为本次构建（防旧 jar 误测）。 */
-	public static final String BUILD_TAG = "20261018-D";
+	public static final String BUILD_TAG = "20261019-F";
 
 	// ===== 20261013-J 倒水/舀水闪烁追踪：玩家事件坐标广播 =====
 	// Angelica 的 EtfrFlashProbe 每客户端 tick 反射轮询（debugTrackSeq 变化 = 新

@@ -8,10 +8,14 @@ import ganymedes01.etfuturum.waterlog.WaterlogFlow;
 import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemBucket;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -122,6 +126,119 @@ public abstract class MixinItemBucket {
 			return false; // swallow vanilla's offset-cell pour
 		}
 		return world.canMineBlock(player, x, y, z);
+	}
+
+	/**
+	 * 26.2 桶的射线（BlockClipContext → OUTLINE 形状）能命中脚手架等家族方块；
+	 * 满桶的 1.7.10 射线（Item.getMovingObjectPositionFromPlayer →
+	 * World.func_147447_a(useLiquids=false, ignoreBlockWithoutBoundingBox=true)）
+	 * 在 L1358 过滤掉 getCollisionBoundingBoxFromPool 为 null 的方块。脚手架为
+	 * 复刻 26.2 isPlacement(Shapes.empty)（脚下叠放不被实体挡）把 collision bbox
+	 * 返回 null → 水桶射线穿透脚手架命中后方方块（背后无方块时 mop 为 null 早退），
+	 * 直接点击倒水分支（etfuturum$waterlogFamilyAtMop）永远收不到脚手架；竖塔
+	 * 底层"能倒"是射线穿到地面后邻面倒入路径偶然命中，横桥完全失效（2026-10-19
+	 * 用户实证）。
+	 *
+	 * <p>修复：重定向 getMovingObjectPositionFromPlayer 的调用点——mop 的唯一
+	 * 出生点，返回值即后续 i/j/k 与邻面偏移的来源（首版挂在 FillBucketEvent
+	 * 构造点只改了事件对象、vanilla 局部变量依旧，已实证无效）。满水桶时沿同一
+	 * 射线做体素步进，路径上第一个"collision bbox 为 null 且可含水"的格（= 26.2
+	 * Shapes.empty 碰撞 + 轮廓非空的家族成员，现仅脚手架）以整格轮廓（选中箱）
+	 * 作为命中返回；其余格维持 vanilla 语义（楼梯/半砖等有碰撞箱，vanilla 射线
+	 * 本就精确命中其真实形状，全格步进反而会越权捕获半砖上半空隙后的目标；火把
+	 * 等无碰撞非家族方块照旧穿透）。步进在 vanilla 命中点参数封口，不会越过
+	 * 实体墙取后方法族格。空桶（邻面倒入路径已覆盖）、岩浆桶、功能关闭时零行为。
+	 */
+	@Redirect(method = "onItemRightClick",
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemBucket;getMovingObjectPositionFromPlayer(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/EntityPlayer;Z)Lnet/minecraft/util/MovingObjectPosition;"))
+	private MovingObjectPosition etfuturum$familyOutlineClip(ItemBucket self, World world, EntityPlayer player, boolean useLiquids) {
+		// 向量公式 javap 已证逐指令同 vanilla（Item.getMovingObjectPositionFromPlayer
+		// L770-791，含客户端眼高偏移与 EntityPlayerMP 手长）。Vec3 仅在 func_147447_a
+		// 调用前即时构造（与 vanilla 同模式即用即弃）：GTNH 环境实证（20261019-D）
+		// Vec3.func_72443_a 被池化复用、跨窗口持有的对象字段会被外部线程改写（读到的
+		// start/end 与写入值矛盾、|end-start| 反解出非 reach 的乱跳值），故射线端点
+		// 全程以 double 本地量持有，步进只消费 double 值。注：实例方法调用点的
+		// @Redirect 非静态 handler 首参必须是 owner 实例（UniMixins 校验）。
+		float pitch = player.prevRotationPitch + (player.rotationPitch - player.prevRotationPitch);
+		float yaw = player.prevRotationYaw + (player.rotationYaw - player.prevRotationYaw);
+		double sx = player.prevPosX + (player.posX - player.prevPosX);
+		double sy = player.prevPosY + (player.posY - player.prevPosY)
+				+ (world.isRemote ? player.getEyeHeight() - player.getDefaultEyeHeight() : player.getEyeHeight());
+		double sz = player.prevPosZ + (player.posZ - player.prevPosZ);
+		float f2 = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI);
+		float f3 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI);
+		float f4 = -MathHelper.cos(-pitch * 0.017453292F);
+		float f5 = MathHelper.sin(-pitch * 0.017453292F);
+		double reach = 5.0D;
+		if (player instanceof EntityPlayerMP) {
+			reach = ((EntityPlayerMP) player).theItemInWorldManager.getBlockReachDistance();
+		}
+		double ex = sx + f3 * f4 * reach;
+		double ey = sy + f5 * reach;
+		double ez = sz + f2 * f4 * reach;
+		MovingObjectPosition vanilla = world.func_147447_a(
+				Vec3.createVectorHelper(sx, sy, sz), Vec3.createVectorHelper(ex, ey, ez), useLiquids, !useLiquids, false);
+		if (!useLiquids && WaterlogRuntime.isEnabled() && self.isFull == Blocks.flowing_water) {
+			MovingObjectPosition family = etfuturum$clipFamilyCell(world, sx, sy, sz, ex, ey, ez, vanilla);
+			if (family != null) {
+				return family;
+			}
+		}
+		return vanilla;
+	}
+
+	/**
+	 * 满水桶射线体素步进：返回路径上第一个可含水的空碰撞家族格，无则 null。
+	 * 射线端点与 vanilla 封口格全部以值传递（double/int 原始量），步进内不复用
+	 * 任何 Vec3 对象（GTNH 环境 Vec3 池化改写，见 {@link #etfuturum$familyOutlineClip}）；
+	 * 封口语义 = 步进一旦进入 vanilla 命中格即停（只读 mop 的 int 字段，不读
+	 * hitVec——它在同池中同样有被改写风险），不会越过实体墙取后方法族格。
+	 * 步序/面号与 World.func_147447_a 一致。
+	 */
+	private MovingObjectPosition etfuturum$clipFamilyCell(World world, double sx, double sy, double sz,
+			double ex, double ey, double ez, MovingObjectPosition vanilla) {
+		// 体素步进（起始格跳过：眼睛所在格不直接命中——站进脚手架内部看向别处
+		// 不应误命中自身格，同格场景由 tryPlaceContainedLiquid 的邻面倒入兜底）
+		int cx = MathHelper.floor_double(sx);
+		int cy = MathHelper.floor_double(sy);
+		int cz = MathHelper.floor_double(sz);
+		double dx = ex - sx;
+		double dy = ey - sy;
+		double dz = ez - sz;
+		boolean stepX = dx > 0.0D;
+		boolean stepY = dy > 0.0D;
+		boolean stepZ = dz > 0.0D;
+		for (int step = 0; step < 200; ++step) {
+			double tx = stepX ? (cx + 1 - sx) / dx : dx < 0.0D ? (cx - sx) / dx : Double.MAX_VALUE;
+			double ty = stepY ? (cy + 1 - sy) / dy : dy < 0.0D ? (cy - sy) / dy : Double.MAX_VALUE;
+			double tz = stepZ ? (cz + 1 - sz) / dz : dz < 0.0D ? (cz - sz) / dz : Double.MAX_VALUE;
+			double t;
+			int face; // 新格入射面（vanilla b0：0=下 1=上 2=北 3=南 4=西 5=东）
+			if (tx <= ty && tx <= tz) {
+				t = tx;
+				face = stepX ? 4 : 5;
+			} else if (ty <= tz) {
+				t = ty;
+				face = stepY ? 0 : 1;
+			} else {
+				t = tz;
+				face = stepZ ? 2 : 3;
+			}
+			double crossX = sx + dx * t;
+			double crossY = sy + dy * t;
+			double crossZ = sz + dz * t;
+			if (face == 4) ++cx; else if (face == 5) --cx;
+			else if (face == 0) ++cy; else if (face == 1) --cy;
+			else if (face == 2) ++cz; else --cz;
+			if (vanilla != null && cx == vanilla.blockX && cy == vanilla.blockY && cz == vanilla.blockZ) {
+				return null; // vanilla 命中格在前，封口
+			}
+			Block block = world.getBlock(cx, cy, cz);
+			if (WaterlogFamilies.isWaterloggable(block) && block.getCollisionBoundingBoxFromPool(world, cx, cy, cz) == null) {
+				return new MovingObjectPosition(cx, cy, cz, face, Vec3.createVectorHelper(crossX, crossY, crossZ));
+			}
+		}
+		return null;
 	}
 
 	/**

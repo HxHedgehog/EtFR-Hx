@@ -468,6 +468,7 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.MixinBlockLiquid");
 			mixins.add("waterlog.MixinEntity");
 			mixins.add("waterlog.MixinEntityLivingBase");
+			mixins.add("waterlog.MixinEntityFallingBlock");
 			mixins.add("waterlog.MixinWorld");
 			// 26.2 explosion semantics (waterlogged blocks block blast rays via
 			// their water FluidState resistance).

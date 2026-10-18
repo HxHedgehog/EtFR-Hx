@@ -1,7 +1,9 @@
 package ganymedes01.etfuturum.waterlog;
 
 import ganymedes01.etfuturum.blocks.BlockChain;
+import ganymedes01.etfuturum.blocks.BlockCopperGrate;
 import ganymedes01.etfuturum.blocks.BlockLantern;
+import ganymedes01.etfuturum.blocks.BlockScaffolding;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockLadder;
@@ -76,6 +78,43 @@ import net.minecraft.block.BlockWall;
  * extends + @Override 四件套（onNeighborBlockChange 蔓延调度、updateTick、
  * removedByPlayer 双载、damageDropped 剥位——锁链同为单变体物品但按家族
  * 铁律审计剥位）。
+ *
+ * <p>铜格栅（26.2 CopperGrateBlock extends WaterloggedTransparentBlock
+ * implements SimpleWaterloggedBlock）：WATERLOGGED 完整支持（getStateForPlacement
+ * L45-48 按 replacedFluidState 判定、updateShape L51-56 含水 scheduleTick 蔓延、
+ * getFluidState L59-64 源水）→ 26.2 忠实对象。EtFR 自有方块 → 全部源码级
+ * 改动无 mixin：① 裸 meta 剥位 = {@code getCopperMeta}/{@code getFinalCopperMeta}
+ * 的 {@code meta > 3} 氧化阶段判定（bit16 直通 → 铜 meta 20-27，氧化/打蜡
+ * 全失真且含水格栅永不氧化）；② {@code setCopperBlock} 源码覆写保留 bit16
+ * （氧化/打蜡 setBlock 重写 meta 会清含水，26.2 属性保留语义）；③ 生命周期
+ * 四件套走源码覆写（onNeighborBlockChange 蔓延调度、updateTick = 家族
+ * handleFamilyTick + super 氧化 tick、removedByPlayer 双载）；④ 物品侧审计：
+ * damageDropped = meta % 8、getIcon = meta % 4，8/4 均整除 16 → 对 bit16
+ * 取模透明零改动（与 BaseWall 类型数不整除 16 的取模错位不同构）；
+ * hardness/explosionResistance 变体表未填充 → 查表 miss 落默认值无害。
+ * 渲染 = 标准方块渲染（renderType 0、非不透明、cutout 贴图，与玻璃同管线），
+ * 通用画水门控（canRenderInPass redirect / celeritas gate）按格 bit16 判定
+ * 自动覆盖。
+ *
+ * <p>脚手架（26.2 ScaffoldingBlock implements SimpleWaterloggedBlock）：
+ * WATERLOGGED 完整支持（getStateForPlacement L84-89、updateShape L99-107
+ * 含水 scheduleTick 蔓延 + 自身 1gt 稳定性 tick、getFluidState L144-149）→
+ * 26.2 忠实对象。EtFR 自有方块 → 全部源码级改动无 mixin：① meta = 距离
+ * {@code &7} + 底部 {@code &8}，全部掩码读取对 bit16 天然透明，但
+ * {@code composeMeta} 全新组 meta 丢 bit16——updateTick 的 setBlock(newMeta,3)
+ * 与 fallMeta（坠落实体）两处并回 bit16（26.2 tick 的 setBlock(newState,3)
+ * 与 FallingBlockEntity.fall(newState) 均属性保留语义；漏并 = 含水脚手架
+ * 首个稳定 tick 静默脱水 + newMeta != meta 每 tick 空转重写）；② 新失去支撑
+ * 的破坏走 26.2 destroyBlock(pos, true) = 掉落 + 留水源
+ * （fluidState.createLegacyBlock）——1.7.10 func_147480_a 丢水 → 破坏前读
+ * 含水位、破坏后补水源格；坠落实体首 tick 清原格由通用
+ * {@code waterlog.MixinEntityFallingBlock} 留水（26.2 FallingBlockEntity
+ * setBlock(fluidState.createLegacyBlock) 同款）；③ 放置 = ItemBlockScaffolding
+ * 完全覆写 onItemUse（虚分派不经过 ItemBlock.onItemUse）→ MixinItemBlock
+ * 捕获对脚手架是死字节码，含水放置（isWaterCell 判定 + bit16 原子并入
+ * setBlock meta）在源码内联；④ damageDropped 剥位（vanilla 体 = return meta
+ * 直通）；⑤ 渲染 = ISBRH（RenderIDs.SCAFFOLDING）掩码读取 {@code &8} 对
+ * bit16 透明，通用画水门控自动覆盖（与提灯/锁链 ISBRH 同路径）。
  */
 public final class WaterlogFamilies {
 
@@ -89,6 +128,8 @@ public final class WaterlogFamilies {
 				|| block instanceof BlockTrapDoor
 				|| block instanceof BlockLantern
 				|| block instanceof BlockChain
+				|| block instanceof BlockCopperGrate
+				|| block instanceof BlockScaffolding
 				|| (block instanceof BlockStairs || block instanceof BlockSlab) && !block.isOpaqueCube();
 	}
 }
