@@ -29,8 +29,6 @@ public abstract class MixinExplosion {
 	@Redirect(method = "doExplosionA", at = @At(value = "INVOKE", remap = false,
 			target = "Lnet/minecraft/entity/Entity;func_145772_a(Lnet/minecraft/world/Explosion;Lnet/minecraft/world/World;IIILnet/minecraft/block/Block;)F"))
 	private float etfuturum$waterloggedResistance(Entity exploder, Explosion explosion, World world, int x, int y, int z, Block block) {
-		WaterlogFlow.noteExplosionHook('A');
-		WaterlogFlow.noteExplosionSample(world, x, y, z, block);
 		return WaterlogFlow.explosionResistance(world, x, y, z, block,
 				exploder.func_145772_a(explosion, world, x, y, z, block));
 	}
@@ -39,8 +37,6 @@ public abstract class MixinExplosion {
 			target = "Lnet/minecraft/block/Block;getExplosionResistance(Lnet/minecraft/entity/Entity;Lnet/minecraft/world/World;IIIDDD)F"))
 	private float etfuturum$waterloggedResistanceDirect(Block block, Entity exploder, World world, int x, int y, int z,
 			double explosionX, double explosionY, double explosionZ) {
-		WaterlogFlow.noteExplosionHook('B');
-		WaterlogFlow.noteExplosionSample(world, x, y, z, block);
 		return WaterlogFlow.explosionResistance(world, x, y, z, block,
 				block.getExplosionResistance(exploder, world, x, y, z, explosionX, explosionY, explosionZ));
 	}

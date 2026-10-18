@@ -49,17 +49,6 @@ public abstract class MixinRenderBlocks {
 
 	@Inject(method = "renderBlockByRenderType", at = @At("HEAD"), cancellable = true)
 	private void etfuturum$paintWaterInsteadOfBlockCopy(Block block, int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
-		// 探针（20261012-W）：墙的客户端渲染取样——rawMeta 是判定核心：
-		// 服务端 MARK 了 16+ 而这里 rawMeta < 16 = S21 网络层丢 bit16（NEID）；
-		// rawMeta 有 bit16 而 flag/cel 全 false = pass-1 门控没给墙开槽
-		if (block instanceof BlockWall && WaterlogFlow.probeBudget("RENDER-WALL", 40)) {
-			WaterlogRuntime.debug("RENDER-WALL " + x + "," + y + "," + z
-					+ " cls=" + block.getClass().getSimpleName()
-					+ " rawMeta=" + this.blockAccess.getBlockMetadata(x, y, z)
-					+ " family=" + WaterlogFamilies.isWaterloggable(block)
-					+ " wet=" + WaterlogRuntime.isWaterlogged(this.blockAccess, x, y, z)
-					+ " flag=" + WaterlogPaint.isFlagged() + " cel=" + WaterlogPaint.isCeleritasPassOne());
-		}
 		boolean flagged = WaterlogPaint.isFlagged(); // vanilla 管线：MixinWorldRenderer 门控置位
 		boolean celeritasPassOne = WaterlogPaint.isCeleritasPassOne(); // celeritas 管线：pass 捕获
 		if (!flagged && !celeritasPassOne) {
@@ -104,9 +93,6 @@ public abstract class MixinRenderBlocks {
 			WaterlogRuntime.debug("PAINT " + x + "," + y + "," + z + " block=" + block + " -> emitted=" + emitted);
 			cir.setReturnValue(emitted);
 		} else {
-			// 干格抑制探针：连放"干块闪"若来自渲染层（构建快照过期/竞态），
-			// 此行会在实际含水的格上出现——与同格 PAINT 行的时序对照定性
-			WaterlogRuntime.debug("SUPPRESS-DRY " + x + "," + y + "," + z + " block=" + block);
 			cir.setReturnValue(false);
 		}
 	}

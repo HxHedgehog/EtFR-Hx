@@ -57,31 +57,6 @@ public abstract class MixinEntity {
 	@Shadow
 	public abstract float getEyeHeight();
 
-	/** 探针节流计数（仅 WATERLOG_DEBUG）。 */
-	private static int etfuturum$insideProbe;
-
-	/**
-	 * 探针（WATERLOG_DEBUG）：蒙版/溺水链最终判定——INSIDE 行。HEAD 门
-	 * （含水 8/9 / 流水真水面）命中时 setReturnValue 后仍经过 RETURN →
-	 * 本探针照常触发，ret 即最终结果。t= 线程名区分客户端/服务端。
-	 */
-	@Inject(method = "isInsideOfMaterial(Lnet/minecraft/block/material/Material;)Z", at = @At("RETURN"))
-	private void etfuturum$insideProbe(Material materialIn, CallbackInfoReturnable<Boolean> cir) {
-		if (!WaterlogRuntime.WATERLOG_DEBUG || materialIn != Material.water || !WaterlogRuntime.isEnabled() || ++etfuturum$insideProbe % 20 != 0) {
-			return;
-		}
-		double d0 = this.posY + (double) this.getEyeHeight();
-		int i = MathHelper.floor_double(this.posX);
-		int j = MathHelper.floor_double(d0);
-		int k = MathHelper.floor_double(this.posZ);
-		Block block = this.worldObj.getBlock(i, j, k);
-		WaterlogRuntime.debug("INSIDE #" + etfuturum$insideProbe + " t=" + Thread.currentThread().getName()
-				+ " ret=" + cir.getReturnValue() + " eye=" + this.posX + "," + d0 + "," + this.posZ
-				+ " cell=" + i + "," + j + "," + k + " block=" + block.getClass().getSimpleName()
-				+ "/" + this.worldObj.getBlockMetadata(i, j, k)
-				+ " wet=" + WaterlogRuntime.isWaterlogged(this.worldObj, i, j, k));
-	}
-
 	@Inject(method = "isInsideOfMaterial(Lnet/minecraft/block/material/Material;)Z", at = @At("HEAD"), cancellable = true)
 	private void etfuturum$waterloggedEye(Material materialIn, CallbackInfoReturnable<Boolean> cir) {
 		if (materialIn != Material.water || !WaterlogRuntime.isEnabled()) {

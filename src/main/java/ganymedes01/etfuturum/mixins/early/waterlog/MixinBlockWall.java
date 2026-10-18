@@ -55,13 +55,6 @@ public abstract class MixinBlockWall extends Block {
 
 	@Override
 	public void onNeighborBlockChange(World world, int x, int y, int z, Block neighbor) {
-		// 探针（20261012-W）：本方法被调用 = mixin 已应用（隐式重映射命中）；
-		// meta 显示客户端/服务端各自看到的原始 meta（bit16 有无 = 网络层判定）
-		if (WaterlogFlow.probeBudget("WALL-NBR", 60)) {
-			WaterlogRuntime.debug("WALL-NBR " + x + "," + y + "," + z + " " + (world.isRemote ? "client" : "server")
-					+ " meta=" + world.getBlockMetadata(x, y, z)
-					+ " wet=" + WaterlogRuntime.isWaterlogged(world, x, y, z));
-		}
 		if (!world.isRemote && WaterlogRuntime.isWaterlogged(world, x, y, z)) {
 			WaterlogFlow.scheduleSpread(world, x, y, z, (Block) (Object) this);
 		}

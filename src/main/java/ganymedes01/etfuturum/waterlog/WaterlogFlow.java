@@ -6,16 +6,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 含水格向外蔓延（26.2 语义：含水格内部是 {@code Fluids.WATER.getSource(false)}
@@ -35,23 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class WaterlogFlow {
 
 	private WaterlogFlow() {}
-
-	/**
-	 * 探针预算（20261012-W 墙排查用）：同一 key 最多放行 cap 条日志——一次游戏
-	 * 会话拿全量链路数据且不刷屏。ConcurrentHashMap：celeritas 构建线程并发探针。
-	 */
-	private static final Map<String, Integer> PROBE_BUDGET = new ConcurrentHashMap<String, Integer>();
-
-	public static boolean probeBudget(String key, int cap) {
-		Integer used = PROBE_BUDGET.get(key);
-		int u = used == null ? 0 : used;
-		if (u >= cap) {
-			return false;
-		}
-		PROBE_BUDGET.put(key, u + 1);
-		return true;
-	}
-
 
 	/** 水的流体 tick 间隔（BlockLiquid.tickRate 水分支，L329）。 */
 	public static final int WATER_TICK_RATE = 5;
@@ -304,68 +282,5 @@ public final class WaterlogFlow {
 					+ " meta=" + world.getBlockMetadata(x, y, z) + " " + hostResistance);
 		}
 		return hostResistance;
-	}
-
-	/** 探针：爆炸抗性采样 redirect 首次命中标记（区分"分支没被劫持"与"判定没命中"）。 */
-	private static boolean explHookALogged;
-	private static boolean explHookBLogged;
-
-	public static void noteExplosionHook(char branch) {
-		if (branch == 'A' && !explHookALogged) {
-			explHookALogged = true;
-			WaterlogRuntime.debug("EXPL-HOOK A (Entity.func_145772_a branch) fire");
-		} else if (branch == 'B' && !explHookBLogged) {
-			explHookBLogged = true;
-			WaterlogRuntime.debug("EXPL-HOOK B (direct 8-arg branch) fire");
-		}
-	}
-
-	/** 探针：TNT 生成（点燃成功，引信开始）。 */
-	public static void noteTntSpawn(Object tnt) {
-		Entity entity = (Entity) tnt;
-		WaterlogRuntime.debug("TNT-SPAWN " + (float) entity.posX + "," + (float) entity.posY + "," + (float) entity.posZ);
-	}
-
-	/** 探针：服务端方块放置总入口——玩家放了什么方块（id+meta+显示名）。 */
-	public static void notePlacement(ItemStack stack, int x, int y, int z) {
-		if (stack == null) {
-			return;
-		}
-		String what;
-		if (stack.getItem() instanceof ItemBlock) {
-			Block block = ((ItemBlock) stack.getItem()).field_150939_a;
-			what = Block.getIdFromBlock(block) + ":" + stack.getItemDamage() + " " + block.getClass().getSimpleName();
-		} else {
-			what = Item.getIdFromItem(stack.getItem()) + " " + stack.getItem().getClass().getSimpleName();
-		}
-		WaterlogRuntime.debug("PLACE " + stack.getDisplayName() + " [" + what + "] " + x + "," + y + "," + z);
-	}
-
-	/** 探针：打火石使用（原版 TNT 点燃方式）。 */
-	public static void noteFlintUse(int x, int y, int z) {
-		WaterlogRuntime.debug("FNS-USE " + x + "," + y + "," + z);
-	}
-
-	/** 探针：TNT 引信走完的入口。 */
-	public static void noteTntBoom(Object tnt) {
-		Entity entity = (Entity) tnt;
-		WaterlogRuntime.debug("TNT-BOOM " + (float) entity.posX + "," + (float) entity.posY + "," + (float) entity.posZ);
-	}
-
-	/** 探针：原版路径爆炸创建入口（TNT/苦力怕/mod 爆炸均经 World.newExplosion）。 */
-	public static void noteExplosionCreate(Entity entity, double x, double y, double z, float size, boolean isSmoking) {
-		WaterlogRuntime.debug("EXPL-CREATE entity=" + (entity == null ? "null" : entity.getClass().getSimpleName())
-				+ " " + (float) x + "," + (float) y + "," + (float) z + " size=" + size + " smoking=" + isSmoking);
-	}
-
-	/** 探针：射线逐格采样转储（首个爆炸的前 60 个非空格，即"TNT 周围"射线视野）。 */
-	private static int explSampleLogged;
-
-	public static void noteExplosionSample(World world, int x, int y, int z, Block block) {
-		if (explSampleLogged < 60) {
-			++explSampleLogged;
-			WaterlogRuntime.debug("EXPL-SAMPLE " + x + "," + y + "," + z + " "
-					+ block.getClass().getSimpleName() + "/" + world.getBlockMetadata(x, y, z));
-		}
 	}
 }
