@@ -61,6 +61,7 @@ public class ConfigMixins extends ConfigBase {
 	public static boolean betterVanillaTextures;
 	public static boolean secretTotem;
 	public static boolean disableWaterlogging;
+	public static boolean modernChestPairing;
 	/** TEMPORARY debug flag for the sand dump machine (SandDupingHelper). Remove along with the TRACKED/trackTick
 	 * debug tracing once the machine layouts are finalised over the next few releases. */
 	public static boolean sandDupingDebug;
@@ -152,5 +153,6 @@ public class ConfigMixins extends ConfigBase {
 		enablePlayersSleepingPecentageGamerule = getBoolean("enablePlayersSleepingPecentageGamerule", catBackport, true, "You nappa, you get slappa");
         enableJumpClimbing = getBoolean("enableClimbingPlants", catBackport, true, "Allows players to simply hold jump to climb up climable blocks instead of having to collide with something horizontally.");
 		disableWaterlogging = getBoolean("disableWaterlogging", catBackport, false, "Disables the modern waterlogging system (26.2-style stairs holding water inside their cell). The water state lives in metadata bit 16, which only NotEnoughIDs' 16-bit metadata patches can store and sync, so the feature also requires NEIDs on BOTH the client and the server and stays off automatically when NEIDs is missing.\nModified Classes: net.minecraft.item.ItemBlock\nModified Client Classes: net.minecraft.block.BlockLiquid net.minecraft.client.renderer.RenderBlocks net.minecraft.client.renderer.WorldRenderer");
+		modernChestPairing = getBoolean("modernChestPairing", catBackport, true, "Restores modern (26.2) chest pairing semantics: chests only merge into a double chest when they face the same direction and sit side-by-side perpendicular to that direction, any number of chests can be placed adjacent to each other, and the facing of an existing chest is never rewritten. Legacy double chests migrate on first load: pairs whose halves face different directions (a vanilla quirk) split into single chests, contents are kept in each half. The pairing state lives in metadata bits 32/64/128, which only NotEnoughIDs' 16-bit metadata patches can store and sync, so the feature also requires NEIDs on BOTH the client and the server and stays off automatically when NEIDs is missing.\nModified Classes: net.minecraft.block.BlockChest net.minecraft.tileentity.TileEntityChest\nModified Client Classes: net.minecraft.client.renderer.tileentity.TileEntityChestRenderer");
 	}
 }

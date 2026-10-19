@@ -487,9 +487,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 				// Wall getIcon is @SideOnly(CLIENT) (SideTransformer strips it on
 				// dedicated servers) - the bit16 strip must be a client mixin.
 				mixins.add("waterlog.client.MixinBlockWall");
-				// Chest/EnderChest TESRs face-switch on raw metadata - mask reads
-				// so waterlogged cells (16+meta) keep facing (trapdoor Bug B class).
-				mixins.add("waterlog.client.MixinTileEntityChestRenderer");
+				// EnderChest TESR face-switches on raw metadata - mask reads so
+				// waterlogged cells (16+meta) keep facing (trapdoor Bug B class).
+				// The regular chest TESR mask registers below on the
+				// waterlog ∪ chestpair union (bits 32/64/128 need it too).
 				mixins.add("waterlog.client.MixinTileEntityEnderChestRenderer");
 				// Underwater fog (density + colour) goes through
 				// ActiveRenderInfo.getBlockAtEntityViewpoint in both pipelines.
@@ -512,6 +513,22 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 
 		if (ConfigFunctions.enableSilkTouchingMushrooms) {
 			mixins.add("mushroom.MixinBlockHugeMushroom");
+		}
+
+		// Modern chest pairing (26.2 ChestBlock TYPE state machine: same-facing
+		// perpendicular merge, TYPE stored in meta bits 32/64/128, never auto
+		// re-merging SINGLEs). Shares the NEIDs extended-metadata gate with
+		// waterlogging since the type bits need the same storage/sync patches.
+		final boolean chestPairOn = ConfigMixins.modernChestPairing && neidPresent;
+		if (chestPairOn) {
+			mixins.add("chestpair.MixinBlockChest");
+			mixins.add("chestpair.MixinTileEntityChest");
+		}
+		// Chest TESR face-switch masks: waterlog (bit 16) and chestpair
+		// (bits 32/64/128) both live above the vanilla facing bits, so the
+		// mask registers on the union of both features.
+		if (side == MixinEnvironment.Side.CLIENT && (waterlogOn || chestPairOn)) {
+			mixins.add("waterlog.client.MixinTileEntityChestRenderer");
 		}
 
 		if (ConfigFunctions.enableFloatingTrapDoors && side == MixinEnvironment.Side.CLIENT) {
