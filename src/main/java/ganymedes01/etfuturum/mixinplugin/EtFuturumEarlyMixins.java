@@ -454,6 +454,14 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.MixinBlockWall");
 			mixins.add("waterlog.MixinBlockLadder");
 			mixins.add("waterlog.MixinBlockTrapDoor");
+			// Chest/EnderChest family extension (26.2 ChestBlock/EnderChestBlock
+			// WATERLOGGED): base-class generic like stairs - modded wooden chests
+			// extending BlockChest inherit automatically (trapped chest = separate
+			// Block instance, covered too). Placement/merge meta rewrites preserve
+			// bit16 (pure preservation - they may target neighbour cells); TESR
+			// facing switches get & 15 masks client-side.
+			mixins.add("waterlog.MixinBlockChest");
+			mixins.add("waterlog.MixinBlockEnderChest");
 			// Lantern/Chain family extension (26.2 LanternBlock/ChainBlock
 			// implements SimpleWaterloggedBlock): lantern uses mixed-mode
 			// (declared onNeighborBlockChange via @Inject HEAD, rest via
@@ -473,12 +481,16 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			// 26.2 explosion semantics (waterlogged blocks block blast rays via
 			// their water FluidState resistance).
 			mixins.add("waterlog.MixinExplosion");
-			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/Wall/Ladder/TrapDoor/Lantern/Chain/StainedGlassPane/Entity/EntityLivingBase/World waterlog mixins + Explosion");
+			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/Wall/Ladder/TrapDoor/Chest/EnderChest/Lantern/Chain/StainedGlassPane/Entity/EntityLivingBase/World waterlog mixins + Explosion");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("waterlog.client.MixinBlockLiquid");
 				// Wall getIcon is @SideOnly(CLIENT) (SideTransformer strips it on
 				// dedicated servers) - the bit16 strip must be a client mixin.
 				mixins.add("waterlog.client.MixinBlockWall");
+				// Chest/EnderChest TESRs face-switch on raw metadata - mask reads
+				// so waterlogged cells (16+meta) keep facing (trapdoor Bug B class).
+				mixins.add("waterlog.client.MixinTileEntityChestRenderer");
+				mixins.add("waterlog.client.MixinTileEntityEnderChestRenderer");
 				// Underwater fog (density + colour) goes through
 				// ActiveRenderInfo.getBlockAtEntityViewpoint in both pipelines.
 				mixins.add("waterlog.client.MixinActiveRenderInfo");

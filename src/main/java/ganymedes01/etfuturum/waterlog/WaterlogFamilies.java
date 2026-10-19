@@ -5,6 +5,8 @@ import ganymedes01.etfuturum.blocks.BlockCopperGrate;
 import ganymedes01.etfuturum.blocks.BlockLantern;
 import ganymedes01.etfuturum.blocks.BlockScaffolding;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockChest;
+import net.minecraft.block.BlockEnderChest;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockLadder;
 import net.minecraft.block.BlockPane;
@@ -115,6 +117,24 @@ import net.minecraft.block.BlockWall;
  * setBlock meta）在源码内联；④ damageDropped 剥位（vanilla 体 = return meta
  * 直通）；⑤ 渲染 = ISBRH（RenderIDs.SCAFFOLDING）掩码读取 {@code &8} 对
  * bit16 透明，通用画水门控自动覆盖（与提灯/锁链 ISBRH 同路径）。
+ *
+ * <p>箱子/末影箱（26.2 ChestBlock/EnderChestBlock：WATERLOGGED 完整支持，
+ * getStateForPlacement L238/L88 按 replacedFluidState 判定、updateShape 蔓延
+ * L186·L253/L155·L163 scheduleTick）→ 26.2 忠实对象。1710 两者 meta = 朝向
+ * 2-5（陷阱箱 = Blocks.trappedChest 独立实例不占 meta 位；末影箱无双箱合并），
+ * 与楼梯同构的基类通用解：@Mixin(BlockChest) —— mod 木箱子类（含陷阱箱实例）
+ * 自动继承；直接继承 BlockContainer 的容器（铁箱扩展等）不在家族，26.2 亦
+ * 不含。裸 meta 重写点全部保留式并回 bit16（箱子会写邻居格，邻居可能自带
+ * 含水，不用楼梯的 isPlacementSource 并位）：BlockChest.onBlockPlacedBy
+ * （放置朝向 + 双箱合并的邻居格写）与 func_149954_e（onBlockAdded 双箱朝向
+ * 修正）、BlockEnderChest.onBlockPlacedBy → @Redirect setBlockMetadataWithNotify
+ * 并入目标格 &amp; bit16；func_149954_e 邻居 meta 裸比较（j1==2/j1==4）与两个
+ * TESR（TileEntityChestRenderer/EnderChestRenderer 裸 getBlockMetadata 朝向
+ * switch）调用点 &amp; 15 剥离。damageDropped 未声明（基类默认 0）→ 物品侧
+ * 干净；放置/倒水/舀水/挖掘留水/蔓延/海绵/爆炸走通用路径；渲染 = GTNH 空
+ * ISBRH（BlockChestRenderer renderId 22，世界内不画本体，箱体走 TESR），
+ * 含水画水走通用 pass-1 管线（renderBlockByRenderType HEAD 挂点对 ISBRH
+ * 分派天然可达，与格栅/链同链路）。
  */
 public final class WaterlogFamilies {
 
@@ -130,6 +150,8 @@ public final class WaterlogFamilies {
 				|| block instanceof BlockChain
 				|| block instanceof BlockCopperGrate
 				|| block instanceof BlockScaffolding
+				|| block instanceof BlockChest
+				|| block instanceof BlockEnderChest
 				|| (block instanceof BlockStairs || block instanceof BlockSlab) && !block.isOpaqueCube();
 	}
 }
