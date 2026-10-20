@@ -501,6 +501,9 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 				// 20261018-A 水闪烁修复：S23/S22 迟到回声过滤（客户端预测登记在
 				// MixinItemBucket 桶路径 + WaterlogRuntime.markWaterlogged）
 				mixins.add("waterlog.client.MixinNetHandlerPlayClient");
+				// 20261020-P 预测窗口收敛：26.2 endPredictionsUpTo 同构，tick 驱动
+				// 应用 pending 终态（见 WaterlogRuntime.pollSettledPredictions）
+				mixins.add("waterlog.client.MixinWorldClient");
 				if (angelicaLoaded) {
 					mixins.add("waterlog.client.MixinAngelicaChunkBuilderMeshingTask");
 					WaterlogRuntime.debug("registered: celeritas paint mixins (angelicaLoaded=true)");

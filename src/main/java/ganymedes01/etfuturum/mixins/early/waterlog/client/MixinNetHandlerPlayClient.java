@@ -14,13 +14,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * 20261018-A 水闪烁修复的包侧半边（预测登记在 MixinItemBucket 桶路径 +
- * WaterlogRuntime.markWaterlogged，26.2 BlockStatePredictionHandler 的无 ack 轻量同构）：
- * 服务端旧写入 flush 的 S23/S22（回声，恰好等于客户端预测前状态）会在预测后 1-2 tick
- * 到达并无条件覆写预测，造成 DRY→WET→DRY 闪 2 tick。TCP 有序 ⇒ 回声必先于确认包，
- * 故对每个格做"未过期预测 且 到来状态==预测前状态 → 丢弃"的过滤；确认包与无关权威
- * 写入照常应用。S21（≥64 格全量权威）不过滤。
- *
- * <p>客户端专属：NetHandlerPlayClient 是 client 类，本 mixin 只在
+ * WaterlogRuntime.markWaterlogged，26.2 BlockStatePredictionHandler 的无 ack 轻量同构）。
+ * <p>
+ * 20261020-P 重写为 26.2 窗口收敛语义：预测窗口内到达的 S23/S22 一律延迟应用（吞下、
+ * 只更新 pending），窗口末由 MixinWorldClient.tick 应用最后到达的权威状态——回声与
+ * 确认在窗口内不可区分也无须区分（内容比对版会在"服务端把格子清回预测前状态"时误吞
+ * 权威写入：海绵吸水残水；不登记空气格则回声直接应用：空地倒水闪）。见
+ * WaterlogRuntime.tryFilter / pollSettledPredictions 的完整语义注释。
+ * <p>
+ * 客户端专属：NetHandlerPlayClient 是 client 类，本 mixin 只在
  * {@code side == CLIENT && waterlogOn} 时注册（EtFuturumEarlyMixins）。
  */
 @Mixin(NetHandlerPlayClient.class)

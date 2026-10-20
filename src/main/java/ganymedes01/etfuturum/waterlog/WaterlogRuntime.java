@@ -7,6 +7,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,7 +33,7 @@ public final class WaterlogRuntime {
 	public static final boolean WATERLOG_DEBUG = false;
 
 	/** 构建标签：日志中核对运行中的 jar 是否为本次构建（防旧 jar 误测）。 */
-	public static final String BUILD_TAG = "20261019-I";
+	public static final String BUILD_TAG = "20261020-A";
 
 	// ===== 20261013-J 倒水/舀水闪烁追踪：玩家事件坐标广播 =====
 	// Angelica 的 EtfrFlashProbe 每客户端 tick 反射轮询（debugTrackSeq 变化 = 新
@@ -70,18 +71,40 @@ public final class WaterlogRuntime {
 	// 未过期登记 且 到来状态==预测前状态 → 丢弃该包/该格（保留登记等确认包）；否则照常
 	// 应用并消费登记。超时自动失效回归原版。保守性：只丢"恰好还原预测前状态"的回声。
 	// 纯 long/int 存储，无 client 类依赖；登记/过滤都过 isEnabled() 短路，功能关闭零行为。
-	public static final int PREDICTION_TTL_TICKS = 10;
+	//
+	// ===== 20261020-P 重写为 26.2 窗口收敛语义（预测状态、不比对内容）=====
+	// 上版"内容比对"有两处实证缺陷：①空气格倒水的回声（==pre）被丢——但海绵吸水等
+	// 服务端"把格子清回空气"的权威写入同样是 air，被误吞 → 客户端永久残水；②反过来
+	// 不登记空气格则回声直接应用 → 空地倒水闪。26.2 BlockStatePredictionHandler 的
+	// 真实语义（prediction/BlockStatePredictionHandler.java）不做任何内容比对：
+	// retainKnownServerState 登记预测序号 → updateKnownServerState（S23/S22 到达）
+	// 只更新 pending、绝不应用 → endPredictionsUpTo（ack 到达）把最后到达的权威状态
+	// 一次性 syncBlockState。即"窗口内一切包延迟、窗口末应用最后一条 = 服务端终态"。
+	// 1.7.10 无 ack 包，用 settle 定时近似：首个包到达时 settle=now+2（海绵吸水与
+	// 倒水确认在服务端同一 tick 顺序发出，+2 足以收齐），后续包顺延 max(settle,now+1)；
+	// 与 ping 无关（ping 只影响首包到达时刻，收敛窗从首包起算）。TTL 仅作断线兜底，
+	// 过期静默移除（pending 不应用，下一条包回归原版行为）。
+	// 应用由 MixinWorldClient.tick → pollSettledPredictions 驱动（client 包，common
+	// 侧只交换 int[]，无 client 类依赖）。登记/过滤都过 isEnabled() 短路，关闭零行为。
+	public static final int PREDICTION_TTL_TICKS = 60;
+	private static final int SETTLE_FIRST_PACKET_DELAY = 2;
+	private static final int SETTLE_NEXT_PACKET_DELAY = 1;
 
 	private static final Map<Long, Prediction> pendingPredictions = new HashMap<>();
 
 	private static final class Prediction {
-		final int blockId;
-		final int meta;
+		final int preId;
+		final int preMeta;
 		final long expireTick;
+		int pendingId;
+		int pendingMeta;
+		long settleTick = -1L;
 
-		Prediction(int blockId, int meta, long expireTick) {
-			this.blockId = blockId;
-			this.meta = meta;
+		Prediction(int preId, int preMeta, long expireTick) {
+			this.preId = preId;
+			this.preMeta = preMeta;
+			this.pendingId = preId;
+			this.pendingMeta = preMeta;
 			this.expireTick = expireTick;
 		}
 	}
@@ -91,10 +114,24 @@ public final class WaterlogRuntime {
 		return ((long) (x & 0x3FFFFFF) << 38) | ((long) (z & 0x3FFFFFF) << 12) | (long) (y & 0xFFF);
 	}
 
+	private static int unpackX(long packed) {
+		int x = (int) (packed >> 38);
+		return (x & (1 << 25)) != 0 ? x - (1 << 26) : x;
+	}
+
+	private static int unpackZ(long packed) {
+		int z = (int) ((packed << 26) >> 38);
+		return (z & (1 << 25)) != 0 ? z - (1 << 26) : z;
+	}
+
+	private static int unpackY(long packed) {
+		return (int) (packed & 0xFFF);
+	}
+
 	/**
-	 * 客户端预测写入前登记预测前状态。调用方（桶路径/MarkWaterlogged）须守卫
-	 * {@code world.isRemote}；本方法只做 isEnabled() 短路。包处理与游戏逻辑同在
-	 * 客户端主线程，synchronized 仅为防御性兜底，无性能影响。
+	 * 客户端预测写入前登记（26.2 retainKnownServerState 同构）。调用方（桶路径/
+	 * MarkWaterlogged）须守卫 {@code world.isRemote}；本方法只做 isEnabled() 短路。
+	 * 包处理与游戏逻辑同在客户端主线程，synchronized 仅为防御性兜底，无性能影响。
 	 */
 	public static void recordPrediction(int x, int y, int z, int blockId, int meta, long nowTick) {
 		if (!isEnabled()) {
@@ -117,7 +154,10 @@ public final class WaterlogRuntime {
 	}
 
 	/**
-	 * S23/S22 到包时的回声过滤（客户端包处理侧调用）。返回 true 表示该包/该格应丢弃。
+	 * S23/S22 到包时的窗口处理（26.2 updateKnownServerState 同构，客户端包处理侧
+	 * 调用）。返回 true 表示该包/该格延迟应用（由 pollSettledPredictions 收敛时应用）：
+	 * 窗口内不比对内容、一律吞下并更新 pending——回声与权威写入在窗口内不可区分，
+	 * 也无需区分，窗口末应用最后一条即服务端终态。
 	 */
 	public static boolean tryFilter(int x, int y, int z, int blockId, int meta, long nowTick) {
 		if (!isEnabled() || pendingPredictions.isEmpty()) {
@@ -132,19 +172,51 @@ public final class WaterlogRuntime {
 			if (nowTick > p.expireTick) {
 				// 超时：回归原版无条件应用
 				pendingPredictions.remove(key);
-				debug("PRED-EXPIRE " + x + "," + y + "," + z + " was " + p.blockId + "/" + p.meta + " tick=" + nowTick);
+				debug("PRED-EXPIRE " + x + "," + y + "," + z + " pre " + p.preId + "/" + p.preMeta + " tick=" + nowTick);
 				return false;
 			}
-			if (p.blockId == blockId && p.meta == meta) {
-				// 迟到回声：丢弃，保留登记等确认包（TCP 有序 ⇒ 回声先于确认包）
-				debug("PRED-FILTER-ECHO " + x + "," + y + "," + z + " echo " + blockId + "/" + meta + " tick=" + nowTick);
-				return true;
-			}
-			// 与预测前状态不同：确认包或无关权威写入 → 照常应用并消费登记
-			pendingPredictions.remove(key);
-			debug("PRED-ACK " + x + "," + y + "," + z + " " + blockId + "/" + meta + " tick=" + nowTick);
-			return false;
+			p.pendingId = blockId;
+			p.pendingMeta = meta;
+			// 首包启动收敛窗（+2 收齐同 tick 发出的回声+确认对），后续包顺延 1 tick
+			p.settleTick = p.settleTick < 0L ? nowTick + SETTLE_FIRST_PACKET_DELAY : Math.max(p.settleTick, nowTick + SETTLE_NEXT_PACKET_DELAY);
+			debug("PRED-HOLD " + x + "," + y + "," + z + " pkt=" + blockId + "/" + meta + " settle=" + p.settleTick + " tick=" + nowTick);
+			return true;
 		}
+	}
+
+	/**
+	 * 26.2 endPredictionsUpTo 同构（MixinWorldClient.tick 每客户端 tick 驱动）：
+	 * 取出收敛期已到的登记，交由调用方应用 pending 终态；TTL 过期的静默移除
+	 * （不应用，下一条包回归原版行为）。返回 {x, y, z, blockId, meta} 数组，
+	 * 纯 int 交换，无 client 类依赖。
+	 */
+	public static int[][] pollSettledPredictions(long nowTick) {
+		if (!isEnabled() || pendingPredictions.isEmpty()) {
+			return new int[0][];
+		}
+		ArrayList<int[]> settled = null;
+		synchronized (pendingPredictions) {
+			final Iterator<Map.Entry<Long, Prediction>> it = pendingPredictions.entrySet().iterator();
+			while (it.hasNext()) {
+				final Map.Entry<Long, Prediction> e = it.next();
+				final Prediction p = e.getValue();
+				if (nowTick > p.expireTick) {
+					it.remove();
+					continue;
+				}
+				if (p.settleTick >= 0L && nowTick >= p.settleTick) {
+					it.remove();
+					final long packed = e.getKey();
+					if (settled == null) {
+						settled = new ArrayList<>();
+					}
+					settled.add(new int[] { unpackX(packed), unpackY(packed), unpackZ(packed), p.pendingId, p.pendingMeta });
+					debug("PRED-SETTLE " + unpackX(packed) + "," + unpackY(packed) + "," + unpackZ(packed)
+							+ " -> " + p.pendingId + "/" + p.pendingMeta + " (pre " + p.preId + "/" + p.preMeta + ") tick=" + nowTick);
+				}
+			}
+		}
+		return settled == null ? new int[0][] : settled.toArray(new int[0][]);
 	}
 
 	public static void debug(String msg) {
