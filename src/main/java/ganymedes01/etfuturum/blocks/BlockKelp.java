@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.client.sound.ModSounds;
 import ganymedes01.etfuturum.core.utils.Utils;
+import ganymedes01.etfuturum.waterlog.WaterlogFlow;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.item.Item;
@@ -51,7 +52,11 @@ public class BlockKelp extends BlockAquaticPlant implements IGrowable {
 		Block above = world.getBlock(x, y + 1, z);
 		if (!world.isRemote && (above == ModBlocks.KELP.get() || above == ModBlocks.KELP_PLANT.get())) {
 			world.setBlock(x, y, z, ModBlocks.KELP_PLANT.get(), 0, 3);
+			return; // converted - the plant segment's own onBlockAdded schedules its spread
 		}
+		// 26.2: the cell holds a permanent source FluidState, so placement starts
+		// the spread chain the same way as the waterlogged family
+		WaterlogFlow.scheduleSpread(world, x, y, z, this);
 	}
 
 	/**
@@ -94,7 +99,11 @@ public class BlockKelp extends BlockAquaticPlant implements IGrowable {
 		Block above = world.getBlock(x, y + 1, z);
 		if (!world.isRemote && (above == ModBlocks.KELP.get() || above == ModBlocks.KELP_PLANT.get())) {
 			world.setBlock(x, y, z, ModBlocks.KELP_PLANT.get(), 0, 3);
+			return; // converted - the plant segment's own onBlockAdded schedules its spread
 		}
+		// 26.2 GrowingPlantHeadBlock#updateShape: every neighbour change schedules
+		// the fluid tick of the permanent source water -> one spread step
+		WaterlogFlow.scheduleSpread(world, x, y, z, this);
 	}
 
 	@Override
@@ -115,9 +124,20 @@ public class BlockKelp extends BlockAquaticPlant implements IGrowable {
 
 	@Override
 	public void updateTick(World world, int x, int y, int z, Random rand) {
-		// Modern GrowingPlantHeadBlock#randomTick: only below max age, 14% chance.
-		if (!world.isRemote && (world.getBlockMetadata(x, y, z) & 15) < MAX_AGE && rand.nextFloat() < GROW_PER_TICK_PROBABILITY) {
-			growOne(world, x, y, z);
+		// Guarded on the cell still being a head: a scheduled spread tick can land
+		// after growth already turned this cell into a plant segment.
+		if (world.getBlock(x, y, z) == this) {
+			// Modern GrowingPlantHeadBlock#randomTick: only below max age, 14% chance.
+			if (!world.isRemote && (world.getBlockMetadata(x, y, z) & 15) < MAX_AGE && rand.nextFloat() < GROW_PER_TICK_PROBABILITY) {
+				growOne(world, x, y, z);
+			}
+			// 26.2 fluid-tick semantics: the kelp cell is a permanent source, so the
+			// scheduled tick is a plain spread step. updateTick also serves random
+			// ticks; a spread attempt into settled water re-derives the same flow
+			// decisions, so the overlap only costs the cheap flow checks.
+			if (!world.isRemote) {
+				WaterlogFlow.spreadFromSource(world, x, y, z);
+			}
 		}
 	}
 

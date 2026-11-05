@@ -62,6 +62,8 @@ import ganymedes01.etfuturum.gamerule.PlayersSleepingPercentage;
 import ganymedes01.etfuturum.gamerule.RandomTickSpeed;
 import ganymedes01.etfuturum.items.ItemArrowTipped;
 import ganymedes01.etfuturum.lib.Reference;
+import ganymedes01.etfuturum.waterlog.WaterlogFamilies;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import ganymedes01.etfuturum.network.AttackYawMessage;
 import ganymedes01.etfuturum.network.BlackHeartParticlesMessage;
 import ganymedes01.etfuturum.network.TotemParticlesMessage;
@@ -772,6 +774,10 @@ public class ServerEventHandler {
 			if (sideHit.get() == 0) {
 				l += 8;
 			}
+			// bit16 保留（同 BlockScaffolding fallMeta 约定）：含水活板门对底/顶面
+			// 放置时浮动逻辑会整格重写朝向，直接写 l 会剥掉 WATERLOGGED_BIT →
+			// 放置 ≤5gt 内"水变干"（STRIP-WATCH old=16 new=2 实锤）。
+			l |= event.world.getBlockMetadata(event.x, event.y, event.z) & WaterlogRuntime.WATERLOGGED_BIT;
 			event.world.setBlockMetadataWithNotify(event.x, event.y, event.z, l, 2);
 		}
 	}
@@ -1275,12 +1281,47 @@ public class ServerEventHandler {
 			}
 
 			if (!event.world.isRemote) { //We assume lava sounds if it's not water because most modded liquids are molten metals
+				// 26.2 parity: pour sounds only fire when the pour actually happens
+				// (a lava bucket on a solid wall is silent). Vanilla pours into the
+				// cell offset from the hit face - replicate the shift and vanilla's
+				// success rule (air or non-solid target); the waterlogging family
+				// adds two successful cases mirroring the bucket mixins: the direct
+				// mop fill (water + family + not sneaking) and the neighbor-face
+				// offset fill (water + family offset cell). Sound position = the
+				// cell that actually receives the water (26.2 plays at the filled
+				// position, the old mop-cell position was off by one for pours).
+				int ox = x;
+				int oy = y;
+				int oz = z;
+				if (target.sideHit == 0)
+					--oy;
+				if (target.sideHit == 1)
+					++oy;
+				if (target.sideHit == 2)
+					--oz;
+				if (target.sideHit == 3)
+					++oz;
+				if (target.sideHit == 4)
+					--ox;
+				if (target.sideHit == 5)
+					++ox;
+				boolean vanillaPour = event.world.isAirBlock(ox, oy, oz) || !event.world.getBlock(ox, oy, oz).getMaterial().isSolid();
+				boolean familyDirect = WaterlogRuntime.isEnabled() && WaterlogFamilies.isWaterloggable(event.world.getBlock(x, y, z)) && !event.entityPlayer.isSneaking();
+				boolean familyNeighbor = WaterlogRuntime.isEnabled() && WaterlogFamilies.isWaterloggable(event.world.getBlock(ox, oy, oz));
 				if (isFull.getMaterial() == Material.water) {// --- Pour water --- //
-					event.world.playSoundEffect(target.blockX + 0.5, target.blockY + 0.5, target.blockZ + 0.5, Reference.MCAssetVer + ":item.bucket.empty", 1.0F, 1.0F);
+					if (familyDirect || familyNeighbor || vanillaPour) {
+						boolean direct = familyDirect && !familyNeighbor;
+						event.world.playSoundEffect((direct ? x : ox) + 0.5, (direct ? y : oy) + 0.5, (direct ? z : oz) + 0.5, Reference.MCAssetVer + ":item.bucket.empty", 1.0F, 1.0F);
+					}
 				} else if (isFull != Blocks.air) {// --- Pour something else --- //
-					event.world.playSoundEffect(target.blockX + 0.5, target.blockY + 0.5, target.blockZ + 0.5, Reference.MCAssetVer + ":item.bucket.empty_lava", 1.0F, 1.0F);
+					if (vanillaPour) {
+						event.world.playSoundEffect(ox + 0.5, oy + 0.5, oz + 0.5, Reference.MCAssetVer + ":item.bucket.empty_lava", 1.0F, 1.0F);
+					}
 				} else {
-					if (event.world.getBlock(target.blockX, target.blockY, target.blockZ).getMaterial() == Material.water) {// --- Fill with water --- //
+					// True waterlogging (bit16): family cells are rock material, so
+					// the material check below never sees them - check the bit first.
+					if (WaterlogRuntime.isWaterlogged(event.world, target.blockX, target.blockY, target.blockZ)
+							|| event.world.getBlock(target.blockX, target.blockY, target.blockZ).getMaterial() == Material.water) {// --- Fill with water --- //
 						event.world.playSoundEffect(target.blockX + 0.5, target.blockY + 0.5, target.blockZ + 0.5, Reference.MCAssetVer + ":item.bucket.fill", 1.0F, 1.0F);
 					} else if (event.world.getBlock(target.blockX, target.blockY, target.blockZ).getMaterial().isLiquid()) {// --- Fill with something else --- //
 						event.world.playSoundEffect(target.blockX + 0.5, target.blockY + 0.5, target.blockZ + 0.5, Reference.MCAssetVer + ":item.bucket.fill_lava", 1.0F, 1.0F);

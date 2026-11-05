@@ -1,71 +1,54 @@
 package ganymedes01.etfuturum.mixins.early.waterlog.client;
 
-import com.gtnewhorizons.angelica.rendering.celeritas.AngelicaChunkBuildContext;
-import com.gtnewhorizons.angelica.rendering.celeritas.iris.BlockRenderContext;
-import ganymedes01.etfuturum.waterlog.StairWaterlog;
-import ganymedes01.etfuturum.waterlog.client.StairWaterRenderer;
-import net.coderbot.iris.block_rendering.NbtConditionalIdMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockStairs;
-import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.client.renderer.Tessellator;
-import org.embeddedt.embeddium.impl.render.chunk.compile.ChunkBuildBuffers;
-import org.embeddedt.embeddium.impl.render.chunk.terrain.material.Material;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.Redirect;
+
+import ganymedes01.etfuturum.waterlog.WaterlogFamilies;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
+import ganymedes01.etfuturum.waterlog.client.WaterlogPaint;
+import net.minecraft.block.Block;
 
 /**
- * Celeritas decides each block's render pass via Block#canRenderInPass, which
- * has no position context, so the decision cannot be overridden per cell
- * there. Instead the pass argument of the per-block renderBlock call is
- * rewritten for a visually waterlogged stair: 0 -&gt; 1, so the content goes
- * through the translucent terrain pass - the painted water then sorts
- * together with the surrounding real water and gets the shader pack's water
- * treatment. The water volume is painted right after
- * renderBlockByRenderType: later is useless, because renderBlock resets the
- * tessellator before returning and the copyRawBuffer arguments are evaluated
- * in between.
- * <p>
- * Targets Angelica by name; registered only when Angelica is present, so the
- * compile-time Angelica types in the handler signature only ever load in an
- * environment that provides them.
+ * celeritas（Angelica 接管 embeddium 区块构建）管线的 pass-1 门控与 pass
+ * 捕获。部署 26.09.06 jar 实证：{@code execute} 对每个非空气方块逐 pass 调
+ * {@code renderBlock}，renderBlock 内部 {@code startDrawingQuads →
+ * renderBlockByRenderType（func_147805_b）→ copyRawBuffer} 全量走通（无
+ * vanilla renderType 拦截），EtFR 的 MixinRenderBlocks 画水挂点两条管线通用。
+ *
+ * <p>本类两个注入都只用 EtFR classpath 内类型——unimixins 0.3.1 运行时对
+ * @Inject handler 的 @Coerce Object 不放宽（Invalid descriptor → 目标类定义
+ * 失败 → NoClassDefFoundError，2026-10-05 实证），跨 mod 目标的 handler 签名
+ * 严禁出现编不进来的具体类型：
+ * <ul>
+ * <li>{@code execute} 里 {@code canRenderInPass}（Forge 添加方法，运行时保持
+ * MCP 名）为家族方块打开 pass-1 槽位——否则楼梯 pass 1 根本不进 renderBlock；
+ * 不需要格坐标（含水判定在画水挂点做）。</li>
+ * <li>{@code renderBlock} 里紧随 {@code setRenderPass} 的 side-effect 调用
+ * {@code canRenderInPass}（同样 Forge 方法）被纯捕获重定向：把当前 pass 记入
+ * ThreadLocal，行为不变。画水挂点（MixinRenderBlocks，自有 blockAccess 与
+ * x/y/z）据 pass==1 分支画水或抑制干家族格的半透明重复几何。</li>
+ * </ul>
+ * 子类（主线程/线程化任务）都委托 super.execute 且不覆写 renderBlock，基类
+ * 注入全覆盖；Threaded 的 canRenderOffThread 下楼梯直连、延迟路径同线程相邻
+ * 捕获/消费，ThreadLocal 天然隔离并发构建线程。shader pack 对家族方块的
+ * per-block 层覆写走 override 分支绕过 canRenderInPass，该路径暂不含水（罕见
+ * 配置，接受）。
  */
 @Mixin(targets = "com.gtnewhorizons.angelica.rendering.celeritas.AngelicaChunkBuilderMeshingTask", remap = false)
 public abstract class MixinAngelicaChunkBuilderMeshingTask {
 
-	@ModifyArg(method = {"execute", "processDeferredBlocks", "lambda$processDeferredBlocks$0"},
-			at = @At(value = "INVOKE",
-					target = "Lcom/gtnewhorizons/angelica/rendering/celeritas/AngelicaChunkBuilderMeshingTask;renderBlock(Lnet/minecraft/block/Block;IIIIILnet/minecraft/client/renderer/Tessellator;Lnet/minecraft/client/renderer/RenderBlocks;Lorg/embeddedt/embeddium/impl/render/chunk/compile/ChunkBuildBuffers;Lcom/gtnewhorizons/angelica/rendering/celeritas/AngelicaChunkBuildContext;Lcom/gtnewhorizons/angelica/rendering/celeritas/iris/BlockRenderContext;IIILorg/embeddedt/embeddium/impl/render/chunk/terrain/material/Material;ZLnet/coderbot/iris/block_rendering/NbtConditionalIdMap;J)V"),
-			index = 5, remap = false)
-	private int etfuturum$waterloggedStairsUseTranslucentPass(Block block, int metadata, int x, int y, int z, int pass,
-			Tessellator tessellator, RenderBlocks renderBlocks, ChunkBuildBuffers buffers,
-			AngelicaChunkBuildContext buildContext, BlockRenderContext blockRenderContext,
-			int originX, int originY, int originZ, Material materialOverride, boolean isShaderPackOverride,
-			NbtConditionalIdMap<Block> teMap, long currentTick) {
-		if (block instanceof BlockStairs && pass == 0
-				&& StairWaterlog.shouldRenderWater(renderBlocks.blockAccess, x, y, z)) {
-			return 1;
+	@Redirect(method = "execute", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;canRenderInPass(I)Z", remap = false))
+	private boolean etfuturum$waterloggedBlocksGetPassOneSlot(Block block, int pass) {
+		if (pass == 1 && WaterlogRuntime.isEnabled() && WaterlogFamilies.isWaterloggable(block)) {
+			return true; // 打开槽位；含水判定在画水挂点做（画水或抑制空几何）
 		}
-		return pass;
+		return block.canRenderInPass(pass);
 	}
 
-	@Inject(method = "renderBlock", remap = false, at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/renderer/RenderBlocks;renderBlockByRenderType(Lnet/minecraft/block/Block;III)Z",
-			shift = At.Shift.AFTER, remap = true))
-	private void etfuturum$afterRenderByType(Block block, int metadata, int x, int y, int z, int pass,
-			Tessellator tessellator, RenderBlocks renderBlocks, ChunkBuildBuffers buffers,
-			AngelicaChunkBuildContext buildContext, BlockRenderContext blockRenderContext,
-			int originX, int originY, int originZ, Material materialOverride, boolean isShaderPackOverride,
-			NbtConditionalIdMap<Block> teMap, long currentTick, CallbackInfo ci) {
-		// The water volume must be added right after renderBlockByRenderType:
-		// later is useless because the copyRawBuffer arguments are evaluated before
-		// an INVOKE-before injection would run, and renderBlock resets the
-		// tessellator before returning.
-		if (block instanceof BlockStairs && pass == 1) {
-			StairWaterRenderer.renderWaterVolume(renderBlocks.blockAccess, x, y, z, tessellator);
-		}
+	@Redirect(method = "renderBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;canRenderInPass(I)Z", remap = false))
+	private boolean etfuturum$captureRenderBlockPass(Block block, int pass) {
+		WaterlogPaint.captureCeleritasPass(pass);
+		return block.canRenderInPass(pass); // 行为不变，纯捕获
 	}
 }

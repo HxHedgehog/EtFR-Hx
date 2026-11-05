@@ -1,6 +1,7 @@
 package ganymedes01.etfuturum.mixins.early.oceanplants;
 
 import ganymedes01.etfuturum.ModBlocks;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
@@ -28,9 +29,10 @@ public abstract class MixinWorld {
 	@Redirect(method = "func_147447_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;collisionRayTrace(Lnet/minecraft/world/World;IIILnet/minecraft/util/Vec3;Lnet/minecraft/util/Vec3;)Lnet/minecraft/util/MovingObjectPosition;"))
 	private MovingObjectPosition etfuturum$liquidRayHitsWholePickleCell(Block block, World world, int x, int y, int z, Vec3 start, Vec3 end, Vec3 outerStart, Vec3 outerEnd, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
 		MovingObjectPosition mop = block.collisionRayTrace(world, x, y, z, start, end);
-		if (mop == null && stopOnLiquid && block == ModBlocks.SEA_PICKLE.get()) {
+		if (mop == null && stopOnLiquid && (block == ModBlocks.SEA_PICKLE.get() || WaterlogRuntime.isWaterlogged(world, x, y, z))) {
 			// 26.2 waterlogged fluid clip: the cell counts as full water for
-			// bucket rays even where the column leaves it open
+			// bucket rays even where the geometry leaves it open (sea pickle
+			// column; waterlogged family blocks with their notches)
 			AxisAlignedBB cell = AxisAlignedBB.getBoundingBox(x, y, z, x + 1.0D, y + 1.0D, z + 1.0D);
 			MovingObjectPosition intercept = cell.calculateIntercept(start, end);
 			if (intercept != null) {

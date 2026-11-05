@@ -4,9 +4,12 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import ganymedes01.etfuturum.client.sound.ModSounds;
 import ganymedes01.etfuturum.core.utils.Utils;
+import ganymedes01.etfuturum.waterlog.WaterlogFlow;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.init.Blocks;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
@@ -42,21 +45,82 @@ public class BlockSeagrass extends BlockAquaticPlant implements IShearable, IGro
 	}
 
 	@Override
+	public void onBlockAdded(World world, int x, int y, int z) {
+		// 26.2: the cell holds a permanent source FluidState, so placement starts
+		// the spread chain the same way as the waterlogged family
+		WaterlogFlow.scheduleSpread(world, x, y, z, this);
+	}
+
+	@Override
 	public void onNeighborBlockChange(World world, int x, int y, int z, Block neighbor) {
 		int meta = world.getBlockMetadata(x, y, z);
 		if (meta == META_UPPER) {
 			Block below = world.getBlock(x, y - 1, z);
 			if (below != this || world.getBlockMetadata(x, y - 1, z) != META_LOWER) {
 				die(world, x, y, z);
+				return;
 			}
 		} else if (meta == META_LOWER) {
 			Block above = world.getBlock(x, y + 1, z);
 			if (!hasSolidGround(world, x, y, z) || above != this || world.getBlockMetadata(x, y + 1, z) != META_UPPER) {
 				die(world, x, y, z);
+				return;
 			}
 		} else if (!hasSolidGround(world, x, y, z)) {
 			die(world, x, y, z);
+			return;
 		}
+		// 26.2 SeagrassBlock#updateShape: every neighbour change schedules the
+		// fluid tick of the permanent source water -> one spread step
+		WaterlogFlow.scheduleSpread(world, x, y, z, this);
+	}
+
+	@Override
+	public void updateTick(World world, int x, int y, int z, Random rand) {
+		// The scheduled fluid tick: the cell is always a source (getFluidState =
+		// getSource(false)), so this is a plain spread step - no source-formation
+		// recheck like the waterlogged family. Guarded on the cell still being
+		// seagrass: a drain (sponge) in between must not create water from nothing.
+		if (!world.isRemote && world.getBlock(x, y, z) == this) {
+			WaterlogFlow.spreadFromSource(world, x, y, z);
+		}
+	}
+
+	/**
+	 * 26.2 SeagrassBlock extends VegetationBlock: updateShape replaces a plant
+	 * that lost its support with AIR <b>silently</b> - no break particles, no
+	 * sound, no drops (the loot is empty anyway) and no water restore; the
+	 * surrounding water flows back through vanilla spread. (Kelp takes the
+	 * GrowingPlantBlock path instead: scheduleTick -> Level.destroyBlock ->
+	 * break particles + sound + drops + the cell keeps its FluidState, which is
+	 * the base class {@code die()}.)
+	 */
+	@Override
+	protected void die(World world, int x, int y, int z) {
+		world.setBlock(x, y, z, Blocks.air, 0, 3);
+	}
+
+	/**
+	 * Both halves keep their FluidState when the plant is dug: the dug cell via
+	 * the base removedByPlayer, and - for an upper-half dig - the lower half is
+	 * restored to still water with a 2001 event on it instead of vanishing
+	 * through updateShape. 26.2 only does this in creative
+	 * (preventDropFromBottomPart, gated on preventsBlockDrops) and lets the
+	 * lower half go silent AIR on survival digs; here it is deliberately
+	 * extended to survival so either half always leaves both cells watered.
+	 * Digging the lower half never special-cases the upper (it just goes AIR).
+	 */
+	@Override
+	public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z) {
+		if (!world.isRemote && world.getBlockMetadata(x, y, z) == META_UPPER) {
+			Block lower = world.getBlock(x, y - 1, z);
+			int lowerMeta = world.getBlockMetadata(x, y - 1, z);
+			if (lower == this && lowerMeta == META_LOWER) {
+				world.playAuxSFX(2001, x, y - 1, z, Block.getIdFromBlock(lower) + (lowerMeta << 12));
+				world.setBlock(x, y - 1, z, Blocks.water, 0, 3);
+			}
+		}
+		return super.removedByPlayer(world, player, x, y, z);
 	}
 
 	@Override

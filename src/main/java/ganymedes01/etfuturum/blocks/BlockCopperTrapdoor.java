@@ -1,6 +1,8 @@
 package ganymedes01.etfuturum.blocks;
 
 import ganymedes01.etfuturum.ModBlocks;
+import ganymedes01.etfuturum.waterlog.WaterlogFlow;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import ganymedes01.etfuturum.client.sound.ModSounds;
 import ganymedes01.etfuturum.core.utils.Utils;
 import net.minecraft.block.Block;
@@ -33,6 +35,13 @@ public class BlockCopperTrapdoor extends BaseTrapdoor implements IDegradable {
 
 	@Override
 	public void updateTick(World world, int x, int y, int z, Random rand) {
+		// 家族含水 tick：MixinBlockTrapDoor 在 BlockTrapDoor.updateTick 注入的蔓延
+		// 调度被本覆写遮蔽（虚分派不经过基类方法体），须显式补上（26.2
+		// updateShape → scheduleTick 语义）。本 tick 也会被风化调度触发，用
+		// isEnabled 门控，关闭时零行为（handleFamilyTick 的 wouldFormSource 不查开关）。
+		if (WaterlogRuntime.isEnabled()) {
+			WaterlogFlow.handleFamilyTick(world, x, y, z, this);
+		}
 		tickDegradation(world, x, y, z, rand);
 	}
 

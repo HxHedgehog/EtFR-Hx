@@ -65,7 +65,7 @@ public class BaseWall extends BlockWall implements ISubBlocksBlock {
 
 	@Override
 	public int damageDropped(int meta) {
-		return meta % getTypes().length;
+		return (meta & 15) % getTypes().length;
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class BaseWall extends BlockWall implements ISubBlocksBlock {
 
 	@Override
 	public IIcon getIcon(int side, int meta) {
-		return getIcons()[meta % icons.length];
+		return getIcons()[(meta & 15) % icons.length];
 	}
 
 	@Override
@@ -142,7 +142,7 @@ public class BaseWall extends BlockWall implements ISubBlocksBlock {
 
 	@Override
 	public MapColor getMapColor(int meta) {
-		return mapColorBase == null ? super.getMapColor(meta) : mapColorBase.getMapColor(meta);
+		return mapColorBase == null ? super.getMapColor(meta) : mapColorBase.getMapColor(meta & 15);
 	}
 
 	private final Map<Integer, Float> hardnesses = Maps.newHashMap();
@@ -150,7 +150,7 @@ public class BaseWall extends BlockWall implements ISubBlocksBlock {
 
 	@Override
 	public float getBlockHardness(World worldIn, int x, int y, int z) {
-		return hardnesses.getOrDefault(worldIn.getBlockMetadata(x, y, z), super.getBlockHardness(worldIn, x, y, z));
+		return hardnesses.getOrDefault(worldIn.getBlockMetadata(x, y, z) & 15, super.getBlockHardness(worldIn, x, y, z));
 	}
 
 	public BaseWall setHardnesses(float hardness, int... metas) {
@@ -164,7 +164,7 @@ public class BaseWall extends BlockWall implements ISubBlocksBlock {
 
 	@Override
 	public float getExplosionResistance(Entity par1Entity, World world, int x, int y, int z, double explosionX, double explosionY, double explosionZ) {
-		Float resistance = resistances.get(world.getBlockMetadata(x, y, z));
+		Float resistance = resistances.get(world.getBlockMetadata(x, y, z) & 15);
 		if (resistance != null) {
 			return resistance / 5.0F;
 		}

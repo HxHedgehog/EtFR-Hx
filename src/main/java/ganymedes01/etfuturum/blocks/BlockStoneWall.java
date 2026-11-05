@@ -32,7 +32,7 @@ public class BlockStoneWall extends BaseWall {
 
 	@Override
 	public IIcon getIcon(int side, int meta) {
-		if (meta == 2 && side <= 1) {
+		if ((meta & 15) == 2 && side <= 1) {
 			return sandstoneSides[side];
 		}
 		return super.getIcon(side, meta);

@@ -14,6 +14,7 @@ import ganymedes01.etfuturum.configuration.configs.ConfigTweaks;
 import ganymedes01.etfuturum.configuration.configs.ConfigWorld;
 import ganymedes01.etfuturum.core.utils.Logger;
 import ganymedes01.etfuturum.lib.Reference;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.launchwrapper.Launch;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 
@@ -403,25 +404,49 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("sponge.MixinBlockSponge");
 		}
 
+		// Real waterlogging (26.2-style, metadata bit 16): needs NEIDs' 16-bit
+		// metadata patches for storage/sync (probed via its mixin config resource,
+		// same trick as the Angelica probe above) on both sides, and the
+		// disableWaterlogging config off. The bucket + liquid-ray mixins below are
+		// shared with the ocean plants feature and registered on the union of both
+		// feature flags.
+		final boolean neidPresent = Launch.classLoader.getResource("mixins.neid.early.json") != null;
+		final boolean waterlogOn = !ConfigMixins.disableWaterlogging && neidPresent;
+		WaterlogRuntime.debug("probe: neidPresent=" + neidPresent + ", disableWaterlogging=" + ConfigMixins.disableWaterlogging);
+
 		if (ConfigBlocksItems.enableOceanPlants) {
 			mixins.add("oceanplants.MixinBlockLiquid");
-			mixins.add("oceanplants.MixinBlockDynamicLiquid");
 			mixins.add("oceanplants.MixinBlockDynamicLiquidBackfill");
-			mixins.add("oceanplants.MixinItemBucket");
 			mixins.add("oceanplants.MixinBlockFalling");
 			mixins.add("oceanplants.MixinItemDye");
-			mixins.add("oceanplants.MixinWorld");
 			mixins.add("oceanplants.MixinEntity");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("oceanplants.client.MixinRenderBlocks");
 				mixins.add("oceanplants.client.MixinItemRenderer");
-				// Angelica's shader hand pipeline routes pass-1 blocks to the translucent
-				// hand pass; flat-icon items must be exempted. Only registered when
-				// Angelica's loading plugin is present (its HandRenderer is targeted).
-				if (angelicaLoaded) {
-					mixins.add("oceanplants.client.MixinHandRenderer");
-				}
 			}
+		}
+
+		// The flow-invoker interface (backing the sea pickle and waterlog spread)
+		// plus the bucket scoop/drain + full-cell liquid ray clip, serving both the
+		// sea pickle (needs the blocks, so only with ocean plants on) and the true
+		// waterlogging family (needs NEIDs + config). All identity checks inside
+		// are null-safe for whichever feature is absent.
+		if (ConfigBlocksItems.enableOceanPlants || waterlogOn) {
+			mixins.add("oceanplants.MixinBlockDynamicLiquid");
+			mixins.add("oceanplants.MixinItemBucket");
+			mixins.add("oceanplants.MixinWorld");
+		}
+
+		// Angelica's shader hand pipeline routes pass-1 blocks to the translucent
+		// hand pass (enableBlend + depthMask(false)), which shatters the flat 2D
+		// card geometry of renderItemIn2D into a pixel-slice mesh. Exempt flat-icon
+		// items from the translucency check: items-atlas sprites (ocean plants) and
+		// block items drawn as 2D cards rather than 3D models (the backported
+		// stained glass panes, renderType 41). Independent of the ocean plants
+		// feature; only registered when Angelica's loading plugin is present (its
+		// HandRenderer is targeted).
+		if (side == MixinEnvironment.Side.CLIENT && angelicaLoaded) {
+			mixins.add("oceanplants.client.MixinHandRenderer");
 		}
 
 		// Underwater visual fixes for real water, independent of any waterlogged
@@ -433,37 +458,94 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.client.MixinItemRenderer");
 		}
 
-		if (ConfigMixins.stairWaterlogging) {
-			// Stateless waterlogged stairs: the look re-derives on section rebuilds,
-			// which are triggered by client-side water changes next to stairs.
+		if (waterlogOn) {
+			WaterlogRuntime.debug("=== BUILD " + WaterlogRuntime.BUILD_TAG + " ===");
+			mixins.add("waterlog.MixinItemBlock");
+			mixins.add("waterlog.MixinBlockStairs");
+			mixins.add("waterlog.MixinBlockSlab");
+			mixins.add("waterlog.MixinBlockPane");
+			mixins.add("waterlog.MixinBlockFence");
+			mixins.add("waterlog.MixinBlockWall");
+			mixins.add("waterlog.MixinBlockLadder");
+			mixins.add("waterlog.MixinBlockTrapDoor");
+			// Chest/EnderChest family extension (26.2 ChestBlock/EnderChestBlock
+			// WATERLOGGED): base-class generic like stairs - modded wooden chests
+			// extending BlockChest inherit automatically (trapped chest = separate
+			// Block instance, covered too). Placement/merge meta rewrites preserve
+			// bit16 (pure preservation - they may target neighbour cells); TESR
+			// facing switches get & 15 masks client-side.
+			mixins.add("waterlog.MixinBlockChest");
+			mixins.add("waterlog.MixinBlockEnderChest");
+			// Lantern/Chain family extension (26.2 LanternBlock/ChainBlock
+			// implements SimpleWaterloggedBlock): lantern uses mixed-mode
+			// (declared onNeighborBlockChange via @Inject HEAD, rest via
+			// extends + @Override), chain is pure extends + @Override. Bare
+			// meta strip points live in BlockLantern source (bounds/placement
+			// support checks); both renderers are bit16-transparent
+			// (lantern %2, chain switch+default).
+			mixins.add("waterlog.MixinBlockLantern");
+			mixins.add("waterlog.MixinBlockChain");
+			mixins.add("waterlog.MixinBlockStainedGlassPane");
+			mixins.add("waterlog.MixinBlockDynamicLiquid");
+			mixins.add("waterlog.MixinBlockLiquid");
+			mixins.add("waterlog.MixinEntity");
+			mixins.add("waterlog.MixinEntityLivingBase");
+			mixins.add("waterlog.MixinEntityFallingBlock");
 			mixins.add("waterlog.MixinWorld");
+			// 26.2 explosion semantics (waterlogged blocks block blast rays via
+			// their water FluidState resistance).
+			mixins.add("waterlog.MixinExplosion");
+			WaterlogRuntime.debug("registered: ItemBlock/BlockStairs/BlockSlab/BlockPane/Fence/Wall/Ladder/TrapDoor/Chest/EnderChest/Lantern/Chain/StainedGlassPane/Entity/EntityLivingBase/World waterlog mixins + Explosion");
 			if (side == MixinEnvironment.Side.CLIENT) {
-				// Water shell suppression applies to both pipelines.
-				mixins.add("waterlog.client.MixinRenderBlocksShell");
+				mixins.add("waterlog.client.MixinBlockLiquid");
+				// Wall getIcon is @SideOnly(CLIENT) (SideTransformer strips it on
+				// dedicated servers) - the bit16 strip must be a client mixin.
+				mixins.add("waterlog.client.MixinBlockWall");
+				// EnderChest TESR face-switches on raw metadata - mask reads so
+				// waterlogged cells (16+meta) keep facing (trapdoor Bug B class).
+				// The regular chest TESR mask registers below on the
+				// waterlog ∪ chestpair union (bits 32/64/128 need it too).
+				mixins.add("waterlog.client.MixinTileEntityEnderChestRenderer");
+				// Underwater fog (density + colour) goes through
+				// ActiveRenderInfo.getBlockAtEntityViewpoint in both pipelines.
+				mixins.add("waterlog.client.MixinActiveRenderInfo");
+				// Paint hook + member-aware liquid heights: shared by the vanilla
+				// pipeline and Angelica's celeritas pipeline alike.
+				mixins.add("waterlog.client.MixinRenderBlocks");
+				// 20261018-A 水闪烁修复：S23/S22 迟到回声过滤（客户端预测登记在
+				// MixinItemBucket 桶路径 + WaterlogRuntime.markWaterlogged）
+				mixins.add("waterlog.client.MixinNetHandlerPlayClient");
+				// 20261020-P 预测窗口收敛：26.2 endPredictionsUpTo 同构，tick 驱动
+				// 应用 pending 终态（见 WaterlogRuntime.pollSettledPredictions）
+				mixins.add("waterlog.client.MixinWorldClient");
 				if (angelicaLoaded) {
-					// Celeritas owns chunk building when Angelica is loaded: reroute the
-					// qualifying stairs' single render call into the translucent pass and
-					// paint the complement water before the buffer capture (Angelica's own
-					// HEAD gate skips func_147805_b for vanilla render types, so the
-					// RenderBlocks TAIL never fires for stairs there).
 					mixins.add("waterlog.client.MixinAngelicaChunkBuilderMeshingTask");
+					WaterlogRuntime.debug("registered: celeritas paint mixins (angelicaLoaded=true)");
 				} else {
-									// Vanilla chunk builder: the stair keeps
-									// rendering normally in pass 0; its water
-									// complement is a translucent volume, so the
-									// pass gates make qualifying stairs report
-									// pass 1, where the stair's pass-1 slot
-									// paints the complement water instead of a
-									// geometry copy (MixinWorldRenderer +
-									// MixinRenderBlocks).
-									mixins.add("waterlog.client.MixinWorldRenderer");
-									mixins.add("waterlog.client.MixinRenderBlocks");
-								}
+					mixins.add("waterlog.client.MixinWorldRenderer");
+					WaterlogRuntime.debug("registered: vanilla-pipeline paint mixins (angelicaLoaded=false)");
+				}
 			}
 		}
 
 		if (ConfigFunctions.enableSilkTouchingMushrooms) {
 			mixins.add("mushroom.MixinBlockHugeMushroom");
+		}
+
+		// Modern chest pairing (26.2 ChestBlock TYPE state machine: same-facing
+		// perpendicular merge, TYPE stored in meta bits 32/64/128, never auto
+		// re-merging SINGLEs). Shares the NEIDs extended-metadata gate with
+		// waterlogging since the type bits need the same storage/sync patches.
+		final boolean chestPairOn = ConfigMixins.modernChestPairing && neidPresent;
+		if (chestPairOn) {
+			mixins.add("chestpair.MixinBlockChest");
+			mixins.add("chestpair.MixinTileEntityChest");
+		}
+		// Chest TESR face-switch masks: waterlog (bit 16) and chestpair
+		// (bits 32/64/128) both live above the vanilla facing bits, so the
+		// mask registers on the union of both features.
+		if (side == MixinEnvironment.Side.CLIENT && (waterlogOn || chestPairOn)) {
+			mixins.add("waterlog.client.MixinTileEntityChestRenderer");
 		}
 
 		if (ConfigFunctions.enableFloatingTrapDoors && side == MixinEnvironment.Side.CLIENT) {

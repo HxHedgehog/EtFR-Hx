@@ -2,6 +2,8 @@ package ganymedes01.etfuturum.blocks;
 
 import ganymedes01.etfuturum.client.sound.ModSounds;
 import ganymedes01.etfuturum.lib.RenderIDs;
+import ganymedes01.etfuturum.waterlog.WaterlogFlow;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -9,6 +11,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
@@ -28,6 +31,11 @@ import java.util.Random;
  * lines used with (mod) observers.
  * <p>
  * Meta layout (4 bits): bits 0-2 = stability distance (0-7), bit 3 = bottom.
+ * <p>
+ * 含水家族成员（26.2 ScaffoldingBlock implements SimpleWaterloggedBlock，
+ * WATERLOGGED 完整支持）——bit16 = 含水位；掩码读取（{@code &7}/{@code &8}）
+ * 对 bit16 天然透明，裸 {@code composeMeta} 组 meta 处并回 bit16（见
+ * {@link ganymedes01.etfuturum.waterlog.WaterlogFamilies} javadoc）。
  */
 public class BlockScaffolding extends BaseBlock {
 
@@ -95,18 +103,28 @@ public class BlockScaffolding extends BaseBlock {
 
 	/**
 	 * 26.2 onPlace: schedule the first stability tick 1gt after placement.
+	 * 含水蔓延调度：落方块实体落地、setBlock 直写等绕过 ItemBlock 放置捕获的
+	 * 路径由 onBlockAdded 兜底（MixinItemBlock 已覆盖 ItemBlockScaffolding 之外的
+	 * 通用路径；脚手架自身放置含水在 ItemBlockScaffolding 内联处理）。
 	 */
 	@Override
 	public void onBlockAdded(World world, int x, int y, int z) {
+		if (!world.isRemote && WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+			WaterlogFlow.scheduleSpread(world, x, y, z, this);
+		}
 		world.scheduleBlockUpdate(x, y, z, this, 1);
 	}
 
 	/**
 	 * 26.2 updateShape: any neighbor change re-schedules the stability tick,
-	 * giving exactly one block of propagation per game tick.
+	 * giving exactly one block of propagation per game tick. 含水蔓延调度同锁链
+	 * 四件套（邻居变化触发一步蔓延）。
 	 */
 	@Override
 	public void onNeighborBlockChange(World world, int x, int y, int z, Block neighbor) {
+		if (!world.isRemote && WaterlogRuntime.isWaterlogged(world, x, y, z)) {
+			WaterlogFlow.scheduleSpread(world, x, y, z, this);
+		}
 		world.scheduleBlockUpdate(x, y, z, this, 1);
 	}
 
@@ -115,12 +133,19 @@ public class BlockScaffolding extends BaseBlock {
 	 * a falling block, newly-unsupported scaffolding breaks with drops, and any
 	 * distance/bottom change is written back with flag 3 (which also feeds the
 	 * observer mixins).
+	 * <p>
+	 * 含水家族 tick（{@code handleFamilyTick}：含水一步蔓延 / 干格 3c 延迟成源
+	 * 重查）在稳定性逻辑前执行。26.2 tick 的 {@code setBlock(newState, 3)} 与
+	 * {@code FallingBlockEntity.fall(newState)} 均属性保留语义（WATERLOGGED
+	 * 原样）→ 本地 {@code composeMeta} 全新组 meta 处并回 bit16（漏并 = 含水
+	 * 脚手架首个稳定 tick 静默脱水，且 newMeta != meta 每 tick 空转重写）。
 	 */
 	@Override
 	public void updateTick(World world, int x, int y, int z, Random rand) {
 		if (world.isRemote) {
 			return;
 		}
+		WaterlogFlow.handleFamilyTick(world, x, y, z, this);
 		int meta = world.getBlockMetadata(x, y, z);
 		int oldDistance = getDistanceFromMeta(meta);
 		int distance = getDistance(world, x, y, z);
@@ -135,7 +160,9 @@ public class BlockScaffolding extends BaseBlock {
 				// bbox half outside the cell (no collision), let posY sink to y-0.04 so
 				// floor(posY) = y-1, and the entity would die without ever clearing the
 				// origin block (floating scaffolds / never-falling distance-7 bridges).
-				int fallMeta = composeMeta(7, isBottom(world, x, y, z, 7));
+				// 26.2 fall(newState) 携带 WATERLOGGED → fallMeta 并回 bit16；实体首
+				// tick 清原格由 waterlog.MixinEntityFallingBlock 留水源。
+				int fallMeta = composeMeta(7, isBottom(world, x, y, z, 7)) | (meta & WaterlogRuntime.WATERLOGGED_BIT);
 				world.spawnEntityInWorld(new EntityFallingBlock(world, x + 0.5D, y + 0.5D, z + 0.5D, this, fallMeta));
 			} else {
 				// 26.2 destroyBlock(pos, true): fires the levelEvent(2001) break
@@ -143,14 +170,43 @@ public class BlockScaffolding extends BaseBlock {
 				// World.func_147480_a is the same sequence via playAuxSFX(2001) - using
 				// it (instead of a bare drop + setBlockToAir) is what gives the cascade
 				// breaks the same break effect as a directly mined scaffold.
+				// 26.2 destroyBlock 对含水状态留下 fluidState.createLegacyBlock()
+				// （水源格）；func_147480_a 走 setBlockToAir 丢水 → 破坏前读含水位
+				// （setBlockToAir 清 meta），破坏后补水源格。
+				boolean wasWaterlogged = WaterlogRuntime.isWaterlogged(world, x, y, z);
 				world.func_147480_a(x, y, z, true);
+				if (wasWaterlogged) {
+					WaterlogFlow.placeSourceWater(world, x, y, z);
+				}
 			}
 		} else {
-			int newMeta = composeMeta(distance, isBottom(world, x, y, z, distance));
+			// 26.2 setBlock(newState, 3) 属性保留语义 → 并回 bit16
+			int newMeta = composeMeta(distance, isBottom(world, x, y, z, distance)) | (meta & WaterlogRuntime.WATERLOGGED_BIT);
 			if (newMeta != meta) {
 				world.setBlock(x, y, z, this, newMeta, 3);
 			}
 		}
+	}
+
+	/**
+	 * 物品侧剥位（家族铁律）：vanilla 体 = {@code return meta} 直通，含水掉落
+	 * 的 ItemStack damage 会带 bit16。
+	 */
+	@Override
+	public int damageDropped(int meta) {
+		return meta & 15;
+	}
+
+	// ---- 含水家族生命周期：玩家挖掘双载（源码覆写，锁链 mixin 四件套同构）----
+
+	@Override
+	public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z, boolean willHarvest) {
+		return WaterlogFlow.leaveSourceWater(world, x, y, z) || super.removedByPlayer(world, player, x, y, z, willHarvest);
+	}
+
+	@Override
+	public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z) {
+		return WaterlogFlow.leaveSourceWater(world, x, y, z) || super.removedByPlayer(world, player, x, y, z);
 	}
 
 	/**

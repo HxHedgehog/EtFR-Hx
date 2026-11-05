@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.client.sound.ModSounds;
 import ganymedes01.etfuturum.core.utils.Utils;
+import ganymedes01.etfuturum.lib.Reference;
 import ganymedes01.etfuturum.lib.RenderIDs;
 import ganymedes01.etfuturum.mixins.early.oceanplants.MixinBlockDynamicLiquid;
 import net.minecraft.block.Block;
@@ -17,7 +18,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -213,13 +213,14 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 	}
 
 	/**
-	 * In-place dry -> wet conversion keeping the pickle count (splash + flag 3
-	 * so neighbours and clients sync). The converted cell's onBlockAdded
-	 * schedules the spread one fluid tick later.
+	 * In-place dry -> wet conversion keeping the pickle count (flag 3 so
+	 * neighbours and clients sync). The converted cell's onBlockAdded schedules
+	 * the spread one fluid tick later. Silent: this is the ambient backfill, not
+	 * a player action (26.2 ambient waterlogging makes no sound) - a sound here
+	 * read as a mysterious "second scoop sound" right after bucket scooping.
 	 */
 	private void rehydrate(World world, int x, int y, int z) {
 		world.setBlock(x, y, z, ModBlocks.SEA_PICKLE.get(), world.getBlockMetadata(x, y, z), 3);
-		world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, "random.splash", 0.5F, 1.0F);
 	}
 
 	@Override
@@ -271,15 +272,10 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 		return super.removedByPlayer(world, player, x, y, z);
 	}
 
-	@Override
-	public void onBlockExploded(World world, int x, int y, int z, Explosion explosion) {
-		if (wet) {
-			dropBlockAsItemWithChance(world, x, y, z, world.getBlockMetadata(x, y, z), 1.0F, 0);
-			world.setBlock(x, y, z, Blocks.water, 0, 3);
-		} else {
-			super.onBlockExploded(world, x, y, z, explosion);
-		}
-	}
+	// 爆炸不覆写 onBlockExploded：forge 默认 setBlockToAir（flag 3）正是 26.2
+	// onExplosionHit 的语义——掉落（Explosion 前置处理，数量按 meta+1）后
+	// setBlock(pos, AIR, 3)，湿泡菜和它占住的水一起消失，邻水自然回流。旧
+	// 实现 wet 分支留水源格（die 风格）是挖掘语义，偏离 26.2 的爆炸语义。
 
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX, float hitY, float hitZ) {
@@ -292,7 +288,9 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 		if (wet && held != null && held.getItem() == Items.bucket) {
 			if (!world.isRemote) {
 				world.setBlock(x, y, z, ModBlocks.DEAD_SEA_PICKLE.get(), meta, 3);
-				world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, "random.splash", 0.5F, 1.0F);
+				// 26.2 pickupBlock sound, matching onFillBucketEvent's fill for the
+				// sneak path so both scoop routes sound identical
+				world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, Reference.MCAssetVer + ":item.bucket.fill", 1.0F, 1.0F);
 			}
 			// The inventory change must run on both sides, like vanilla
 			// ItemBucket#func_150910_a does: a server-only change gets its slot
@@ -321,7 +319,7 @@ public class BlockSeaPickle extends BaseBlock implements IGrowable {
 		if (!wet && held != null && held.getItem() == Items.water_bucket) {
 			if (!world.isRemote) {
 				world.setBlock(x, y, z, ModBlocks.SEA_PICKLE.get(), meta, 3);
-				world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, "random.splash", 0.5F, 1.0F);
+				world.playSoundEffect(x + 0.5D, y + 0.5D, z + 0.5D, Reference.MCAssetVer + ":item.bucket.empty", 1.0F, 1.0F);
 				if (!player.capabilities.isCreativeMode) {
 					if (--held.stackSize <= 0) {
 						player.inventory.mainInventory[player.inventory.currentItem] = new ItemStack(Items.bucket);

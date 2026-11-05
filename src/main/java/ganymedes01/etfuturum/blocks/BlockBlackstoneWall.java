@@ -14,7 +14,7 @@ public class BlockBlackstoneWall extends BaseWall {
 
 	@Override
 	public IIcon getIcon(int side, int meta) {
-		if (meta == 0) {
+		if ((meta & 15) == 0) {
 			ModBlocks.BLACKSTONE.get().getIcon(side, 0);
 		}
 		return super.getIcon(side, meta);

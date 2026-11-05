@@ -1,37 +1,32 @@
 package ganymedes01.etfuturum.mixins.early.waterlog.client;
 
-import ganymedes01.etfuturum.waterlog.StairWaterlog;
-import ganymedes01.etfuturum.waterlog.client.StairWaterRenderer;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockStairs;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.world.ChunkCache;
-import net.minecraft.world.IBlockAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
+import ganymedes01.etfuturum.waterlog.client.WaterlogPaint;
+import net.minecraft.block.Block;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.world.ChunkCache;
+import net.minecraft.world.IBlockAccess;
+
 /**
- * Pass gating for stateless waterlogged stairs in the vanilla chunk builder.
- * The stair's own geometry keeps rendering in pass 0 exactly as vanilla
- * does. The painted complement is water - a translucent material whose real
- * vanilla block (BlockLiquid) renders in pass 1 - so it must join that pass
- * too; it then sorts together with the surrounding real water and receives
- * the same water treatment from shader mods. The gate only has to make that
- * pass-1 paint happen: getRenderBlockPass reports 1 for qualifying stairs so
- * the k3 &gt; pass check keeps the pass-1 loop alive, and canRenderInPass
- * opens the stair's pass-1 slot, where renderBlockStairs (MixinRenderBlocks)
- * paints the water volume instead of a second geometry copy - which also
- * keeps the pass-1 "has content" flag set. The waterlog test is memoized per
- * cell (one entry): the gates evaluate it back to back for the same cell
- * against the same immutable per-rebuild ChunkCache, so the judgment runs
- * once per stair per rebuild. Chunk building runs on the render thread, so
- * the tracked cell (captured per iteration from the getBlock call that
- * precedes both gate calls) needs no synchronization. Only registered when
- * Angelica is absent: celeritas owns the chunk build path when Angelica is
- * loaded, and the AngelicaChunkBuilderMeshingTask mixin handles the pass
- * there instead.
+ * vanilla 区块构建器的 pass-1 门控（镜像上代伪含水架构）：家族方块本体
+ * 照 vanilla 在 pass 0 渲染；内部水体是半透明体积，vanilla 的真水
+ * （BlockLiquid）渲染在 pass 1，所以画水必须也进 pass 1，与周边真水一起
+ * 排序、接受光影的水处理。
+ *
+ * <p>门控要做的是"让 pass-1 画水发生"：{@code getRenderBlockPass} 对含水格
+ * 报 1，使 {@code k3 > pass} 检查在 pass-1 循环里保住该格；{@code canRenderInPass}
+ * 打开该格的 pass-1 槽位并置 {@link WaterlogPaint#flagNextCall}，随后
+ * renderBlockByRenderType（MixinRenderBlocks）画水替代第二份几何拷贝。
+ * 每格门控判定 O(1)（bit16 测试），无需 memo。追踪格由同迭代里先于两次
+ * 门控调用的 getBlock 捕获；区块构建在渲染线程，无同步问题。
+ *
+ * <p>仅在 Angelica 缺席时注册：celeritas 接管区块构建路径，Angelica 管线的
+ * pass 处理在后续阶段实现。
  */
 @Mixin(WorldRenderer.class)
 public abstract class MixinWorldRenderer {
@@ -45,19 +40,6 @@ public abstract class MixinWorldRenderer {
 	@Unique
 	private static int etfuturum$trackedZ;
 
-	// One-entry memo for the waterlog test: the ChunkCache is an immutable
-	// per-rebuild snapshot, so a hit is always valid within a rebuild.
-	@Unique
-	private static IBlockAccess etfuturum$queriedAccess;
-	@Unique
-	private static int etfuturum$queriedX;
-	@Unique
-	private static int etfuturum$queriedY;
-	@Unique
-	private static int etfuturum$queriedZ;
-	@Unique
-	private static boolean etfuturum$queriedResult;
-
 	@Redirect(method = "updateRenderer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/ChunkCache;getBlock(III)Lnet/minecraft/block/Block;"))
 	private Block etfuturum$trackCell(ChunkCache cache, int x, int y, int z) {
 		Block block = cache.getBlock(x, y, z);
@@ -68,41 +50,26 @@ public abstract class MixinWorldRenderer {
 		return block;
 	}
 
-	/** The stateless waterlog test for the currently tracked cell, memoized for the two gate redirects below. */
 	@Unique
-	private static boolean etfuturum$isWaterloggedStair(Block block) {
-		if (!(block instanceof BlockStairs) || etfuturum$trackedAccess == null) {
-			return false;
-		}
-		if (etfuturum$trackedAccess == etfuturum$queriedAccess
-				&& etfuturum$trackedX == etfuturum$queriedX
-				&& etfuturum$trackedY == etfuturum$queriedY
-				&& etfuturum$trackedZ == etfuturum$queriedZ) {
-			return etfuturum$queriedResult;
-		}
-		final boolean result = StairWaterlog.shouldRenderWater(etfuturum$trackedAccess, etfuturum$trackedX, etfuturum$trackedY, etfuturum$trackedZ);
-		etfuturum$queriedAccess = etfuturum$trackedAccess;
-		etfuturum$queriedX = etfuturum$trackedX;
-		etfuturum$queriedY = etfuturum$trackedY;
-		etfuturum$queriedZ = etfuturum$trackedZ;
-		etfuturum$queriedResult = result;
-		return result;
+	private static boolean etfuturum$isWaterlogged() {
+		return etfuturum$trackedAccess != null && WaterlogRuntime.isWaterlogged(etfuturum$trackedAccess, etfuturum$trackedX, etfuturum$trackedY, etfuturum$trackedZ);
 	}
 
 	@Redirect(method = "updateRenderer", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;getRenderBlockPass()I"))
-	private int etfuturum$waterloggedStairsKeepPassOneLoop(Block block) {
-		if (etfuturum$isWaterloggedStair(block)) {
-			return 1; // drives the k3 > pass check so the pass-1 loop runs for the water paint
+	private int etfuturum$waterloggedBlocksKeepPassOneLoop(Block block) {
+		if (etfuturum$isWaterlogged()) {
+			return 1; // 驱动 k3 > pass 检查，让 pass-1 循环为画水保住该格
 		}
 		return block.getRenderBlockPass();
 	}
 
 	@Redirect(method = "updateRenderer", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;canRenderInPass(I)Z", remap = false))
-	private boolean etfuturum$waterloggedStairsFlagPassOneSlot(Block block, int pass) {
-		StairWaterRenderer.paintWaterNextCall = false;
-		if (pass == 1 && etfuturum$isWaterloggedStair(block)) {
-			StairWaterRenderer.paintWaterNextCall = true;
-			return true; // open the slot: renderBlockStairs paints the water volume instead of the geometry
+	private boolean etfuturum$waterloggedBlocksFlagPassOneSlot(Block block, int pass) {
+		WaterlogPaint.clearFlag();
+		if (pass == 1 && etfuturum$isWaterlogged()) {
+			WaterlogPaint.flagNextCall();
+			WaterlogRuntime.debug("GATE " + etfuturum$trackedX + "," + etfuturum$trackedY + "," + etfuturum$trackedZ + " pass-1 slot opened");
+			return true; // 打开槽位：renderBlockByRenderType 将画水替代几何拷贝
 		}
 		return block.canRenderInPass(pass);
 	}

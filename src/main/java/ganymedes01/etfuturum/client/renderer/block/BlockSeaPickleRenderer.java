@@ -2,6 +2,7 @@ package ganymedes01.etfuturum.client.renderer.block;
 
 import com.gtnewhorizons.angelica.api.ThreadSafeISBRH;
 import ganymedes01.etfuturum.blocks.BlockSeaPickle;
+import ganymedes01.etfuturum.waterlog.client.StairWaterRenderer;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -64,11 +65,8 @@ public class BlockSeaPickleRenderer extends BlockModelBase {
 		boolean wet = block instanceof BlockSeaPickle && ((BlockSeaPickle) block).isWet();
 		int pass = ForgeHooksClient.getWorldRenderPass();
 
-		if (pass == 1) {
-			if (!wet) {
-				return false;
-			}
-			BlockOceanPlantRenderer.renderStillWaterVolume(world, x, y, z);
+		if (pass == 1 && !wet) {
+			return false;
 		}
 
 		int meta = world.getBlockMetadata(x, y, z);
@@ -81,6 +79,14 @@ public class BlockSeaPickleRenderer extends BlockModelBase {
 		float[][] cluster = CLUSTERS[BlockSeaPickle.getPickleCount(meta)];
 		for (float[] pickle : cluster) {
 			renderPickle(tessellator, renderer, block, icon, x, y, z, pickle, rotation, skipBottom, wet);
+		}
+
+		// 水体最后画（与 BlockOceanPlantRenderer 同款顺序，26.2 = cutout 几何在半透明
+		// 流体之前）：泡菜本体/触鳍全部浸没在静水面（8/9）之下，先画水会让浸没几何
+		// 以无水色全亮叠在半透明水面上；调序后半透明水罩染本体（2026-10-07 海草
+		// X 裂口同源问题的预防性修复）。
+		if (pass == 1) {
+			StairWaterRenderer.renderStillWaterVolume(world, x, y, z);
 		}
 
 		renderer.setRenderBounds(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
