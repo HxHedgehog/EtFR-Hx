@@ -54,6 +54,7 @@ import ganymedes01.etfuturum.configuration.ConfigBase;
 import ganymedes01.etfuturum.creative.ItemCategoryHelper;
 import ganymedes01.etfuturum.creative.ModdedCreativeTabs;
 
+import ganymedes01.etfuturum.configuration.configs.ConfigEntities;
 import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
 import ganymedes01.etfuturum.configuration.configs.ConfigExperiments;
 import ganymedes01.etfuturum.configuration.configs.ConfigFunctions;
@@ -64,7 +65,7 @@ import ganymedes01.etfuturum.core.handlers.WorldEventHandler;
 import ganymedes01.etfuturum.core.proxy.CommonProxy;
 import ganymedes01.etfuturum.core.utils.IInitAction;
 import ganymedes01.etfuturum.core.utils.Logger;
-
+import ganymedes01.etfuturum.dispenser.DispenserBehaviourWitherSpawning;
 import ganymedes01.etfuturum.lib.Reference;
 
 import ganymedes01.etfuturum.network.ArmourStandInteractHandler;
@@ -244,6 +245,10 @@ public class EtFuturum {
 		if(ModsList.RPLE.isLoaded()) {
 			CompatRPLEEventHandler.registerRPLECompat();
 		}
+
+        if (ConfigEntities.enableModernWither) {
+            BlockDispenser.dispenseBehaviorRegistry.putObject(Items.skull, new DispenserBehaviourWitherSpawning());
+        }
 	}
 
 	@EventHandler
