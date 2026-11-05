@@ -17,19 +17,18 @@ public abstract class MixinEntity {
 	public AxisAlignedBB boundingBox;
 
 	/**
-	 * The pseudo-waterlogged ocean plants occupy the water cell itself, so they
-	 * already answer vanilla water detection wherever the detection band
-	 * reaches. That band (Entity#handleWaterMovement) shrinks the bounding box
-	 * by 0.4 on both vertical ends, so gliders with the feet in the lower part
-	 * of a plant cell - or skimming just above short plant tops - miss every
-	 * Material.water cell and keep moving at air speed. 26.2 keeps the fluid
+	 * The waterlogged volumes occupy their whole cell - pseudo-waterlogged
+	 * ocean plants are Material.water blocks, real waterlogged blocks answer
+	 * inside {@code World#handleMaterialAcceleration} via waterlog.MixinWorld -
+	 * so they both already answer vanilla water detection wherever the
+	 * detection band reaches. That band (Entity#handleWaterMovement) shrinks
+	 * the bounding box by 0.4 on both vertical ends, so gliders with the feet
+	 * in the lower part of a cell - or skimming just above short tops - miss
+	 * every water cell and keep moving at air speed. 26.2 keeps the fluid
 	 * state in the full bounding box: OR the vanilla verdict with a full-box
-	 * scan for ocean plant cells. Real water keeps the vanilla band behaviour.
-	 * <p>
-	 * TODO waterlog: real waterlogged stairs/fences (26.2 waterlogged blocks
-	 * carry a water fluidstate over the whole cell) belong in this same OR -
-	 * extend the full-box scan with their cell predicate once the feature
-	 * lands; {@link BlockAquaticPlant#isTouchingOceanPlant} is the pattern.
+	 * scan for waterlogged volumes (see
+	 * {@link BlockAquaticPlant#isTouchingWaterVolume}). Real water keeps the
+	 * vanilla band behaviour.
 	 */
 	@Redirect(method = "handleWaterMovement",
 			at = @At(value = "INVOKE",
@@ -39,6 +38,6 @@ public abstract class MixinEntity {
 		if (world.handleMaterialAcceleration(bb, material, entity)) {
 			return true;
 		}
-		return material == Material.water && BlockAquaticPlant.isTouchingOceanPlant(world, this.boundingBox);
+		return material == Material.water && BlockAquaticPlant.isTouchingWaterVolume(world, this.boundingBox);
 	}
 }

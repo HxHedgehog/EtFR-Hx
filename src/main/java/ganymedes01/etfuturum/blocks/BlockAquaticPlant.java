@@ -2,6 +2,7 @@ package ganymedes01.etfuturum.blocks;
 
 import ganymedes01.etfuturum.ModBlocks;
 import ganymedes01.etfuturum.lib.RenderIDs;
+import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
@@ -59,14 +60,17 @@ public abstract class BlockAquaticPlant extends BaseBlock {
 	/**
 	 * 1.7.10 water detection runs over the bounding box shrunk by 0.4 on both
 	 * vertical ends (Entity#handleWaterMovement), so entities gliding with the
-	 * feet in the lower part of a plant cell - or just above short plant tops -
-	 * miss every Material.water cell and keep moving at air speed. 26.2 derives
-	 * the fluid state from the full bounding box, where a pseudo-waterlogged
-	 * plant cell is a full source-water volume, so any body overlap counts.
-	 * Scans the unshrunk box for ocean plant cells; only water-material plants
-	 * qualify (a dry sea pickle is Material.coral and stays dry for physics).
+	 * feet in the lower part of a cell - or just above short volumes - miss
+	 * cells near the body ends and keep moving at air speed. 26.2 derives the
+	 * fluid state from the full bounding box, where a waterlogged cell is a
+	 * full source-water volume, so any body overlap counts. Scans the unshrunk
+	 * box for the two 26.2-style full water volumes: pseudo-waterlogged ocean
+	 * plants (water-material blocks, a dry sea pickle is Material.coral and
+	 * stays dry for physics) and real waterlogged blocks (WaterlogRuntime
+	 * bit16, gated - future waterlog families register there and are covered
+	 * automatically, no per-family adaptation).
 	 */
-	public static boolean isTouchingOceanPlant(World world, AxisAlignedBB bb) {
+	public static boolean isTouchingWaterVolume(World world, AxisAlignedBB bb) {
 		AxisAlignedBB box = bb.contract(0.001D, 0.001D, 0.001D);
 		int minX = MathHelper.floor_double(box.minX);
 		int maxX = MathHelper.floor_double(box.maxX + 1.0D);
@@ -80,6 +84,9 @@ public abstract class BlockAquaticPlant extends BaseBlock {
 				for (int z = minZ; z < maxZ; z++) {
 					Block block = world.getBlock(x, y, z);
 					if (block.getMaterial() == Material.water && isOceanPlant(block)) {
+						return true;
+					}
+					if (WaterlogRuntime.isWaterlogged(world, x, y, z)) {
 						return true;
 					}
 				}

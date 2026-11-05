@@ -28,6 +28,9 @@ public abstract class MixinEntityLivingBase extends Entity {
 	public abstract float getAIMoveSpeed();
 
 	@Shadow
+	public abstract boolean isOnLadder();
+
+	@Shadow
 	public float prevLimbSwingAmount;
 
 	@Shadow
@@ -160,12 +163,25 @@ public abstract class MixinEntityLivingBase extends Entity {
 		double d0 = this.posY;
 		this.moveFlying(p_70612_1_, p_70612_2_, speed);
 		this.moveEntity(this.motionX, this.motionY, this.motionZ);
+		// 26.2 travelInWater L2399-2401: the waterlogged-ladder climb (0.2) is set
+		// BEFORE the drag, so the y*0.8 damping and water gravity apply to it -
+		// steady state 0.2*0.8-0.005 = 0.155/t, matching official speed exactly.
+		// The waterlog.MixinEntityLivingBase ladder bridge lives inside the vanilla
+		// branch that this handler cancels from HEAD, so it is replicated here.
+		if (this.isCollidedHorizontally && this.isOnLadder()) {
+			this.motionY = 0.20000000298023224D;
+		}
 		// 26.2 keeps the vertical drag at 0.8; Depth Strider only eases X/Z.
 		this.motionX *= slowDown;
 		this.motionY *= 0.800000011920929D;
 		this.motionZ *= slowDown;
-		this.motionY -= 0.02D;
+		// 26.2 water gravity = baseGravity/16 = 0.005 (getFluidFallingAdjustedMovement),
+		// matching the waterBuoyancy @ModifyConstant of waterlog.MixinEntityLivingBase;
+		// vanilla 1.7.10 uses 0.02, which made buoyancy 4x weaker than modern versions.
+		this.motionY -= 0.005D;
 
+		// Official priority (jumpOutOfFluid runs last in travelInWater): the surface
+		// jump 0.3 overwrites the damped ladder 0.2 when both conditions coexist.
 		if (this.isCollidedHorizontally && this.isOffsetPositionInLiquid(this.motionX, this.motionY + 0.6000000238418579D - this.posY + d0, this.motionZ)) {
 			this.motionY = 0.30000001192092896D;
 		}

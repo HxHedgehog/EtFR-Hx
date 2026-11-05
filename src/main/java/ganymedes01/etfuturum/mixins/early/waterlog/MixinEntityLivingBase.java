@@ -12,17 +12,19 @@ import ganymedes01.etfuturum.configuration.configs.ConfigFunctions;
 import net.minecraft.entity.EntityLivingBase;
 
 /**
- * 水下梯子攀爬（26.2 LivingEntity.travel 水分支 parity）：1.7.10 的水物理分支
+ * 水下梯子攀爬（26.2 LivingEntity.travelInWater parity）：1.7.10 的水物理分支
  * （moveEntityWithHeading 的 isInWater 段）没有梯子上爬逻辑——梯子爬行
  * （isOnLadder → motionY = 0.2）只在 else 陆地分支里，isInWater 时整段跳过
- * → 含水/水下梯子无法攀爬。26.2 travelInWater：
- * {@code if (horizontalCollision && onClimbable()) motion.y = 0.2}（且在水面
- * 跳出 0.3 判定之后，二者共存时 0.2 生效）。
+ * → 含水/水下梯子无法攀爬。26.2 travelInWater（LivingEntity L2396-2404）的
+ * 顺序 = move → {@code if (horizontalCollision && onClimbable()) motion.y = 0.2}
+ * → 拖拽 y×0.8 → 重力 → jumpOutOfFluid 0.3（最后，共存时 0.3 覆写 0.2）。
  *
- * <p>注入点 = 水分支的 {@code isOffsetPositionInLiquid(motionY+0.6-...)} 调用
- * 之后（ordinal 0 = 水分支；lava 分支的 ordinal 1 不干预）。此时 vanilla 的
- * 水面跳出（motionY = 0.3）尚未赋值：靠墙+上目标为液体时 vanilla 0.3 覆写
- * （水面跳出语义），否则本桥的 0.2 上爬生效——与 26.2 两判定并存的优先序一致。
+ * <p>注入点 = 水分支的 {@code moveEntity(DDD)} 调用之后（ordinal 0 = 水分支；
+ * lava L1601 / 陆地 L1680 不干预）——0.2 必须设在拖拽**之前**再吃 y×0.8 和
+ * 水重力，稳态爬速 = 0.2×0.8−0.005 = 0.155/t（26.2 逐位一致）。旧版注入在
+ * isOffsetPositionInLiquid 之后（拖拽已过），0.2 绕过阻尼 → 0.2/t，比官方
+ * 快 29%（2026-11-05 源码核实后修正）。靠墙+上目标为液体时 vanilla 水面
+ * 跳出（motionY = 0.3）在拖拽之后赋值 → 0.3 胜出，与 26.2 优先序一致。
  *
  * <p>**waterBuoyancy 水重力（26.2 parity，config 默认开）**：26.2 水重力 =
  * baseGravity/16 = 0.005（LivingEntity.getFluidFallingAdjustedMovement：
@@ -37,14 +39,17 @@ public abstract class MixinEntityLivingBase {
 	@Shadow
 	public abstract boolean isOnLadder();
 
-	@Inject(method = "moveEntityWithHeading(FF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;isOffsetPositionInLiquid(DDD)Z", ordinal = 0, shift = At.Shift.AFTER))
+	@Inject(method = "moveEntityWithHeading(FF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;moveEntity(DDD)V", ordinal = 0, shift = At.Shift.AFTER))
 	private void etfuturum$ladderClimbInWater(float strafe, float forward, CallbackInfo ci) {
 		if (this.isOnLadder()) {
 			// motionY/isCollidedHorizontally 是 Entity 声明的字段（@Shadow 继承陷阱），
 			// 经 waterlog.MixinEntity 的 shadow cast 访问；isCollidedHorizontally 由
-			// vanilla 外层条件保证为 true，此处显式判一次防御。
+			// 26.2 的 horizontalCollision 条件保证，此处显式判一次防御。
 			MixinEntity self = (MixinEntity) (Object) this;
 			if (self.isCollidedHorizontally) {
+				// 0.2 先设、再吃本 tick 的 y×0.8 拖拽与水重力（26.2 travelInWater
+				// L2399-2402 顺序），稳态 = 0.155/t；vanilla 水面跳出 0.3 在拖拽后
+				// 赋值，共存时 0.3 胜出（26.2 jumpOutOfFluid 最后执行的优先序）。
 				self.motionY = 0.20000000298023224D;
 			}
 		}
