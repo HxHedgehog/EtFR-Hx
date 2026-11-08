@@ -156,6 +156,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			}
 		}
 
+		if (ConfigWorld.modernWaterFog && side == MixinEnvironment.Side.CLIENT) {
+			mixins.add("waterfog.client.MixinEntityRenderer");
+		}
+
 		if (ConfigBlocksItems.enableSpears) {
 			mixins.add("spear.common.MixinEntityLivingBase");
 			mixins.add("spear.common.MixinEntityPlayer");
