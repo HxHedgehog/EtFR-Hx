@@ -2,6 +2,8 @@ package ganymedes01.etfuturum.mixins.early.backlytra;
 
 import ganymedes01.etfuturum.ModEnchantments;
 import ganymedes01.etfuturum.configuration.configs.ConfigEnchantsPotions;
+import ganymedes01.etfuturum.configuration.configs.ConfigFunctions;
+import ganymedes01.etfuturum.configuration.configs.ConfigMixins;
 import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -154,7 +156,8 @@ public abstract class MixinEntityLivingBase extends Entity {
 		}
 		// Keep the vanilla 1.7.10 base values, then blend them towards the modern targets.
 		float speed = this.isAIEnabled() ? 0.04F : 0.02F;
-		float slowDown = 0.8F;
+		// 26.2 LivingEntity#travelInWater: sprinting uses 0.9 instead of getWaterSlowDown() (0.8).
+		float slowDown = ConfigMixins.enableSwimming && this.isSprinting() ? 0.9F : 0.8F;
 		if (waterWalker > 0.0F) {
 			slowDown += (0.54600006F - slowDown) * waterWalker;
 			speed += (this.getAIMoveSpeed() - speed) * waterWalker;
@@ -175,10 +178,11 @@ public abstract class MixinEntityLivingBase extends Entity {
 		this.motionX *= slowDown;
 		this.motionY *= 0.800000011920929D;
 		this.motionZ *= slowDown;
-		// 26.2 water gravity = baseGravity/16 = 0.005 (getFluidFallingAdjustedMovement),
-		// matching the waterBuoyancy @ModifyConstant of waterlog.MixinEntityLivingBase;
-		// vanilla 1.7.10 uses 0.02, which made buoyancy 4x weaker than modern versions.
-		this.motionY -= 0.005D;
+		// 26.2 getFluidFallingAdjustedMovement: the water sink term is skipped entirely
+		// while sprinting; otherwise it is baseGravity/16 = 0.005 (waterBuoyancy config)
+		// or the vanilla 1.7.10 0.02. Matches swimming.MixinEntityLivingBase.etfu$swimGravity,
+		// which owns the same constant in the vanilla branch this handler replaces.
+		this.motionY -= this.isSprinting() ? 0.0D : ConfigFunctions.waterBuoyancy ? 0.005D : 0.02D;
 
 		// Official priority (jumpOutOfFluid runs last in travelInWater): the surface
 		// jump 0.3 overwrites the damped ladder 0.2 when both conditions coexist.

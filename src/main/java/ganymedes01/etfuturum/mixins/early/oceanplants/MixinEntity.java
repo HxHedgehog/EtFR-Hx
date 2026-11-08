@@ -1,8 +1,10 @@
 package ganymedes01.etfuturum.mixins.early.oceanplants;
 
 import ganymedes01.etfuturum.blocks.BlockAquaticPlant;
+import ganymedes01.etfuturum.configuration.configs.ConfigMixins;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,12 +31,27 @@ public abstract class MixinEntity {
 	 * scan for waterlogged volumes (see
 	 * {@link BlockAquaticPlant#isTouchingWaterVolume}). Real water keeps the
 	 * vanilla band behaviour.
+	 *
+	 * <p>The swimming port's water probe is merged into this redirect because a
+	 * single call site only supports one {@code @Redirect}. 26.2 Entity#isInWater
+	 * counts the whole slightly-deflated bounding box, while the 1.7.10 band probe
+	 * trims 0.4 off BOTH vertical ends and INVERTS the 0.6-high swimming/crawling
+	 * box into an empty rectangle: the cached inWater flag would read false on
+	 * every swimming tick, making the player flip-flop between poses and between
+	 * water/air physics (camera jitter, splash bubbles on every re-entry) and
+	 * stripping the water drag and gravity from moveEntityWithHeading. Only the
+	 * player is widened and only while swimming is enabled; vanilla entities keep
+	 * their exact 1.7.10 band behaviour. The fluid push side effect is preserved
+	 * by delegating with the corrected box.</p>
 	 */
 	@Redirect(method = "handleWaterMovement",
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/world/World;handleMaterialAcceleration(Lnet/minecraft/util/AxisAlignedBB;Lnet/minecraft/block/material/Material;Lnet/minecraft/entity/Entity;)Z"),
 			require = 1)
 	private boolean etfu$oceanPlantWaterDetection(World world, AxisAlignedBB bb, Material material, Entity entity) {
+		if (entity instanceof EntityPlayer && ConfigMixins.enableSwimming) {
+			bb = entity.boundingBox.contract(0.001D, 0.001D, 0.001D);
+		}
 		if (world.handleMaterialAcceleration(bb, material, entity)) {
 			return true;
 		}
