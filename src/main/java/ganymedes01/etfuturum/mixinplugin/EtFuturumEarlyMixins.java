@@ -583,6 +583,10 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		// Enchanted golden apple gets its own display name (like modern versions): always applied.
 		mixins.add("goldenapple.MixinItemAppleGold");
 
+		if (ConfigEntities.enableModernWither) {
+			mixins.add("wither.MixinBlockSkull_OnPlacingWitherSkull");
+		}
+
 		return mixins;
 	}
 

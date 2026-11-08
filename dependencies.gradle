@@ -64,9 +64,11 @@ dependencies {
         transitive = false
     }
     shadowImplementation('it.unimi.dsi:fastutil:8.5.12')
-    shadowImplementation('com.github.makamys:MCLib:0.3.7.8') {
+    shadowImplementation('com.github.makamys:MCLib:0.4') {
         exclude group: "codechicken"
     }
+
+    compileOnly('com.github.GTNewHorizons:Backhand:1.8.11:dev') {transitive = false}
 }
 
 configurations.configureEach {

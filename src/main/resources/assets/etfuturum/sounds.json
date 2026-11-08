@@ -78,5 +78,13 @@
         "name": "spear_wood/attack3"
       }
     ]
+  },
+  "block.coopers_mallet.convert": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "etfuturum:coopers_mallet_convert"
+      }
+    ]
   }
 }
