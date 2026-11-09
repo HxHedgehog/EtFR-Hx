@@ -117,6 +117,10 @@ public final class SwimmingRuntime {
 
 		boolean swimming;
 		if (swimmingPlayer.etfu$isSwimming()) {
+			// 26.2 keeps requiring sprint to maintain the flag (Entity#updateSwimming
+			// L1560-1566): releasing W stops the sprint (LocalPlayer#shouldStopSwimSprinting)
+			// and the pose reverts to standing. The observed "stays prone in water" case is
+			// elytra gliding skimming on the surface (FALL_FLYING pose), not this flag.
 			swimming = sprinting && player.isInWater() && player.ridingEntity == null;
 		} else {
 			boolean underWater = isEyeInWater(player) && player.isInWater();

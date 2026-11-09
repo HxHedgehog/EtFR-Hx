@@ -2,12 +2,14 @@ package ganymedes01.etfuturum.mixins.early.swimming.client;
 
 import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import ganymedes01.etfuturum.swimming.ISwimmingPlayer;
+import ganymedes01.etfuturum.items.ItemSpear;
 import ganymedes01.etfuturum.swimming.client.SwimmingRenderState;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -57,33 +59,45 @@ public class MixinModelBiped {
 		this.bipedHeadwear.rotateAngleX = this.bipedHead.rotateAngleX;
 
 		if (!((EntityPlayer) entityIn).isUsingItem()) {
+			// 26.2 zeroes the per-arm swim amount for the arm that is currently swinging
+			// (attackArm == arm && attackTime > 0) or posed as SPEAR, so the vanilla swing
+			// arc / spear animations on that arm survive the paddle block (HumanoidModel
+			// L227-228). 1.7.10 swings always animate the right arm and spears are
+			// right-hand only; the raised/attack spear pose itself is applied afterwards by
+			// the spear ModelBiped mixin.
+			float attackTime = ((EntityLivingBase) entityIn).getSwingProgress(SwimmingRenderState.partialTicks);
+			ItemStack held = ((EntityPlayer) entityIn).getHeldItem();
+			float rightArmSwimAmount = attackTime > 0.0F || held != null && held.getItem() instanceof ItemSpear
+					? 0.0F
+					: swimAmount;
+
 			if (swimPos < 14.0F) {
 				float q = quadraticArmUpdate(swimPos) / quadraticArmUpdate(14.0F);
 
 				this.bipedLeftArm.rotateAngleX = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleX, 0.0F);
-				this.bipedRightArm.rotateAngleX = lerp(swimAmount, this.bipedRightArm.rotateAngleX, 0.0F);
+				this.bipedRightArm.rotateAngleX = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleX, 0.0F);
 				this.bipedLeftArm.rotateAngleY = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleY, (float) Math.PI);
-				this.bipedRightArm.rotateAngleY = lerp(swimAmount, this.bipedRightArm.rotateAngleY, (float) Math.PI);
+				this.bipedRightArm.rotateAngleY = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleY, (float) Math.PI);
 				this.bipedLeftArm.rotateAngleZ = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleZ, (float) Math.PI + 1.8707964F * q);
-				this.bipedRightArm.rotateAngleZ = lerp(swimAmount, this.bipedRightArm.rotateAngleZ, (float) Math.PI - 1.8707964F * q);
+				this.bipedRightArm.rotateAngleZ = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleZ, (float) Math.PI - 1.8707964F * q);
 			} else if (swimPos < 22.0F) {
 				float part = (swimPos - 14.0F) / 8.0F;
 
 				this.bipedLeftArm.rotateAngleX = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleX, 1.5707964F * part);
-				this.bipedRightArm.rotateAngleX = lerp(swimAmount, this.bipedRightArm.rotateAngleX, 1.5707964F * part);
+				this.bipedRightArm.rotateAngleX = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleX, 1.5707964F * part);
 				this.bipedLeftArm.rotateAngleY = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleY, (float) Math.PI);
-				this.bipedRightArm.rotateAngleY = lerp(swimAmount, this.bipedRightArm.rotateAngleY, (float) Math.PI);
+				this.bipedRightArm.rotateAngleY = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleY, (float) Math.PI);
 				this.bipedLeftArm.rotateAngleZ = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleZ, 5.012389F - 1.8707964F * part);
-				this.bipedRightArm.rotateAngleZ = lerp(swimAmount, this.bipedRightArm.rotateAngleZ, 1.2707963F + 1.8707964F * part);
+				this.bipedRightArm.rotateAngleZ = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleZ, 1.2707963F + 1.8707964F * part);
 			} else if (swimPos < 26.0F) {
 				float part = (swimPos - 22.0F) / 4.0F;
 
 				this.bipedLeftArm.rotateAngleX = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleX, 1.5707964F - 1.5707964F * part);
-				this.bipedRightArm.rotateAngleX = lerp(swimAmount, this.bipedRightArm.rotateAngleX, 1.5707964F - 1.5707964F * part);
+				this.bipedRightArm.rotateAngleX = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleX, 1.5707964F - 1.5707964F * part);
 				this.bipedLeftArm.rotateAngleY = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleY, (float) Math.PI);
-				this.bipedRightArm.rotateAngleY = lerp(swimAmount, this.bipedRightArm.rotateAngleY, (float) Math.PI);
+				this.bipedRightArm.rotateAngleY = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleY, (float) Math.PI);
 				this.bipedLeftArm.rotateAngleZ = rotLerpRad(swimAmount, this.bipedLeftArm.rotateAngleZ, (float) Math.PI);
-				this.bipedRightArm.rotateAngleZ = lerp(swimAmount, this.bipedRightArm.rotateAngleZ, (float) Math.PI);
+				this.bipedRightArm.rotateAngleZ = lerp(rightArmSwimAmount, this.bipedRightArm.rotateAngleZ, (float) Math.PI);
 			}
 		}
 
