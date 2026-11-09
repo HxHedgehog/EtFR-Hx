@@ -70,15 +70,29 @@ public final class ModernWaterFog {
 			MovingObjectPosition mop = world.rayTraceBlocks(Vec3.createVectorHelper(camX, camY, camZ),
 					Vec3.createVectorHelper(camX + look.xCoord * sign * distance, camY + look.yCoord * sign * distance,
 							camZ + look.zCoord * sign * distance));
+			boolean clamped = false;
 			if (mop != null) {
 				double hit = MathHelper.sqrt_double(mop.hitVec.squareDistanceTo(camX, camY, camZ));
 				if (hit < distance) {
 					distance = hit;
+					clamped = true;
 				}
 			}
 			camX += look.xCoord * sign * distance;
 			camY += look.yCoord * sign * distance;
 			camZ += look.zCoord * sign * distance;
+			if (clamped) {
+				// The clamp lands on the occluding face to floating point precision, and the
+				// intersection floats around the exact block boundary as partialTicks varies
+				// per frame, so floor_double straddles the two blocks and the material
+				// judgment flickers (third person looking up from the seabed clamps on the
+				// sand top face = water/sand boundary: fog, sky-skip and FOV all toggle every
+				// frame). Nudge the sample back toward the eye, into the last fluid the ray
+				// passed through; 0.1 matches vanilla orientCamera's ray jitter scale.
+				camX -= look.xCoord * sign * 0.1D;
+				camY -= look.yCoord * sign * 0.1D;
+				camZ -= look.zCoord * sign * 0.1D;
+			}
 		}
 		return blockAtPoint(world, camX, camY, camZ);
 	}
