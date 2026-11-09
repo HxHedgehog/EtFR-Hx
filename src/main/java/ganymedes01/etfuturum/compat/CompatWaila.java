@@ -159,11 +159,9 @@ public class CompatWaila {
 
 		@Override
 		public ItemStack getWailaStack(IWailaDataAccessor accessor, IWailaConfigHandler config) {
-			// BaseCaveVines.getPickBlock deliberately returns glow berries (mirrors modern
-			// getCloneItemStack, also used by creative pick block), so it must not be what
-			// Waila displays. CAVE_VINE has a plain ItemBlock (registered in ModBlocks) so
-			// this ItemStack resolves to tile.etfuturum.cave_vines.name ("Cave Vines").
-			return new ItemStack(ModBlocks.CAVE_VINE.get(), 1, accessor.getMetadata());
+			// See BaseCaveVines#getHighlightStack: the knowledge lives on the block so that the
+			// Waila and NEI highlight paths stay in sync.
+			return ((BaseCaveVines) accessor.getBlock()).getHighlightStack(accessor.getMetadata());
 		}
 
 		@Override

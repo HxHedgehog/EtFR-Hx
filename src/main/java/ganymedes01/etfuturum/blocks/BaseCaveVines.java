@@ -82,6 +82,16 @@ public class BaseCaveVines extends Block implements IGrowable
         return (worldIn.getBlock(x, y + 1, z) instanceof BlockCaveVinesPlant) || worldIn.isSideSolid(x, y + 1, z, ForgeDirection.DOWN);
     }
 
+    /**
+     * The stack block-name providers (Waila, NEI highlight) should show: the vine block itself.
+     * getPickBlock deliberately yields glow berries (mirrors modern getCloneItemStack), so it
+     * must not be used for the display name. CAVE_VINE has a plain ItemBlock (registered in
+     * ModBlocks), so this resolves to tile.etfuturum.cave_vines.name.
+     */
+    public ItemStack getHighlightStack(int metadata) {
+        return new ItemStack(ModBlocks.CAVE_VINE.get(), 1, metadata);
+    }
+
     @Override
     public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z, EntityPlayer player)
     {

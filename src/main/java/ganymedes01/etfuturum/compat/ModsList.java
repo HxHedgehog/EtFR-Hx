@@ -9,6 +9,7 @@ public enum ModsList {
 	NETHERLICIOUS("netherlicious"),
 	AETHER_LEGACY("aether_legacy"),
 	WAILA("Waila"),
+	NEI("NotEnoughItems"),
 	THAUMCRAFT("Thaumcraft"),
 	FORBIDDEN_MAGIC("ForbiddenMagic"),
 	BLUEPOWER("bluepower"),

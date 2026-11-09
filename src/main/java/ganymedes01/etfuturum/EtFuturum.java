@@ -45,6 +45,7 @@ import ganymedes01.etfuturum.command.CommandFill;
 
 import ganymedes01.etfuturum.compat.CompatBaublesExpanded;
 import ganymedes01.etfuturum.compat.CompatMisc;
+import ganymedes01.etfuturum.compat.CompatNEI;
 import ganymedes01.etfuturum.compat.CompatRPLEEventHandler;
 import ganymedes01.etfuturum.compat.CompatTinkersConstruct;
 import ganymedes01.etfuturum.compat.CompatWaila;
@@ -266,6 +267,10 @@ public class EtFuturum {
 
 		if (ModsList.WAILA.isLoaded()) {
 			CompatWaila.register();
+		}
+
+		if (ModsList.NEI.isLoaded()) {
+			CompatNEI.register();
 		}
 
 		proxy.registerEvents();
