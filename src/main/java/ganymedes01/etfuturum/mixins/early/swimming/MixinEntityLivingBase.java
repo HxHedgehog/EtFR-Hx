@@ -28,25 +28,32 @@ public abstract class MixinEntityLivingBase extends Entity {
 
 	/**
 	 * 26.2 Player#travel applies the look-based vertical control before super.travel(), i.e.
-	 * before the water drag and gravity. Injecting before moveEntityWithHeading() means this
-	 * still runs when the backlytra mixin cancels the vanilla water branch from its HEAD.
+	 * before the water drag and gravity. Injecting at the HEAD of moveEntityWithHeading()
+	 * puts the pull at the same point: the whole method (moveFlying, moveEntity, drag,
+	 * gravity) runs after this handler, and it still runs when the backlytra mixin cancels
+	 * the vanilla water branch from its HEAD (HEAD callbacks are all invoked before the
+	 * cancel flag is checked).
+	 *
+	 * <p>INJECTION POINT HISTORY: this was first wired to onLivingUpdate (matched zero
+	 * instructions - moveEntityWithHeading is only called from onUpdate, after onLivingUpdate
+	 * returns) and then to onUpdate INVOKE before the moveEntityWithHeading call site. The
+	 * INVOKE form also silently never ran in the GTNH runtime even though the refmap mapped
+	 * the target to func_70612_e and the same mixin's @ModifyConstant handlers applied: the
+	 * runtime probe log showed U lines (onLivingUpdate HEAD, same class) every tick in water
+	 * but zero PULL lines. The moveEntityWithHeading HEAD target is the same injector shape
+	 * the backlytra mixin uses for glide physics, which is verified working in this pack.</p>
 	 *
 	 * <p>26.2 LocalPlayer#aiStep also sinks the player -0.04 while sneaking in water
 	 * (goDownInWater, gated by isAffectedByFluids() = !flying) right before the travel pull.
-	 * That sink cannot be injected at the onLivingUpdate super call - javac emits it as an
-	 * INVOKESPECIAL on the direct superclass and Mixin's @At("INVOKE") does not match super
-	 * calls - so it runs here instead, ahead of the pull, preserving the 26.2 order.</p>
+	 * It runs here too, ahead of the pull, preserving the 26.2 order.</p>
 	 *
 	 * <p>26.2 Player#travel L1291 applies the pull when {@code lookY <= 0.0 || jumping
 	 * || fluidState at feet+0.9 is NOT empty} - i.e. looking up pulls the player UP while
 	 * there is still fluid above, and the pull only stops once the feet+0.9 probe leaves
 	 * the fluid (so the player is not yanked back down when surfacing).</p>
 	 */
-	@Inject(method = "onLivingUpdate",
-			at = @At(value = "INVOKE",
-					target = "Lnet/minecraft/entity/EntityLivingBase;moveEntityWithHeading(FF)V",
-					shift = At.Shift.BEFORE))
-	private void etfu$swimVerticalControl(CallbackInfo ci) {
+	@Inject(method = "moveEntityWithHeading", at = @At("HEAD"))
+	private void etfu$swimVerticalControl(float strafe, float forward, CallbackInfo ci) {
 		Entity self = (Entity) (Object) this;
 		if (!(self instanceof EntityPlayer)) {
 			return;
@@ -58,16 +65,18 @@ public abstract class MixinEntityLivingBase extends Entity {
 			this.motionY -= 0.04D;
 		}
 
-		if (!((ISwimmingPlayer) self).etfu$isSwimming()) {
+		boolean swimming = ((ISwimmingPlayer) self).etfu$isSwimming();
+		Vec3 look = this.getLookVec();
+		double lookY = look.yCoord;
+		boolean probe = SwimmingRuntime.isWaterAt(this.worldObj, this.posX, this.boundingBox.minY + 0.9D, this.posZ);
+
+		if (!swimming) {
 			return;
 		}
 
-		Vec3 look = this.getLookVec();
-		double lookY = look.yCoord;
 		double mult = lookY < -0.2D ? 0.085D : 0.06D;
-
-		if (lookY <= 0.0D || this.isJumping
-				|| SwimmingRuntime.isWaterAt(this.worldObj, this.posX, this.boundingBox.minY + 0.9D, this.posZ)) {
+		boolean gate = lookY <= 0.0D || this.isJumping || probe;
+		if (gate) {
 			this.motionY += (lookY - this.motionY) * mult;
 		}
 	}

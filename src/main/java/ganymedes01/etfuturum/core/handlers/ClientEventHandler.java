@@ -457,7 +457,14 @@ public class ClientEventHandler {
 
 	@SubscribeEvent
 	public void renderPlayerSetArmour(SetArmorModel event) {
-		if (event.entityPlayer instanceof IElytraPlayer) {
+		// 26.2 draws layers with their own render type, so the hurt overlay only repaints
+		// the body/armor passes: the elytra stays visible with its normal texture and
+		// glint while flashing, it is simply never tinted red. 1.7.10 repaints the armor
+		// passes inside the hurt block under GL_EQUAL (RendererLivingEntity#doRender
+		// L242-278), so skip exactly that repaint pass and keep the normal one untouched.
+		boolean hurtRepaint = (event.entityLiving.hurtTime > 0 || event.entityLiving.deathTime > 0)
+				&& GL11.glGetInteger(GL11.GL_DEPTH_FUNC) == GL11.GL_EQUAL;
+		if (event.entityPlayer instanceof IElytraPlayer && !hurtRepaint) {
 			LayerBetterElytra.doRenderLayer(event.entityLiving, event.entityPlayer.limbSwing, event.entityPlayer.limbSwingAmount, Minecraft.getMinecraft().timer.renderPartialTicks, event.entityPlayer.getAge(), 0.0625F);
 		}
 

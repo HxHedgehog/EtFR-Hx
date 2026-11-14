@@ -51,7 +51,11 @@ public abstract class MixinEntityLivingBase extends Entity {
 	private void moveElytra(float p_70612_1_, float p_70612_2_, CallbackInfo ci) {
 		/* method is named incorrectly in these older mappings, it's really isServerWorld */
 		if (this.isClientWorld() && (!this.isInWater() || (ConfigEnchantsPotions.elytraOceanEnchant && ModEnchantments.getElytraWaterWalkerLevel((EntityLivingBase) (Object) this) > 0)) && !this.handleLavaMovement()) {
-			if (this instanceof IElytraPlayer && ((IElytraPlayer) this).etfu$isElytraFlying()) {
+			/* !isSneaking(): part of the custom sneak-cancel extension - while shift is
+			 * held the glide physics must not run even if the synced flag is still true
+			 * (the server clears it a tick or two later; without this gate the lagging
+			 * echo would re-apply one or two glide ticks after the client exit). */
+			if (this instanceof IElytraPlayer && ((IElytraPlayer) this).etfu$isElytraFlying() && !this.isSneaking()) {
 				if (this.motionY > -0.5D) {
 					this.fallDistance = 1.0F;
 				}

@@ -2,6 +2,8 @@ package ganymedes01.etfuturum.mixins.early.waterlog.client;
 
 import ganymedes01.etfuturum.client.waterfog.ModernWaterFog;
 import ganymedes01.etfuturum.configuration.configs.ConfigWorld;
+import ganymedes01.etfuturum.swimming.ISwimmingPlayer;
+import ganymedes01.etfuturum.swimming.SwimmingRuntime;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderGlobal;
@@ -46,6 +48,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * fog/FOV redirects) instead of vanilla's entity-eye check, so third person
  * agrees with the fog the camera actually renders with. When
  * {@code modernWaterFog} is off, falls back to the vanilla eye check.</p>
+ *
+ * <p>The camera-only check still leaks at the water-surface interface: with a
+ * third-person camera floating just above the surface while the player swims
+ * at the interface, the rings' y=64 plane sits ~1.2 blocks above the swimmer
+ * and the void shaft walls wrap the player again. 26.2 has no such geometry in
+ * any view, so the hide condition also fires whenever the player itself is in
+ * the water (or in the swimming pose); on land / in the air the vanilla look is
+ * untouched.</p>
  */
 @Mixin(RenderGlobal.class)
 public abstract class MixinRenderGlobal {
@@ -62,7 +72,7 @@ public abstract class MixinRenderGlobal {
 			method = "renderSky(F)V",
 			at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glShadeModel(I)V", remap = false))
 	private void etfuturum$fogSunriseBandOnly(int mode) {
-		if (etfu$isCameraUnderwaterForSky()) {
+		if (etfu$shouldHideSeaHorizon()) {
 			if (mode == GL11.GL_SMOOTH) {
 				// Sunrise/sunset band begins: fog it so it blends with the water.
 				GL11.glEnable(GL11.GL_FOG);
@@ -84,7 +94,7 @@ public abstract class MixinRenderGlobal {
 			slice = @Slice(from = @At(value = "FIELD", opcode = Opcodes.GETFIELD,
 					target = "Lnet/minecraft/client/renderer/RenderGlobal;glSkyList2:I", ordinal = 0)))
 	private void etfu$hideHorizonRingsUnderwater(int list) {
-		if (!etfu$isCameraUnderwaterForSky()) {
+		if (!etfu$shouldHideSeaHorizon()) {
 			GL11.glCallList(list);
 		}
 	}
@@ -106,7 +116,7 @@ public abstract class MixinRenderGlobal {
 					to = @At(value = "FIELD", opcode = Opcodes.GETFIELD,
 							target = "Lnet/minecraft/client/renderer/RenderGlobal;glSkyList2:I", ordinal = 1)))
 	private void etfu$hideVoidBoxStartUnderwater(Tessellator tessellator) {
-		if (!etfu$isCameraUnderwaterForSky()) {
+		if (!etfu$shouldHideSeaHorizon()) {
 			tessellator.startDrawingQuads();
 		}
 	}
@@ -120,23 +130,31 @@ public abstract class MixinRenderGlobal {
 					to = @At(value = "FIELD", opcode = Opcodes.GETFIELD,
 							target = "Lnet/minecraft/client/renderer/RenderGlobal;glSkyList2:I", ordinal = 1)))
 	private int etfu$hideVoidBoxUnderwater(Tessellator tessellator) {
-		if (!etfu$isCameraUnderwaterForSky()) {
+		if (!etfu$shouldHideSeaHorizon()) {
 			return tessellator.draw();
 		}
 		return 0;
 	}
 
 	@Unique
-	private boolean etfu$isCameraUnderwaterForSky() {
+	private boolean etfu$shouldHideSeaHorizon() {
 		Minecraft mc = Minecraft.getMinecraft();
 		EntityLivingBase view = mc.renderViewEntity;
 		if (view == null || mc.theWorld == null) {
 			return false;
 		}
-		if (ConfigWorld.modernWaterFog) {
-			return ModernWaterFog.getBlockAtCamera(mc.theWorld, view, this.etfu$skyPartialTicks)
-					.getMaterial() == Material.water;
+		boolean underwater = ConfigWorld.modernWaterFog
+				? ModernWaterFog.getBlockAtCamera(mc.theWorld, view, this.etfu$skyPartialTicks)
+						.getMaterial() == Material.water
+				: view.isInsideOfMaterial(Material.water);
+		if (!underwater) {
+			// 26.2 has no sea-level horizon rings / void shaft geometry in any view: whenever
+			// the player itself is in the water (third-person camera above the surface while
+			// swimming at the interface, or swimming underwater), hide the rings/shaft too.
+			// Land / air keep the vanilla look.
+			underwater = view.isInWater()
+					|| (view instanceof ISwimmingPlayer && ((ISwimmingPlayer) view).etfu$isSwimming());
 		}
-		return view.isInsideOfMaterial(Material.water);
+		return underwater;
 	}
 }

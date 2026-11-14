@@ -64,6 +64,14 @@ public abstract class MixinEntityPlayerSP extends AbstractClientPlayer implement
 	@Inject(method = "onLivingUpdate", at = @At("HEAD"))
 	private void etfu$clientSwimming(CallbackInfo ci) {
 		SwimmingRuntime.updateSwimming((EntityPlayer) (Object) this);
+		// 26.2 shouldStopRunSprinting (LocalPlayer L881) stops a sprint that is not a
+		// swim-sprint on entering shallow water (isInWater && !isUnderWater, Entity L1544)
+		// unless flying: a sprint carried from land dies at the water's edge instead of
+		// water-walking with the sprint-keyed drag/sink skips.
+		if (this.isSprinting() && !this.etfu$localSwimming && !this.capabilities.isFlying
+				&& this.isInWater() && !SwimmingRuntime.isEyeInWater((EntityPlayer) (Object) this)) {
+			this.setSprinting(false);
+		}
 	}
 
 	/**
@@ -109,11 +117,33 @@ public abstract class MixinEntityPlayerSP extends AbstractClientPlayer implement
 	 * 26.2 canStartSprinting() has no onGround requirement, so double tapping W while
 	 * underwater starts sprinting and therefore swimming. The 1.7.10 double tap branch
 	 * (first onGround read in onLivingUpdate) is gated on being on the ground.
+	 *
+	 * <p>26.2 also gates every sprint start through isSprintingPossible (LocalPlayer
+	 * L1078-1080): shallow water ({@code isInWater() && !isUnderWater()}, Entity L1544)
+	 * vetoes starting a sprint - wading players keep walking until their eye is under
+	 * the surface. That is what keeps the sprint-keyed water drag (0.9) and sink skip
+	 * tied to an actual swim-sprint, and it removes the sprint/no-swim dead zone between
+	 * the rendered surface and the underwater eye line.</p>
 	 */
 	@Redirect(method = "onLivingUpdate",
 			at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;onGround:Z", ordinal = 0))
 	private boolean etfu$sprintInWater(EntityPlayerSP instance) {
+		if (!this.capabilities.isFlying && instance.isInWater()
+				&& !SwimmingRuntime.isEyeInWater(instance)) {
+			return false;
+		}
 		return instance.onGround || instance.isInWater();
+	}
+
+	/**
+	 * Same 26.2 shallow-water veto for the sprint-key start branch (onLivingUpdate L221):
+	 * holding the sprint key while wading must not start a sprint either.
+	 */
+	@ModifyExpressionValue(method = "onLivingUpdate",
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;getIsKeyPressed()Z", ordinal = 1))
+	private boolean etfu$noSprintStartInShallowWater(boolean original) {
+		return original && (this.capabilities.isFlying || !this.isInWater()
+				|| SwimmingRuntime.isEyeInWater((EntityPlayer) (Object) this));
 	}
 
 	// NOTE: 26.2's goDownInWater() runs right before super.aiStep(). The bytecode super call

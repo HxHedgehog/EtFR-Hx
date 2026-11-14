@@ -55,8 +55,14 @@ public abstract class MixinEntityPlayer extends EntityLivingBase implements IEly
 			 *   and the glide resumes once the entity leaves the water).
 			 * With elytraOceanEnchant enabled, an elytra without Depth Strider
 			 * stops gliding in water (pre-26.2 behavior); with the enchant it
-			 * keeps gliding underwater instead. */
-			if (flag && !this.onGround && !this.isRiding() && !this.isOnLadder() && !etfu$hasLevitation()
+			 * keeps gliding underwater instead.
+			 * Sneak stopping the glide is a custom extension (26.2 has no
+			 * sneak-cancel): shift while gliding exits the glide and restores
+			 * the standing pose. The client clears its local flag instantly
+			 * (backlytra.client.MixinEntityPlayerSP) and this server-side
+			 * re-evaluation clears the authoritative flag as soon as the C0B
+			 * sneak state arrives. */
+			if (flag && !this.onGround && !this.isRiding() && !this.isOnLadder() && !this.isSneaking() && !etfu$hasLevitation()
 					&& !(ConfigEnchantsPotions.elytraOceanEnchant && this.isInWater() && ModEnchantments.getElytraWaterWalkerLevel(this) <= 0)) {
 				if (!this.worldObj.isRemote && (this.etfu$ticksElytraFlying + 1) % 20 == 0) {
 					itemstack.damageItem(1, this);
