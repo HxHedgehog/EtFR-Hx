@@ -38,7 +38,7 @@ public class ConfigEnchantsPotions extends ConfigBase {
 		mendingID = getInt("mendingID", catEnchants, 201, 0, Short.MAX_VALUE, "");
 		enableSwiftSneak = getBoolean("swiftSneak", catEnchants, true, "");
 		swiftSneakID = getInt("swiftSneakID", catEnchants, 202, 0, Short.MAX_VALUE, "");
-		elytraOceanEnchant = getBoolean("elytraOceanEnchant", catEnchants, true, "When enabled, an elytra enchanted with Depth Strider can keep gliding underwater (water no longer stops the glide), like the pre-26.2 behavior. When disabled, the elytra fully matches 26.2: water never stops the glide, but there is no underwater gliding. The Depth Strider enchantment itself is always registered and always works on boots.");
+		elytraOceanEnchant = getBoolean("elytraOceanEnchant", catEnchants, true, "When enabled, an elytra without Depth Strider stops gliding in water (pre-26.2 behavior) while an elytra enchanted with Depth Strider keeps gliding underwater: the glide flag persists, the 26.2 water travel physics apply with the elytra's Depth Strider easing the drag, and the boosting firework rocket scales its thrust to 35/55/75% per level. When disabled, the elytra fully matches 26.2: water never stops the glide (the glide physics hand over to water travel and resume once the entity leaves the water) and Depth Strider works from boots only. The Depth Strider enchantment itself is always registered and always works on boots.");
 		waterWalkerID = getInt("waterWalkerID", catEnchants, 203, 0, Short.MAX_VALUE, "");
 
 		//potions

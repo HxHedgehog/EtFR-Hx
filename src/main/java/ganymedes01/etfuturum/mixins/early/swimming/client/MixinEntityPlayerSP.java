@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
+import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import ganymedes01.etfuturum.swimming.ISwimmingPlayer;
 import ganymedes01.etfuturum.swimming.SwimmingRuntime;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -128,8 +129,14 @@ public abstract class MixinEntityPlayerSP extends AbstractClientPlayer implement
 	@Redirect(method = "onLivingUpdate",
 			at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;onGround:Z", ordinal = 0))
 	private boolean etfu$sprintInWater(EntityPlayerSP instance) {
-		if (!this.capabilities.isFlying && instance.isInWater()
-				&& !SwimmingRuntime.isEyeInWater(instance)) {
+		boolean underWater = SwimmingRuntime.isEyeInWater(instance);
+		// 26.2 canStartSprinting (LocalPlayer L1082-1084): isFallFlying() && !isUnderWater()
+		// vetoes the sprint start - a surface-skimming glider keeps gliding instead of
+		// sprint-swimming, while a fully submerged glider (glide eye 0.4) may start.
+		if (instance instanceof IElytraPlayer && ((IElytraPlayer) instance).etfu$isElytraFlying() && !underWater) {
+			return false;
+		}
+		if (!this.capabilities.isFlying && instance.isInWater() && !underWater) {
 			return false;
 		}
 		return instance.onGround || instance.isInWater();
@@ -137,13 +144,17 @@ public abstract class MixinEntityPlayerSP extends AbstractClientPlayer implement
 
 	/**
 	 * Same 26.2 shallow-water veto for the sprint-key start branch (onLivingUpdate L221):
-	 * holding the sprint key while wading must not start a sprint either.
+	 * holding the sprint key while wading must not start a sprint either. The fall-flying
+	 * veto from canStartSprinting covers this path as well.
 	 */
 	@ModifyExpressionValue(method = "onLivingUpdate",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;getIsKeyPressed()Z", ordinal = 1))
 	private boolean etfu$noSprintStartInShallowWater(boolean original) {
-		return original && (this.capabilities.isFlying || !this.isInWater()
-				|| SwimmingRuntime.isEyeInWater((EntityPlayer) (Object) this));
+		boolean underWater = SwimmingRuntime.isEyeInWater((EntityPlayer) (Object) this);
+		if (this instanceof IElytraPlayer && ((IElytraPlayer) this).etfu$isElytraFlying() && !underWater) {
+			return false;
+		}
+		return original && (this.capabilities.isFlying || !this.isInWater() || underWater);
 	}
 
 	// NOTE: 26.2's goDownInWater() runs right before super.aiStep(). The bytecode super call

@@ -2,6 +2,7 @@ package ganymedes01.etfuturum.client.waterfog;
 
 import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import ganymedes01.etfuturum.swimming.ISwimmingPlayer;
+import ganymedes01.etfuturum.swimming.SwimmingRuntime;
 import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
@@ -17,12 +18,16 @@ import net.minecraft.world.World;
 
 /**
  * Camera-based water judgment for vanilla's fog logic (26.2 {@code Camera#getFluidInCamera}
- * semantics). Used as the redirect target for {@code ActiveRenderInfo#getBlockAtEntityViewpoint}
- * in {@code EntityRenderer#setupFog}/{@code updateFogColor}.
+ * semantics). Serves the sea-horizon judgment ({@code MixinRenderGlobal}) and, through
+ * {@link #getCameraPos(EntityLivingBase, float)}, the fog color/density/FOV pipeline
+ * ({@code EntityRenderer#setupFog}/{@code updateFogColor}/{@code getFOVModifier} via the
+ * {@code ActiveRenderInfo#getBlockAtEntityViewpoint} sample-point redirect).
  *
  * <p>Vanilla 1.7.10 judges the fog type from the entity-eye viewpoint, which is what leaks the
- * underwater fog onto the sky in third person when the camera is above the surface. Judging at
- * the camera position fixes that leak at the source for every vanilla branch (water, lava, fog
+ * underwater fog onto the sky in third person when the camera is above the surface - and, for
+ * a gliding player, drops the fog entirely while the third-person camera hangs under the
+ * surface (the glide pose camera sits at feet+0.4, far below the judged standing eye). Judging
+ * at the camera position fixes both at the source for every vanilla branch (water, lava, fog
  * colors) without touching any bytecode Angelica injects.</p>
  *
  * <p>Deliberately <b>no</b> fog density/color takeover: shader packs read the {@code fogColor}
@@ -37,21 +42,31 @@ public final class ModernWaterFog {
 	}
 
 	/**
-	 * The block the vanilla fog logic judges, but sampled at the <b>camera</b> position instead of
-	 * the entity-eye viewpoint (26.2 {@code Camera#getFluidInCamera} semantics).
-	 *
-	 * <p>Replicates 1.7.10 {@code EntityRenderer#orientCamera} (L552-650) so the judgment happens
-	 * where the camera really is, including the swimming pose anchor (same math as the swimming
-	 * mixin's camera eye height constant replacement), the third person look offsets and the
-	 * anti-clip ray. The eye anchor follows {@code posY = boundingBox.minY + yOffset - ySize}
-	 * (Entity L591), i.e. {@code posY} is already at eye level for a standing player.</p>
+	 * Camera position without an explicit world: the fog/FOV pipeline
+	 * ({@code ActiveRenderInfo#getBlockAtEntityViewpoint}) only receives the entity, and its
+	 * single caller chain ({@code EntityRenderer#updateFogColor/#setupFog/#getFOVModifier})
+	 * always passes {@code mc.theWorld}.
 	 */
-	public static Block getBlockAtCamera(World world, EntityLivingBase entity, float partialTicks) {
+	public static double[] getCameraPos(EntityLivingBase entity, float partialTicks) {
+		return getCameraPos(Minecraft.getMinecraft().theWorld, entity, partialTicks);
+	}
+
+	/**
+	 * The <b>camera</b> position (26.2 {@code Camera} semantics): the pose eye anchor
+	 * (fall flying 0.4 / swimming pose camera eye / standing 1.62), interpolated, plus the
+	 * third-person look offset with the vanilla anti-clip ray.
+	 */
+	public static double[] getCameraPos(World world, EntityLivingBase entity, float partialTicks) {
 		float f1 = entity.yOffset - 1.62F;
 		if (entity.isPlayerSleeping()) {
 			f1 += 1.0F;
 		} else if (entity instanceof EntityPlayer && entity instanceof ISwimmingPlayer
-				&& !(entity instanceof IElytraPlayer elytra && elytra.etfu$isElytraFlying())) {
+				&& entity instanceof IElytraPlayer && ((IElytraPlayer) entity).etfu$isElytraFlying()) {
+			// 26.2 Avatar.POSES: the fall-flying eye sits 0.4 above the feet - the same anchor
+			// the backlytra camera shift (standing 1.62 - 1.22) uses, so the fluid judgment
+			// happens exactly where the rendered camera is.
+			f1 = entity.yOffset - entity.ySize - SwimmingRuntime.FALL_FLYING_EYE;
+		} else if (entity instanceof EntityPlayer && entity instanceof ISwimmingPlayer) {
 			f1 = entity.yOffset - entity.ySize - ((ISwimmingPlayer) entity).etfu$getCameraEyeHeight(partialTicks);
 		}
 		double camX = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
@@ -94,7 +109,16 @@ public final class ModernWaterFog {
 				camZ -= look.zCoord * sign * 0.1D;
 			}
 		}
-		return blockAtPoint(world, camX, camY, camZ);
+		return new double[] {camX, camY, camZ};
+	}
+
+	/**
+	 * The block the vanilla fog logic judges, but sampled at the <b>camera</b> position instead of
+	 * the entity-eye viewpoint (26.2 {@code Camera#getFluidInCamera} semantics).
+	 */
+	public static Block getBlockAtCamera(World world, EntityLivingBase entity, float partialTicks) {
+		double[] pos = getCameraPos(world, entity, partialTicks);
+		return blockAtPoint(world, pos[0], pos[1], pos[2]);
 	}
 
 	/**

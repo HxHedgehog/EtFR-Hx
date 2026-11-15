@@ -50,7 +50,11 @@ public abstract class MixinEntityLivingBase extends Entity {
 	@Inject(method = "moveEntityWithHeading", at = @At("HEAD"), cancellable = true)
 	private void moveElytra(float p_70612_1_, float p_70612_2_, CallbackInfo ci) {
 		/* method is named incorrectly in these older mappings, it's really isServerWorld */
-		if (this.isClientWorld() && (!this.isInWater() || (ConfigEnchantsPotions.elytraOceanEnchant && ModEnchantments.getElytraWaterWalkerLevel((EntityLivingBase) (Object) this) > 0)) && !this.handleLavaMovement()) {
+		/* Water never runs the glide physics: 26.2 LivingEntity#travel() dispatches fluid
+		 * travel before fall flying, so a gliding entity in water runs the travelInWater
+		 * replication below (waterWalkerSwim) and the glide physics resume here on the
+		 * first tick out of the water, carrying the inherited motion. */
+		if (this.isClientWorld() && !this.isInWater() && !this.handleLavaMovement()) {
 			/* !isSneaking(): part of the custom sneak-cancel extension - while shift is
 			 * held the glide physics must not run even if the synced flag is still true
 			 * (the server clears it a tick or two later; without this gate the lagging
@@ -92,22 +96,25 @@ public abstract class MixinEntityLivingBase extends Entity {
 				this.motionY *= 0.9800000190734863D;
 				this.motionZ *= 0.9900000095367432D;
 
-				/* 26.2 applies the underwater speed penalty through the Depth Strider slowDown of
-				   travelInWater (0.8 swimming drag, blended towards 0.546 by WATER_MOVEMENT_EFFICIENCY,
-				   LivingEntity#travelInWater). The balance feature keeps the air glide physics
-				   underwater instead and scales its performance: the base 0.99/0.98 glide drag is
-				   raised so the drag balanced glide speed settles at 35% of the air speed with Depth
-				   Strider I, 55% with II and 75% with III, keeping flight over water the faster
-				   option. The boosting firework rocket scales its thrust by the same factor
-				   (EntityBoostingFireworkRocket). */
-				if (this.isInWater()) {
-					double performance = ModEnchantments.getElytraWaterWalkerPerformance((EntityLivingBase) (Object) this);
-					this.motionX *= (1.0D - 0.01D / performance) / 0.9900000095367432D;
-					this.motionY *= (1.0D - 0.02D / performance) / 0.9800000190734863D;
-					this.motionZ *= (1.0D - 0.01D / performance) / 0.9900000095367432D;
-				}
-
 				this.moveEntity(this.motionX, this.motionY, this.motionZ);
+
+				/* 26.2 LivingEntity#aiStep L2927 runs calculateEntityAnimation after EVERY travel
+				 * branch (players: 2D horizontal distance, LivingEntity L2516-2528; WalkAnimationState
+				 * L18-23: speed += (min(distance*4, 1) - speed) * 0.4, position += speed) - the walk
+				 * animation advances from the actual movement no matter how the tick moved. The 1.7.10
+				 * equivalent lives at the tail of moveEntityWithHeading, which this cancel removes, so
+				 * replicate it here: without it limbSwing/limbSwingAmount freeze at their last ground
+				 * value during glide, and a slow turn or climb (the glide pose speedValue of the swing
+				 * divisor = (motion²/0.2)³ min 1 settling at 1) renders the frozen amplitude as a
+				 * static legs-apart pose that never settles. */
+				double dx = this.posX - this.prevPosX;
+				double dz = this.posZ - this.prevPosZ;
+				float f6 = MathHelper.sqrt_double(dx * dx + dz * dz) * 4.0F;
+				if (f6 > 1.0F) {
+					f6 = 1.0F;
+				}
+				this.limbSwingAmount += (f6 - this.limbSwingAmount) * 0.4F;
+				this.limbSwing += this.limbSwingAmount;
 
 				if (this.isCollidedHorizontally && !this.worldObj.isRemote) {
 					double d10 = Math.sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ);
@@ -130,25 +137,33 @@ public abstract class MixinEntityLivingBase extends Entity {
 
 	/**
 	 * 26.2 water travel with Depth Strider (travelInWater), replicated on top of the
-	 * vanilla 1.7.10 water branch of {@code moveEntityWithHeading}. Only takes over
-	 * when the entity is in the vanilla water branch, is not elytra gliding (the
-	 * glide physics above already cancel the whole method) and the equipped boots
-	 * carry Depth Strider. Without this handler, the unenchanted vanilla formula
-	 * runs unchanged; Depth Strider then reduces the water drag and boosts the
-	 * swim acceleration exactly like modern versions (level 3 = no penalty).
-	 * This is NOT gated by elytraOceanEnchant: the enchantment works on boots always.
+	 * vanilla 1.7.10 water branch of {@code moveEntityWithHeading}. Also owns the
+	 * physics of gliding entities in water: 26.2 LivingEntity#travel() dispatches
+	 * fluid travel before fall flying (the glide flag persists and the glide resumes
+	 * once the entity leaves the water), so a gliding player runs this water branch
+	 * instead of the air glide physics in {@link #moveElytra}. Without this handler,
+	 * the unenchanted vanilla formula runs unchanged; Depth Strider then reduces the
+	 * water drag and boosts the swim acceleration exactly like modern versions
+	 * (level 3 = no penalty). For gliders the efficiency is driven by the Depth
+	 * Strider on the elytra when elytraOceanEnchant is on (the custom underwater
+	 * glide feature); otherwise by the boots as in vanilla 26.2.
 	 */
 	@Inject(method = "moveEntityWithHeading", at = @At("HEAD"), cancellable = true)
 	private void waterWalkerSwim(float p_70612_1_, float p_70612_2_, CallbackInfo ci) {
-		if (this instanceof IElytraPlayer && ((IElytraPlayer) this).etfu$isElytraFlying()) {
-			return;
-		}
 		// Vanilla water branch condition (flying players are excluded there too).
 		Object self = this;
 		if (!this.isInWater() || self instanceof EntityPlayer && ((EntityPlayer) self).capabilities.isFlying) {
 			return;
 		}
-		int level = ModEnchantments.getBootWaterWalkerLevel((EntityLivingBase) (Object) this);
+		int level;
+		if (this instanceof IElytraPlayer && ((IElytraPlayer) this).etfu$isElytraFlying() && ConfigEnchantsPotions.elytraOceanEnchant) {
+			// Custom underwater glide feature: while the glide flag is on, the elytra's
+			// own Depth Strider drives the efficiency (26.2 maps it to
+			// WATER_MOVEMENT_EFFICIENCY); boots are deliberately ignored (glide only).
+			level = ModEnchantments.getElytraWaterWalkerLevel((EntityLivingBase) (Object) this);
+		} else {
+			level = ModEnchantments.getBootWaterWalkerLevel((EntityLivingBase) (Object) this);
+		}
 		if (level <= 0) {
 			return;
 		}

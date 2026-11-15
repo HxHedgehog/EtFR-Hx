@@ -86,13 +86,16 @@ public class EntityBoostingFireworkRocket extends EntityFireworkRocket {
 				if (this.boostedEntity instanceof IElytraPlayer && ((IElytraPlayer) this.boostedEntity).etfu$isElytraFlying()) {
 					Vec3 look = this.boostedEntity.getLookVec();
 
-					/* The underwater glide drag (MixinEntityLivingBase#moveElytra) alone barely
-					 * weakens the boost: the 26.2 thrust formula self-limits towards look * 1.5
-					 * with a 50% per-tick correction that dwarfs the extra drag, so boosted speed
-					 * stays nearly identical across Depth Strider levels. Scaling the base thrust
-					 * and the target speed by the same performance factor restores the 35/55/75%
-					 * underwater gradient for rocket boosting. Like the underwater glide itself,
-					 * the scaling follows the elytraOceanEnchant gate; in air thrust is untouched. */
+					/* The underwater water travel drag (MixinEntityLivingBase#waterWalkerSwim, the
+					 * 26.2 travelInWater replication) alone would flatten the boost across Depth
+					 * Strider levels: the 26.2 thrust formula self-limits towards look * 1.5
+					 * with a 50% per-tick correction that dwarfs the drag differences, and more
+					 * Depth Strider actually tightens the per-tick drag (0.8 blended towards
+					 * 0.546), so the boosted speed would even invert with levels. Scaling the
+					 * base thrust and the target speed by the same performance factor keeps the
+					 * 35/55/75% underwater gradient monotonic for rocket boosting. Like the
+					 * underwater glide itself, the scaling follows the elytraOceanEnchant gate;
+					 * in air thrust is untouched. */
 					double thrust = 1.0D;
 					if (ConfigEnchantsPotions.elytraOceanEnchant && this.boostedEntity.isInWater()) {
 						thrust = ModEnchantments.getElytraWaterWalkerPerformance(this.boostedEntity);

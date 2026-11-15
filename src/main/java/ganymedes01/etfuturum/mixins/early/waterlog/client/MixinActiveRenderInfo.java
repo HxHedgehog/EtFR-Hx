@@ -4,6 +4,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import ganymedes01.etfuturum.client.waterfog.ModernWaterFog;
 import ganymedes01.etfuturum.waterlog.WaterlogRuntime;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.ActiveRenderInfo;
@@ -45,25 +46,35 @@ import net.minecraft.world.World;
  * 跳动，雾随视角开关。26.2 = {@code camera.getBlockAtCamera()} 流体判定——
  * <b>相机格，与视线方向无关</b>。修复 = 重定向返回纯眼位（去掉视线偏移），
  * 采样格 = 眼位格；真水的 8/9 表面判线在眼位格上照 vanilla 保留。
+ *
+ * <p><b>采样点升级为相机位（2026-11-15 用户实证"三人称滑翔入水无蓝雾/透视"）</b>：
+ * 眼位格在三人称下不是真实相机——滑翔姿态相机在脚+0.4 并沿视线后移 4 格，眼位
+ * （脚+1.74）仍在水上时相机已入水 → 无雾透视。26.2 的雾/FOV 判定全部走
+ * {@code Camera#getFluidInCamera}（相机流体）。修复 = 采样点由纯眼位升级为
+ * {@link ModernWaterFog#getCameraPos} 相机位（滑翔/游泳/站立锚点 + 三人称视线
+ * 偏移 + 抗穿模射线），第一人称站立/游泳锚点与原纯眼位语义一致，8/9 表面判线
+ * 与含水/流水规则原样作用于相机格。
  */
 @Mixin(ActiveRenderInfo.class)
 public abstract class MixinActiveRenderInfo {
 
 	/**
-	 * 采样点改为纯眼位（26.2 camera 格语义）：去掉沿视线 +1.0 的偏移，让
-	 * getBlockAtEntityViewpoint 判定眼位格而非视线前方 1 格。唯一调用方即
-	 * getBlockAtEntityViewpoint（rfg 全树实证），无外溢。眼位格坐标进
+	 * 采样点改为<b>相机位</b>（26.2 {@code Camera#getFluidInCamera} L432-438：雾颜色/密度与
+	 * FOV 的流体判定全部发生在相机处，FogRenderer/GameRenderer 均取相机流体）。眼位锚点 =
+	 * 滑翔 0.4（26.2 Avatar.POSES，与 backlytra 相机下移 1.22 同源）/ 游泳姿态相机眼高 /
+	 * 站立 1.62；三人称再叠加视线偏移与 vanilla 抗穿模射线（ModernWaterFog#getCameraPos，
+	 * 与 MixinRenderGlobal 海平面判定的相机数学同源）。vanilla projectViewFromEntity 沿视线
+	 * +1.0 的偏移保持移除（2026-10-10 修复）。水下判定全部走相机格后，滑翔入水时三人称相机
+	 * 低于水面即有蓝雾（修复第三人称透视），相机高于水面则正确无雾。眼位格坐标进
 	 * ThreadLocal，供 getBlock 重定向精确区分主采样与上方回退两个调用点。
 	 */
 	private static final ThreadLocal<double[]> EYE_POS = new ThreadLocal<double[]>();
 
 	@Redirect(method = "getBlockAtEntityViewpoint(Lnet/minecraft/world/World;Lnet/minecraft/entity/EntityLivingBase;F)Lnet/minecraft/block/Block;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ActiveRenderInfo;projectViewFromEntity(Lnet/minecraft/entity/EntityLivingBase;D)Lnet/minecraft/util/Vec3;"))
 	private static Vec3 etfuturum$sampleEyeCell(EntityLivingBase entity, double partialTicks) {
-		double x = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
-		double y = entity.prevPosY + (entity.posY - entity.prevPosY) * partialTicks + entity.getEyeHeight();
-		double z = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * partialTicks;
-		EYE_POS.set(new double[] {x, y, z});
-		return Vec3.createVectorHelper(x, y, z);
+		double[] pos = ModernWaterFog.getCameraPos(entity, (float) partialTicks);
+		EYE_POS.set(pos);
+		return Vec3.createVectorHelper(pos[0], pos[1], pos[2]);
 	}
 
 	/**

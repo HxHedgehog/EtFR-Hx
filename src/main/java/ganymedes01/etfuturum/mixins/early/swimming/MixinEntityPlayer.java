@@ -136,8 +136,13 @@ public abstract class MixinEntityPlayer extends EntityLivingBase implements ISwi
 			if (this.height != targetHeight) {
 				this.setSize(SwimmingRuntime.WIDTH, targetHeight);
 			}
-			this.etfu$visualSwimming = pose == SwimmingRuntime.POSE_SWIMMING;
 		}
+		// 26.2 re-derives the visual swim state from the pose EVERY tick (isVisuallySwimming =
+		// hasPose(SWIMMING), Entity L2604; LivingEntity#updateSwimAmount ramps swimAmount by it).
+		// Gating it behind the non-KEEP branch froze it at true whenever the pose flipped to
+		// POSE_KEEP - a firework burst out of the water left the crawl animation playing forever
+		// while flying (the "stuck swimming pose"), because POSE_KEEP never rewrote the state.
+		this.etfu$visualSwimming = pose == SwimmingRuntime.POSE_SWIMMING;
 
 		this.etfu$swimAmountO = this.etfu$swimAmount;
 		this.etfu$swimAmount = this.etfu$visualSwimming

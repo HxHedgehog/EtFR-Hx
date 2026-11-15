@@ -23,6 +23,8 @@ public final class SwimmingRuntime {
 	public static final float STANDING_EYE = 1.62F;
 	public static final float CROUCHING_EYE = 1.27F;
 	public static final float SWIMMING_EYE = 0.4F;
+	/** 26.2 Avatar.POSES: the fall-flying pose eye sits 0.4 above the feet. */
+	public static final float FALL_FLYING_EYE = 0.4F;
 
 	public static final int POSE_KEEP = 0;
 	public static final int POSE_STANDING = 1;
@@ -79,12 +81,19 @@ public final class SwimmingRuntime {
 		return block.getMaterial() == Material.water || WaterlogRuntime.isWaterlogged(world, bx, by, bz);
 	}
 
-	private static float getEyeHeight(EntityPlayer player) {
-		return ((ISwimmingPlayer) player).etfu$getEyeHeightAboveFeet();
-	}
-
+	/**
+	 * 26.2 {@code Entity#isUnderWater()} - eye-in-fluid at the current <b>pose</b> eye height.
+	 * While gliding that pose eye sits 0.4 above the feet (Avatar.POSES fall flying), the same
+	 * anchor the backlytra camera shift uses; the standing/crouching/swimming values come from
+	 * the pose height. Deliberately not routed through {@code getEyeHeight()}: the elytra port
+	 * keeps the vanilla 0.12 stance there for C03 compatibility, and the swimming poseEyeHeight
+	 * injection derives from {@code getEyeHeightAboveFeet()} instead.
+	 */
 	public static boolean isEyeInWater(EntityPlayer player) {
-		return isWaterAt(player.worldObj, player.posX, player.boundingBox.minY + getEyeHeight(player), player.posZ);
+		float eyeAboveFeet = player instanceof IElytraPlayer && ((IElytraPlayer) player).etfu$isElytraFlying()
+				? FALL_FLYING_EYE
+				: ((ISwimmingPlayer) player).etfu$getEyeHeightAboveFeet();
+		return isWaterAt(player.worldObj, player.posX, player.boundingBox.minY + eyeAboveFeet, player.posZ);
 	}
 
 	/**
@@ -96,14 +105,12 @@ public final class SwimmingRuntime {
 	public static void updateSwimming(EntityPlayer player) {
 		ISwimmingPlayer swimmingPlayer = (ISwimmingPlayer) player;
 
-		// 26.2 Player#updateSwimming: flying clears the swimming flag.
+		// 26.2 Player#updateSwimming: flying clears the swimming flag. Fall flying does NOT -
+		// LocalPlayer#canStartSprinting (L1082-1084) vetoes the sprint start only while
+		// isFallFlying() && !isUnderWater(), so a glider whose eye is under the surface
+		// sprints and swims like anyone else (Avatar#getPose puts SWIMMING above FALL_FLYING,
+		// so the pose goes crawl while the glide BODY rotation keeps applying via the flag).
 		if (player.capabilities.isFlying) {
-			swimmingPlayer.etfu$setSwimming(false);
-			return;
-		}
-
-		// Compatibility with the existing elytra port: gliding always wins.
-		if (player instanceof IElytraPlayer && ((IElytraPlayer) player).etfu$isElytraFlying()) {
 			swimmingPlayer.etfu$setSwimming(false);
 			return;
 		}
@@ -139,15 +146,19 @@ public final class SwimmingRuntime {
 		if (player.isPlayerSleeping()) {
 			return POSE_KEEP;
 		}
+		// 26.2 Avatar#getPose (L344-361): SWIMMING beats FALL_FLYING - a gliding player who
+		// sprint-swims underwater takes the swimming pose (0.6 height, crawl limbs). The
+		// fall-flying flag survives and the glide BODY rotation keeps applying while the flag
+		// is on (AvatarRenderer.setupRotations L262-270: the swim rotation block is an
+		// else-if), so the look is the glide body + paddling limbs, not a standing sprint.
+		if (((ISwimmingPlayer) player).etfu$isSwimming()) {
+			return canFit(player, SWIMMING_HEIGHT) ? POSE_SWIMMING : POSE_KEEP;
+		}
 		if (player instanceof IElytraPlayer && ((IElytraPlayer) player).etfu$isElytraFlying()) {
 			return POSE_KEEP;
 		}
 		if (!canFit(player, SWIMMING_HEIGHT)) {
 			return POSE_KEEP;
-		}
-
-		if (((ISwimmingPlayer) player).etfu$isSwimming()) {
-			return POSE_SWIMMING;
 		}
 
 		// getDesiredPose(): crouching is the desired pose while shift is held (not flying).

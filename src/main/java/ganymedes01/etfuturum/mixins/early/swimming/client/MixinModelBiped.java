@@ -1,6 +1,5 @@
 package ganymedes01.etfuturum.mixins.early.swimming.client;
 
-import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import ganymedes01.etfuturum.swimming.ISwimmingPlayer;
 import ganymedes01.etfuturum.items.ItemSpear;
 import ganymedes01.etfuturum.swimming.client.SwimmingRenderState;
@@ -36,14 +35,15 @@ public class MixinModelBiped {
 
 	/**
 	 * 26.2 HumanoidModel#setupAnim swim block. Injected at RETURN so it overrides the vanilla
-	 * (and elytra) angles; the elytra flight pose wins when it is active.
+	 * angles. Runs on swimAmount regardless of the fall-flying flag: 26.2 Avatar#getPose
+	 * (L344-361) puts the swimming pose above fall flying, so a gliding player who sprint-swims
+	 * underwater crawls - AvatarRenderer.setupRotations (L262-270) keeps the glide BODY rotation
+	 * while the flag is on (the swim rotation block there is an else-if), and the limbs paddle
+	 * through this block, blended in by swimAmount (rotLerpRad/lerp ramp from the elytra pose).
 	 */
 	@Inject(method = "setRotationAngles", at = @At("RETURN"))
 	private void etfu$setSwimAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
 									float headPitch, float scaleFactor, Entity entityIn, CallbackInfo ci) {
-		if (entityIn instanceof IElytraPlayer && ((IElytraPlayer) entityIn).etfu$isElytraFlying()) {
-			return;
-		}
 		if (!(entityIn instanceof ISwimmingPlayer) || !(entityIn instanceof EntityLivingBase)) {
 			return;
 		}
