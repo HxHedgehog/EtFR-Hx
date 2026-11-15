@@ -106,7 +106,12 @@ public abstract class MixinEntityLivingBase extends Entity {
 				 * replicate it here: without it limbSwing/limbSwingAmount freeze at their last ground
 				 * value during glide, and a slow turn or climb (the glide pose speedValue of the swing
 				 * divisor = (motion²/0.2)³ min 1 settling at 1) renders the frozen amplitude as a
-				 * static legs-apart pose that never settles. */
+				 * static legs-apart pose that never settles. The prevLimbSwingAmount snapshot is part
+				 * of that same 1.7.10 tail and MUST come first: the renderer lerps
+				 * prev+(cur-prev)*partialTicks, so a frozen prev turns the converging amplitude into
+				 * a per-frame oscillation - the post-firework leg twitch 26.2 does not show
+				 * (WalkAnimationState snapshots speedOld/positionOld every tick). */
+				this.prevLimbSwingAmount = this.limbSwingAmount;
 				double dx = this.posX - this.prevPosX;
 				double dz = this.posZ - this.prevPosZ;
 				float f6 = MathHelper.sqrt_double(dx * dx + dz * dz) * 4.0F;
