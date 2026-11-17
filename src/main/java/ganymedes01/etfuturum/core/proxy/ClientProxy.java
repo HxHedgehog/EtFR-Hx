@@ -6,6 +6,7 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import ganymedes01.etfuturum.ModBlocks;
+import ganymedes01.etfuturum.ModItems;
 import ganymedes01.etfuturum.api.event.GlowLichenHighlightEvent;
 import ganymedes01.etfuturum.client.model.ModelShulker;
 
@@ -63,6 +64,7 @@ import ganymedes01.etfuturum.client.renderer.item.ItemBannerRenderer;
 import ganymedes01.etfuturum.client.renderer.item.ItemBowRenderer;
 import ganymedes01.etfuturum.client.renderer.item.ItemShulkerBoxRenderer;
 import ganymedes01.etfuturum.client.renderer.item.ItemSkullRenderer;
+import ganymedes01.etfuturum.client.renderer.item.ItemSpearRenderer;
 import ganymedes01.etfuturum.client.renderer.tileentity.TileEntityBannerRenderer;
 import ganymedes01.etfuturum.client.renderer.tileentity.TileEntityFancySkullRenderer;
 import ganymedes01.etfuturum.client.renderer.tileentity.TileEntityGatewayRenderer;
@@ -73,6 +75,7 @@ import ganymedes01.etfuturum.client.SpawnEggFaceTextureHandler;
 import ganymedes01.etfuturum.client.skins.NewRenderPlayer;
 import ganymedes01.etfuturum.client.skins.NewSkinManager;
 import ganymedes01.etfuturum.client.subtitle.GuiSubtitles;
+import ganymedes01.etfuturum.configuration.configs.ConfigBlocksItems;
 import ganymedes01.etfuturum.configuration.configs.ConfigFunctions;
 import ganymedes01.etfuturum.configuration.configs.ConfigMixins;
 import ganymedes01.etfuturum.core.handlers.ClientEventHandler;
@@ -168,6 +171,14 @@ public class ClientProxy extends CommonProxy {
 			for (ModBlocks bed : ModBlocks.BEDS) {
 				if (bed.isEnabled()) {
 					MinecraftForgeClient.registerItemRenderer(bed.getItem(), new Item3DBedRenderer((BlockBed) bed.get()));
+				}
+			}
+		}
+		if (ConfigBlocksItems.enableSpears) {
+			ItemSpearRenderer spearRenderer = new ItemSpearRenderer();
+			for (ModItems spear : ModItems.SPEARS) {
+				if (spear.isEnabled()) {
+					MinecraftForgeClient.registerItemRenderer(spear.get(), spearRenderer);
 				}
 			}
 		}

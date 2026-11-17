@@ -30,6 +30,7 @@ public class ConfigWorld extends ConfigBase {
 	public static boolean modernLightmapGamma;
 	public static boolean modernBlockLightTint;
 	public static boolean modernNightVision;
+	public static boolean modernWaterFog;
 	public static boolean enableAirDebris;
 	public static int debrisMax = 3;
 	public static int maxNetherGoldPerCluster;
@@ -115,6 +116,7 @@ public class ConfigWorld extends ConfigBase {
 		modernLightmapGamma = getBoolean("modernLightmapGamma", catClient, true, "Replaces the vanilla brightness-slider curve with the modern hue and saturation preserving one.");
 		modernBlockLightTint = getBoolean("modernBlockLightTint", catClient, true, "Adjust block light color and gradient to match modern Minecraft.");
 		modernNightVision = getBoolean("modernNightVision", catClient, true, "Adjust night vision to match modern Minecraft.");
+		modernWaterFog = getBoolean("modernWaterFog", catClient, true, "Makes vanilla's water fog type judgment camera-based (26.2 Camera#getFluidInCamera semantics) instead of entity-eye based: fixes the underwater fog leaking onto the sky when the camera is above the surface in first or third person. Fog density and color stay vanilla, so shader packs keep full ownership of the underwater look.");
 		enableAirDebris = getBoolean("enableAirDebris", catGeneration, false, "Can ancient debris generate next to air?");
 		maxStonesPerCluster = getInt("maxStonesPerCluster", catGeneration, 32, 0, 64, "Max vein size for Granite/Andesite/Diorite blocks in a cluster");
 		smallDebrisMax = getInt("smallDebrisMax", catGeneration, 2, 0, 64, "The max vein size for the first, typically smaller debris veins which generate from Y 8 to 119");

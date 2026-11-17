@@ -36,6 +36,7 @@ import ganymedes01.etfuturum.items.ItemNetheriteIngot;
 import ganymedes01.etfuturum.items.ItemNewBoat;
 import ganymedes01.etfuturum.items.ItemRabbitStew;
 import ganymedes01.etfuturum.items.ItemShulkerBoxUpgrade;
+import ganymedes01.etfuturum.items.ItemSpear;
 import ganymedes01.etfuturum.items.ItemSuspiciousStew;
 import ganymedes01.etfuturum.items.ItemSweetBerries;
 import ganymedes01.etfuturum.items.ItemWoodSign;
@@ -113,6 +114,15 @@ public enum ModItems {
 	HONEY_BOTTLE(ConfigBlocksItems.enableHoney, new ItemHoneyBottle()),
 	BAMBOO(ConfigBlocksItems.enableBambooBlocks, new ItemBamboo()),
 
+	/* 26.2 Items.java L1198-1204, seconds x 20: delay, dismount ticks/speed, knockback ticks/speed, damage ticks/relative speed */
+	WOODEN_SPEAR(ConfigBlocksItems.enableSpears, new ItemSpear("wooden_spear", 59, () -> new ItemStack(Blocks.planks), 13, 0.7F, 0.0F, 15, 100, 14.0F, 200, 5.1F, 300, 4.6F, "spear_wood")),
+	STONE_SPEAR(ConfigBlocksItems.enableSpears, new ItemSpear("stone_spear", 131, () -> new ItemStack(Blocks.cobblestone), 15, 0.82F, 1.0F, 14, 90, 13.0F, 180, 5.1F, 260, 4.6F, "spear")),
+	COPPER_SPEAR(ConfigBlocksItems.enableSpears, new ItemSpear("copper_spear", 190, () -> ModItems.COPPER_INGOT.newItemStack(), 17, 0.82F, 1.0F, 13, 80, 12.0F, 165, 5.1F, 250, 4.6F, "spear")),
+	IRON_SPEAR(ConfigBlocksItems.enableSpears, new ItemSpear("iron_spear", 250, () -> new ItemStack(Items.iron_ingot), 19, 0.95F, 2.0F, 12, 50, 11.0F, 135, 5.1F, 225, 4.6F, "spear")),
+	GOLDEN_SPEAR(ConfigBlocksItems.enableSpears, new ItemSpear("golden_spear", 32, () -> new ItemStack(Items.gold_ingot), 19, 0.7F, 0.0F, 14, 70, 13.0F, 170, 5.1F, 275, 4.6F, "spear")),
+	DIAMOND_SPEAR(ConfigBlocksItems.enableSpears, new ItemSpear("diamond_spear", 1561, () -> new ItemStack(Items.diamond), 21, 1.075F, 3.0F, 10, 60, 10.0F, 130, 5.1F, 200, 4.6F, "spear")),
+	NETHERITE_SPEAR(ConfigBlocksItems.enableSpears, new ItemSpear("netherite_spear", 2031, () -> ModItems.NETHERITE_INGOT.newItemStack(), 23, 1.2F, 4.0F, 8, 50, 9.0F, 110, 5.1F, 175, 4.6F, "spear")),
+
 	OAK_BOAT(ConfigBlocksItems.enableNewBoats && !ConfigBlocksItems.replaceOldBoats, new ItemNewBoat("minecraft", "oak", () -> Item.getItemFromBlock(Blocks.planks), 0, false, false)),
 	OAK_CHEST_BOAT(ConfigBlocksItems.enableNewBoats, new ItemNewBoat("minecraft", "oak", () -> Item.getItemFromBlock(Blocks.planks), 0, true, false)),
 	SPRUCE_BOAT(ConfigBlocksItems.enableNewBoats, new ItemNewBoat("minecraft", "spruce", () -> Item.getItemFromBlock(Blocks.planks), 1, false, false)),
@@ -188,6 +198,7 @@ public enum ModItems {
 	public static final ModItems[] CHEST_BOATS = new ModItems[]{OAK_CHEST_BOAT, SPRUCE_CHEST_BOAT, BIRCH_CHEST_BOAT, JUNGLE_CHEST_BOAT, ACACIA_CHEST_BOAT, DARK_OAK_CHEST_BOAT, CHERRY_CHEST_BOAT, BAMBOO_CHEST_RAFT};
 	public static final ModItems[] BOATS = new ModItems[]{OAK_BOAT, SPRUCE_BOAT, BIRCH_BOAT, JUNGLE_BOAT, ACACIA_BOAT, DARK_OAK_BOAT, CHERRY_BOAT, BAMBOO_RAFT};
 	public static final ModItems[] OLD_SIGN_ITEMS = new ModItems[]{SPRUCE_SIGN, BIRCH_SIGN, JUNGLE_SIGN, ACACIA_SIGN, DARK_OAK_SIGN};
+	public static final ModItems[] SPEARS = new ModItems[]{WOODEN_SPEAR, STONE_SPEAR, COPPER_SPEAR, IRON_SPEAR, GOLDEN_SPEAR, DIAMOND_SPEAR, NETHERITE_SPEAR};
 
 	/*
 	 * Stand-in static final fields because some mods incorrectly referenced my code directly.

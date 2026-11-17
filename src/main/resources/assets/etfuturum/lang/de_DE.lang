@@ -326,6 +326,13 @@ item.etfuturum.netherite_pickaxe.name=Netheritspitzhacke
 item.etfuturum.netherite_axe.name=Netheritaxt
 item.etfuturum.netherite_spade.name=Netheritschaufel
 item.etfuturum.netherite_sword.name=Netheritschwert
+item.etfuturum.wooden_spear.name=Holzspeer
+item.etfuturum.stone_spear.name=Steinspeer
+item.etfuturum.copper_spear.name=Kupferspeer
+item.etfuturum.iron_spear.name=Eisenspeer
+item.etfuturum.golden_spear.name=Goldspeer
+item.etfuturum.diamond_spear.name=Diamantspeer
+item.etfuturum.netherite_spear.name=Netheritspeer
 item.etfuturum.netherite_hoe.name=Netherithacke
 potion.prefix.lingering=Verweil || TRANSLATION IN PROGRESS
 item.etfuturum.totem_of_undying.name=Totem der Unsterblichkeit
@@ -916,6 +923,7 @@ death.attack.flyIntoWall.player=%1$s erfuhr beim Versuch, %2$s zu entkommen, kin
 death.attack.sting=%1$s wurde zu Tode gestochen
 death.attack.sting.item=%1$s wurde von %2$s mit %3$s zu Tode gestochen
 death.attack.sting.player=%1$s wurde von %2$s zu Tode gestochen
+death.attack.fireworks=%1$s flog in die Luft
 
 # Banners
 item.banner.black.name=Schwarzes Banner

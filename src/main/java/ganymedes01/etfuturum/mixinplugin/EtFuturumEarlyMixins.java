@@ -126,6 +126,7 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 		if (ConfigMixins.enableElytra) {
 			mixins.add("backlytra.MixinEntityPlayer");
 			mixins.add("backlytra.MixinEntityLivingBase");
+			mixins.add("backlytra.MixinEntity");
 			mixins.add("backlytra.MixinNetHandlerPlayServer");
 			mixins.add("backlytra.MixinEntityTrackerEntry");
 			if (loadedCoreMods.stream().anyMatch(name -> name.contains("thaumcraft"))) {
@@ -137,6 +138,37 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 				mixins.add("backlytra.client.MixinRenderPlayer");
 				mixins.add("backlytra.client.MixinModelBiped");
 				mixins.add("backlytra.client.MixinEntityRenderer");
+			}
+		}
+
+		if (ConfigMixins.enableSwimming) {
+			mixins.add("swimming.MixinEntity");
+			mixins.add("swimming.MixinEntityPlayer");
+			mixins.add("swimming.MixinEntityLivingBase");
+			if (side == MixinEnvironment.Side.CLIENT) {
+				mixins.add("swimming.client.MixinEntityPlayerSP");
+				// 26.2 never echoes self metadata; 1.7.10 SP stomps the client-authoritative
+				// sprint bit through the self-echo (sprint FOV/physics stutter).
+				mixins.add("swimming.client.MixinNetHandlerPlayClient");
+				mixins.add("swimming.client.MixinRenderPlayer");
+				mixins.add("swimming.client.MixinModelBiped");
+				mixins.add("swimming.client.MixinEntityRenderer");
+			}
+		}
+
+		if (ConfigWorld.modernWaterFog && side == MixinEnvironment.Side.CLIENT) {
+			mixins.add("waterfog.client.MixinEntityRenderer");
+		}
+
+		if (ConfigBlocksItems.enableSpears) {
+			mixins.add("spear.common.MixinEntityLivingBase");
+			mixins.add("spear.common.MixinEntityPlayer");
+			mixins.add("spear.common.MixinNetHandlerPlayServer");
+			if (side == MixinEnvironment.Side.CLIENT) {
+				mixins.add("spear.client.MixinEntityPlayerSP");
+				mixins.add("spear.client.MixinMinecraft");
+				mixins.add("spear.client.MixinModelBiped");
+				mixins.add("spear.client.MixinItemRenderer");
 			}
 		}
 
@@ -406,6 +438,7 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("oceanplants.MixinBlockDynamicLiquidBackfill");
 			mixins.add("oceanplants.MixinBlockFalling");
 			mixins.add("oceanplants.MixinItemDye");
+			mixins.add("oceanplants.MixinEntity");
 			if (side == MixinEnvironment.Side.CLIENT) {
 				mixins.add("oceanplants.client.MixinRenderBlocks");
 				mixins.add("oceanplants.client.MixinItemRenderer");
@@ -476,6 +509,12 @@ public class EtFuturumEarlyMixins implements IFMLLoadingPlugin, IEarlyMixinLoade
 			mixins.add("waterlog.MixinBlockLiquid");
 			mixins.add("waterlog.MixinEntity");
 			mixins.add("waterlog.MixinEntityLivingBase");
+			// Buoyancy @ModifyConstant conflicts with swimming.MixinEntityLivingBase
+			// (one modifier per constant) - when swimming is enabled its unified
+			// etfu$swimGravity covers the waterBuoyancy logic instead.
+			if (!ConfigMixins.enableSwimming) {
+				mixins.add("waterlog.MixinEntityLivingBaseBuoyancy");
+			}
 			mixins.add("waterlog.MixinEntityFallingBlock");
 			mixins.add("waterlog.MixinWorld");
 			// 26.2 explosion semantics (waterlogged blocks block blast rays via

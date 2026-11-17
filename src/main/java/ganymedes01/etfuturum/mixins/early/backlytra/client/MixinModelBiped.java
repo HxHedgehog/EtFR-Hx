@@ -34,7 +34,13 @@ public class MixinModelBiped {
 		boolean flag = entityIn instanceof IElytraPlayer && ((IElytraPlayer) entityIn).etfu$getTicksElytraFlying() > 4;
 
 		if (flag) {
-			limbSwing = ageInTicks;
+			/* 26.2 HumanoidModel#setupAnim L155-160: the limb swing phase is the walk animation
+			 * position (limbSwing), the amplitude the walk animation speed (limbSwingAmount) and
+			 * the divisor the fall-flying speedValue (motion²/0.2 cubed, min 1 - HumanoidMobRenderer
+			 * L71-79). No ageInTicks phase substitution (a 1.9-era artifact): underwater gliding
+			 * advances limbSwing/limbSwingAmount from the actual displacement, so the glide pose
+			 * kicks at walk cadence like 26.2; in air the amplitude stays ~0 and the limbs hold
+			 * the straight glide pose. */
 
 			this.bipedHead.rotateAngleY = this.bipedHeadwear.rotateAngleY = netHeadYaw * 0.017453292F;
 			this.bipedHead.rotateAngleX = this.bipedHeadwear.rotateAngleX = -((float) Math.PI / 4F);

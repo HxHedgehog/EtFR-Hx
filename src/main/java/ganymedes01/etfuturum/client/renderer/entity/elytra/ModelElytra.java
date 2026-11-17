@@ -13,6 +13,9 @@ import org.lwjgl.opengl.GL12;
 public class ModelElytra extends ModelBase {
 	private final ModelRenderer rightWing;
 	private final ModelRenderer leftWing = new ModelRenderer(this, 22, 0);
+	/* Set by LayerBetterElytra before setRotationAngles so the wing angles can be
+	 * interpolated with partialTicks like 26.2's ElytraAnimationState getters */
+	public float partialTicks;
 
 	public ModelElytra() {
 		this.leftWing.addBox(-10.0F, 0.0F, 0.0F, 10, 20, 2, 1.0F);
@@ -43,42 +46,43 @@ public class ModelElytra extends ModelBase {
 	public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entityIn) {
 		super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scaleFactor, entityIn);
 
-		float f = 0.2617994F; // 15 degrees in radians
-		float f1 = -0.2617994F;
-		float f2 = 0.0F;
-		float f3 = 0.0F;
+		/* Target angles, mirroring 26.2's ElytraAnimationState.tick() */
+		float targetX = 0.2617994F; // 15 degrees in radians
+		float targetZ = -0.2617994F;
+		float targetY = 0.0F;
+		float rotationPointY = 0.0F;
 
 		if (entityIn instanceof IElytraPlayer && ((IElytraPlayer) entityIn).etfu$isElytraFlying()) {
-			float f4 = 1.0F;
+			float ratio = 1.0F;
 
 			if (entityIn.motionY < 0.0D) {
 				Vec3 vec3d = (Vec3.createVectorHelper(entityIn.motionX, entityIn.motionY, entityIn.motionZ)).normalize();
-				f4 = 1.0F - (float) Math.pow(-vec3d.yCoord, 1.5D);
+				ratio = 1.0F - (float) Math.pow(-vec3d.yCoord, 1.5D);
 			}
 
-			f = f4 * 0.34906584F + (1.0F - f4) * f; // 20 degrees in radians
-			f1 = f4 * -((float) Math.PI / 2F) + (1.0F - f4) * f1;
+			targetX = ratio * 0.34906584F + (1.0F - ratio) * targetX; // 20 degrees in radians
+			targetZ = ratio * -((float) Math.PI / 2F) + (1.0F - ratio) * targetZ;
 		} else if (entityIn.isSneaking()) {
-			f = ((float) Math.PI * 2F / 9F);
-			f1 = -((float) Math.PI / 4F);
-			f2 = 3.0F;
-			f3 = 0.08726646F;
+			targetX = ((float) Math.PI * 2F / 9F);
+			targetZ = -((float) Math.PI / 4F);
+			targetY = 0.08726646F;
+			rotationPointY = 3.0F;
 		}
 
 		this.leftWing.rotationPointX = 5.0F;
-		this.leftWing.rotationPointY = f2;
+		this.leftWing.rotationPointY = rotationPointY;
 
 		if (entityIn instanceof IClientElytraPlayer cep) {
-			cep.setRotateElytraX((float) (cep.getRotateElytraX() + (f - cep.getRotateElytraX()) * 0.1D));
-			cep.setRotateElytraY((float) (cep.getRotateElytraY() + (f3 - cep.getRotateElytraY()) * 0.1D));
-			cep.setRotateElytraZ((float) (cep.getRotateElytraZ() + (f1 - cep.getRotateElytraZ()) * 0.1D));
-			this.leftWing.rotateAngleX = cep.getRotateElytraX();
-			this.leftWing.rotateAngleY = cep.getRotateElytraY();
-			this.leftWing.rotateAngleZ = cep.getRotateElytraZ();
+			/* Advance the animation once per game tick (factor 0.3), then interpolate
+			 * with partialTicks - same behavior as 26.2's ElytraAnimationState */
+			cep.etfu$elytraAnimTick(targetX, targetY, targetZ, entityIn.ticksExisted);
+			this.leftWing.rotateAngleX = cep.etfu$getElytraRotX(partialTicks);
+			this.leftWing.rotateAngleY = cep.etfu$getElytraRotY(partialTicks);
+			this.leftWing.rotateAngleZ = cep.etfu$getElytraRotZ(partialTicks);
 		} else {
-			this.leftWing.rotateAngleX = f;
-			this.leftWing.rotateAngleZ = f1;
-			this.leftWing.rotateAngleY = f3;
+			this.leftWing.rotateAngleX = targetX;
+			this.leftWing.rotateAngleY = targetY;
+			this.leftWing.rotateAngleZ = targetZ;
 		}
 
 		this.rightWing.rotationPointX = -this.leftWing.rotationPointX;

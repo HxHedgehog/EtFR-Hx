@@ -28,6 +28,7 @@ public class ConfigMixins extends ConfigBase {
 	public static boolean enableSpectatorMode;
 	public static boolean enableElytra;
 	public static boolean enableNewElytraTakeoffLogic;
+	public static boolean enableSwimming;
 	public static boolean enableDoWeatherCycle;
 	public static boolean enableRandomTickSpeed;
 	public static float creativeFlightSpeedModifier;
@@ -106,6 +107,7 @@ public class ConfigMixins extends ConfigBase {
 		blockHopperInteraction = getBoolean("blockHopperInteraction", catBackport, true, "Allows some blocks without tile entities (e.g. composters) to interact with hoppers. May still not interact with modded pipes.\nModified Classes: net.minecraft.tileentity.TileEntityHopper");
 
 		enableNewElytraTakeoffLogic = getBoolean("enableNewElytraTakeoffLogic", catBackport, true, "When enabled, the 1.15+ elytra takeoff logic is used, when disabled, the 1.9-1.14 elytra takeoff logic is used.");
+		enableSwimming = getBoolean("enableSwimming", catBackport, true, "26.2 modern swimming: sprint underwater to swim, with a 0.6x0.6 hitbox, 0.4 eye height, crawling under low ceilings, eye-height camera and the modern swim animation and water vertical control.\nModified Classes: net.minecraft.entity.Entity net.minecraft.entity.EntityLivingBase net.minecraft.entity.player.EntityPlayer\nModified Client Classes: net.minecraft.client.entity.EntityPlayerSP net.minecraft.client.model.ModelBiped net.minecraft.client.renderer.entity.RenderPlayer net.minecraft.client.renderer.EntityRenderer");
 		enableDoWeatherCycle = getBoolean("enableDoWeatherCycle", catBackport, true, "Add the doWeatherCycle game rule from 1.11+");
 		enableRandomTickSpeed = getBoolean("enableRandomTickSpeed", catBackport, true, "Add the randomTickSpeed game rule from 1.8+");
 		creativeFlightSpeedModifier = getFloat("creativeFlightSpeedModifier", catBackport, 2, 1, 5, "When greater than 1, boosts creative flight speed when sprinting, like in newer versions");

@@ -53,10 +53,18 @@ public class LayerBetterElytra {
 
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0.0F, 0.0F, 0.125F);
+			modelElytra.partialTicks = partialTicks; // for wing angle interpolation (26.2 ElytraAnimationState)
 			modelElytra.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, entityIn);
 			modelElytra.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
 
-			if (itemstack.isItemEnchanted())
+			/* 1.7.10 hurt flash (RendererLivingEntity.doRender L236-257): the entity is
+			 * repainted with translucent red through inheritRenderPass -> shouldRenderPass,
+			 * which re-fires the SetArmorModel event this layer renders from - so the
+			 * elytra gets the plain red flash here. The glint pass below then stacks
+			 * purple (GL_SRC_COLOR + GL_ONE additive) on top of that fresh red paint,
+			 * flashing magenta instead. Skip the glint while hurt/dying so the flash
+			 * stays plain red like unenchanted armor. */
+			if (itemstack.isItemEnchanted() && entityIn.hurtTime <= 0 && entityIn.deathTime <= 0)
 				renderGlint(entityIn, modelElytra, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
 
 			GL11.glPopMatrix();

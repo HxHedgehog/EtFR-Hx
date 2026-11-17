@@ -337,6 +337,13 @@ item.etfuturum.netherite_pickaxe.name=下界合金镐
 item.etfuturum.netherite_axe.name=下界合金斧
 item.etfuturum.netherite_spade.name=下界合金锹
 item.etfuturum.netherite_sword.name=下界合金剑
+item.etfuturum.wooden_spear.name=木矛
+item.etfuturum.stone_spear.name=石矛
+item.etfuturum.copper_spear.name=铜矛
+item.etfuturum.iron_spear.name=铁矛
+item.etfuturum.golden_spear.name=金矛
+item.etfuturum.diamond_spear.name=钻石矛
+item.etfuturum.netherite_spear.name=下界合金矛
 item.etfuturum.netherite_hoe.name=下界合金锄
 potion.prefix.lingering=滞留型
 item.etfuturum.totem_of_undying.name=不死图腾
@@ -994,6 +1001,7 @@ death.attack.sting.item=%1$s 被 %2$s 用 %3$s 蛰死了
 death.attack.sting.player=%1$s 被 %2$s 蛰死了
 death.attack.stonecutter=%1$s 发现了为什么需要OSHA指南
 death.attack.stonecutter.player=%2$s 将 %1$s 推入了运转中的锯片
+death.attack.fireworks=%1$s被烟花炸飞了
 
 # Banners
 item.banner.black.name=黑色旗帜

@@ -1,8 +1,11 @@
 package ganymedes01.etfuturum.mixins.early.backlytra;
 
+import ganymedes01.etfuturum.configuration.configs.ConfigEnchantsPotions;
 import ganymedes01.etfuturum.configuration.configs.ConfigFunctions;
 import ganymedes01.etfuturum.elytra.IElytraPlayer;
 import ganymedes01.etfuturum.items.equipment.ItemArmorElytra;
+import ganymedes01.etfuturum.ModEnchantments;
+import ganymedes01.etfuturum.potion.ModPotions;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -12,6 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -41,8 +45,25 @@ public abstract class MixinEntityPlayer extends EntityLivingBase implements IEly
 
 		ItemStack itemstack = ItemArmorElytra.getElytra(this);
 		this.setHideCape(1, itemstack != null);
+		/* Capture the previous tick's motion for the client-side glide Y-rot interpolation (26.2 deltaMovementOnPreviousTick) */
+		this.etfu$setPrevMotion(this.motionX, this.motionY, this.motionZ);
 		if (itemstack != null && !capabilities.isFlying && !ItemArmorElytra.isBroken(itemstack)) {
-			if (flag && !this.onGround && !this.isRiding() && !this.isInWater()) {
+			/* 26.2 LivingEntity.canGlide() + travelFallFlying():
+			 * - onGround / passenger / levitation stop the glide;
+			 * - touching a climbable block stops the glide;
+			 * - water does NOT stop the glide (fluid travel takes precedence,
+			 *   and the glide resumes once the entity leaves the water).
+			 * With elytraOceanEnchant enabled, an elytra without Depth Strider
+			 * stops gliding in water (pre-26.2 behavior); with the enchant it
+			 * keeps gliding underwater instead.
+			 * Sneak stopping the glide is a custom extension (26.2 has no
+			 * sneak-cancel): shift while gliding exits the glide and restores
+			 * the standing pose. The client clears its local flag instantly
+			 * (backlytra.client.MixinEntityPlayerSP) and this server-side
+			 * re-evaluation clears the authoritative flag as soon as the C0B
+			 * sneak state arrives. */
+			if (flag && !this.onGround && !this.isRiding() && !this.isOnLadder() && !this.isSneaking() && !etfu$hasLevitation()
+					&& !(ConfigEnchantsPotions.elytraOceanEnchant && this.isInWater() && ModEnchantments.getElytraWaterWalkerLevel(this) <= 0)) {
 				if (!this.worldObj.isRemote && (this.etfu$ticksElytraFlying + 1) % 20 == 0) {
 					itemstack.damageItem(1, this);
 				}
@@ -63,6 +84,35 @@ public abstract class MixinEntityPlayer extends EntityLivingBase implements IEly
 		} else {
 			this.etfu$ticksElytraFlying = 0;
 		}
+	}
+
+	private boolean etfu$hasLevitation() {
+		return ModPotions.levitation != null && this.getActivePotionEffect(ModPotions.levitation) != null;
+	}
+
+	@Unique
+	private double etfu$prevMotionX, etfu$prevMotionY, etfu$prevMotionZ;
+
+	@Override
+	public void etfu$setPrevMotion(double x, double y, double z) {
+		etfu$prevMotionX = x;
+		etfu$prevMotionY = y;
+		etfu$prevMotionZ = z;
+	}
+
+	@Override
+	public double etfu$getPrevMotionX() {
+		return etfu$prevMotionX;
+	}
+
+	@Override
+	public double etfu$getPrevMotionY() {
+		return etfu$prevMotionY;
+	}
+
+	@Override
+	public double etfu$getPrevMotionZ() {
+		return etfu$prevMotionZ;
 	}
 
 	@Inject(method = "getEyeHeight", at = @At("HEAD"), cancellable = true)

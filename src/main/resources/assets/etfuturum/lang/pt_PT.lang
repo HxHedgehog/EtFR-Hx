@@ -41,6 +41,13 @@ item.etfuturum.chorus_fruit_popped.name=Fruta-do-Coro Estourada
 item.etfuturum.dragon_breath.name=Sopro do Dragão
 item.etfuturum.elytra.name=Élitros
 item.etfuturum.end_crystal.name=Cristal do Fim
+item.etfuturum.wooden_spear.name=Lança de madeira
+item.etfuturum.stone_spear.name=Lança de pedra
+item.etfuturum.copper_spear.name=Lança de cobre
+item.etfuturum.iron_spear.name=Lança de ferro
+item.etfuturum.golden_spear.name=Lança de ouro
+item.etfuturum.diamond_spear.name=Lança de diamante
+item.etfuturum.netherite_spear.name=Lança de netherite
 potion.prefix.lingering=Duradoura
 
 # Arrows

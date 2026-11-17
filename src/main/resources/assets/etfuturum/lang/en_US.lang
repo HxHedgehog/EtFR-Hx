@@ -390,6 +390,13 @@ item.etfuturum.netherite_pickaxe.name=Netherite Pickaxe
 item.etfuturum.netherite_axe.name=Netherite Axe
 item.etfuturum.netherite_spade.name=Netherite Shovel
 item.etfuturum.netherite_sword.name=Netherite Sword
+item.etfuturum.wooden_spear.name=Wooden Spear
+item.etfuturum.stone_spear.name=Stone Spear
+item.etfuturum.copper_spear.name=Copper Spear
+item.etfuturum.iron_spear.name=Iron Spear
+item.etfuturum.golden_spear.name=Golden Spear
+item.etfuturum.diamond_spear.name=Diamond Spear
+item.etfuturum.netherite_spear.name=Netherite Spear
 item.etfuturum.netherite_hoe.name=Netherite Hoe
 potion.prefix.lingering=Lingering
 item.etfuturum.totem_of_undying.name=Totem of Undying
@@ -1289,6 +1296,7 @@ death.attack.sting.item=%1$s was stung to death by %2$s using %3$s
 death.attack.sting.player=%1$s was stung to death by %2$s
 death.attack.stonecutter=%1$s discovered why OSHA guidelines were created
 death.attack.stonecutter.player=%2$s pushed %1$s into a live saw blade
+death.attack.fireworks=%1$s went off with a bang
 
 # Banners
 item.banner.black.name=Black Banner
